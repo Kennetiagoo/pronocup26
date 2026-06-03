@@ -191,12 +191,15 @@ export default async function PronosticoPage() {
 
   const [users, allPredictionsForStandings] = await Promise.all([
     prisma.user.findMany({
-      where: { role: "USER" },
+      where: {
+        OR: [{ paymentStatus: "APROBADO" }, { id: user.id, role: "ADMIN" }],
+      },
       select: {
         id: true,
         nombres: true,
         apellidos: true,
         username: true,
+        paymentStatus: true,
         createdAt: true,
       },
     }),
@@ -269,12 +272,13 @@ export default async function PronosticoPage() {
   }
 
   const bettorStandings = users
-    .filter((u) => (u.username?.trim() ?? "").length >= 3)
+    .filter((u) => (u.username?.trim() ?? "").length >= 3 || u.id === user.id)
     .map((u) => ({
       userId: u.id,
       nombres: u.nombres,
       apellidos: u.apellidos,
       username: u.username ?? "",
+      paymentStatus: u.paymentStatus,
       totalPoints: totalsByUser.get(u.id)?.totalPoints ?? 0,
       predictionCount: totalsByUser.get(u.id)?.predictionCount ?? 0,
       groupPoints: totalsByUser.get(u.id)?.groupPoints ?? 0,

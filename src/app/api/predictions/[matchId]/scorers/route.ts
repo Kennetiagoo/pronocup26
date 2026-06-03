@@ -1,4 +1,4 @@
-import { PaymentStatus, TeamSide, UserRole } from "@prisma/client";
+import { MatchStatus, PaymentStatus, TeamSide, UserRole } from "@prisma/client";
 
 import { createAuditLog } from "@/lib/audit";
 import { getOrCreateBonusConfig, isBonusEnabledForStage, isFutureMatchForActivation } from "@/lib/bonus";
@@ -52,6 +52,7 @@ export async function PUT(
         select: {
           id: true,
           stage: true,
+          status: true,
           kickoff: true,
           homeTeamCode: true,
           awayTeamCode: true,
@@ -69,6 +70,13 @@ export async function PUT(
     }
     if (!rule) {
       throw new ApiError(500, "INTERNAL_ERROR", "No existe configuracion de puntaje.");
+    }
+    if (match.status === MatchStatus.FINAL) {
+      throw new ApiError(
+        422,
+        "UNPROCESSABLE",
+        "Este partido ya fue finalizado. No se pueden modificar goleadores.",
+      );
     }
 
     const lockAt = match.kickoff.getTime() - rule.lockMinutesBeforeKickoff * 60 * 1000;

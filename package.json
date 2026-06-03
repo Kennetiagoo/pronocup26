@@ -10,6 +10,7 @@
     "prisma:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "squad:import": "tsx scripts/import-squad-players.ts",
     "fixture:refresh": "tsx scripts/fetch-worldcup-fixture.ts"
   },
   "dependencies": {

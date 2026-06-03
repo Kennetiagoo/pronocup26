@@ -100,6 +100,13 @@ export async function PUT(
     if (!rule) {
       throw new ApiError(500, "INTERNAL_ERROR", "No existe configuracion de puntaje.");
     }
+    if (match.status === MatchStatus.FINAL) {
+      throw new ApiError(
+        422,
+        "UNPROCESSABLE",
+        "Este partido ya fue finalizado. No se pueden modificar pronosticos.",
+      );
+    }
 
     const lockAt = match.kickoff.getTime() - rule.lockMinutesBeforeKickoff * 60 * 1000;
     if (user.role !== UserRole.ADMIN && Date.now() >= lockAt) {

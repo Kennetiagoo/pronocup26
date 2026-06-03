@@ -1,6 +1,8 @@
 import "dotenv/config";
 
 import bcrypt from "bcryptjs";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, PaymentStatus, UserRole } from "@prisma/client";
 import { Pool } from "pg";
@@ -13,6 +15,57 @@ if (!connectionString) {
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
+
+type SquadPlayersFile = Record<
+  string,
+  {
+    sourceName: string;
+    sourceCode: string;
+    players: Array<{ number: number; name: string }>;
+  }
+>;
+
+async function seedTeamPlayers() {
+  const filePath = path.join(process.cwd(), "prisma", "squad-players.json");
+  const raw = await fs.readFile(filePath, "utf8");
+  const squads = JSON.parse(raw) as SquadPlayersFile;
+
+  for (const [teamCode, squad] of Object.entries(squads)) {
+    await prisma.$transaction(async (tx) => {
+      await tx.teamPlayer.updateMany({
+        where: { teamCode },
+        data: { isActive: false, updatedAt: new Date() },
+      });
+
+      for (const player of squad.players) {
+        await tx.teamPlayer.upsert({
+          where: {
+            teamCode_name: {
+              teamCode,
+              name: player.name.trim(),
+            },
+          },
+          update: {
+            number: player.number,
+            isActive: true,
+            updatedAt: new Date(),
+          },
+          create: {
+            teamCode,
+            name: player.name.trim(),
+            number: player.number,
+            isActive: true,
+          },
+        });
+      }
+    });
+  }
+
+  return {
+    teams: Object.keys(squads).length,
+    players: Object.values(squads).reduce((sum, squad) => sum + squad.players.length, 0),
+  };
+}
 
 async function main() {
   const adminEmail = process.env.ADMIN_EMAIL ?? "admin@prono2026.com";
@@ -134,7 +187,9 @@ async function main() {
     },
   });
 
-  console.log("Seed completo.");
+  const seededPlayers = await seedTeamPlayers();
+
+  console.log(`Seed completo. Plantillas: ${seededPlayers.teams} selecciones, ${seededPlayers.players} jugadores.`);
 }
 
 main()

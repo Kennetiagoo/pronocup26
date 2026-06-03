@@ -181,6 +181,14 @@ function formatKickoff(isoDate: string) {
   return `${datePart} ${timePart} GMT-5`;
 }
 
+function formatPoints(value: number) {
+  return `${value} ${value === 1 ? "punto" : "puntos"}`;
+}
+
+function multipliedPoints(value: number, multiplier: number) {
+  return Math.round(value * Math.max(1, multiplier));
+}
+
 function isScorersEnabledForStage(config: SafeBonusConfig, stage: string) {
   if (!config.scorersEnabledGlobal) return false;
   if (stage === "GROUP") return config.scorersGroupEnabled;
@@ -324,6 +332,38 @@ export default function AdminPanelClient({
     cleanedTeamPlayers.length > 0 &&
     cleanedTeamPlayers.length <= 26 &&
     duplicateNameCount === 0;
+  const scoreRows = [
+    {
+      label: "Por acertar el resultado (ganador o empate)",
+      groupPoints: rule.outcomePoints,
+      knockoutPoints: multipliedPoints(rule.outcomePoints, rule.knockoutMultiplier),
+      description:
+        "Se otorga cuando el pronostico acierta si gana el local, gana el visitante o el partido termina empatado.",
+    },
+    {
+      label: "Por acertar los goles del equipo local",
+      groupPoints: rule.singleTeamGoalsPoints,
+      knockoutPoints: multipliedPoints(rule.singleTeamGoalsPoints, rule.knockoutMultiplier),
+      description:
+        "Se otorga cuando el numero de goles pronosticado para el local coincide con el resultado oficial.",
+    },
+    {
+      label: "Por acertar los goles del equipo visitante",
+      groupPoints: rule.singleTeamGoalsPoints,
+      knockoutPoints: multipliedPoints(rule.singleTeamGoalsPoints, rule.knockoutMultiplier),
+      description:
+        "Se otorga cuando el numero de goles pronosticado para el visitante coincide con el resultado oficial.",
+    },
+    {
+      label: "Por acertar la diferencia de goles",
+      groupPoints: rule.goalDifferencePoints,
+      knockoutPoints: multipliedPoints(rule.goalDifferencePoints, rule.knockoutMultiplier),
+      description:
+        "Se otorga cuando la resta local menos visitante es igual en el pronostico y en el resultado oficial.",
+    },
+  ];
+  const groupMaxPoints = scoreRows.reduce((sum, row) => sum + row.groupPoints, 0);
+  const knockoutMaxPoints = scoreRows.reduce((sum, row) => sum + row.knockoutPoints, 0);
 
   useEffect(() => {
     if (!selectedTeamCode && teamCodeOptions.length > 0) {
@@ -892,6 +932,65 @@ export default function AdminPanelClient({
             />
             Permitir registro público de nuevos usuarios
           </label>
+          <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <p className="wc-eyebrow text-emerald-800">Distribucion visible para usuarios</p>
+            <h3 className="mt-1 text-2xl font-extrabold text-emerald-950">Como se calculan los puntos</h3>
+            <p className="mt-2 text-sm text-emerald-900">
+              En modo oficial el marcador se puntua por partes. No hay un premio separado por marcador exacto:
+              el pleno sale de sumar resultado correcto, goles del local, goles del visitante y diferencia de goles.
+            </p>
+            <div className="mt-4 overflow-x-auto rounded-xl border border-emerald-300 bg-white">
+              <table className="min-w-[760px] w-full text-left text-sm text-zinc-900">
+                <thead className="bg-emerald-700 text-white">
+                  <tr>
+                    <th className="px-3 py-2">Concepto</th>
+                    <th className="w-40 px-3 py-2 text-center">Primera ronda</th>
+                    <th className="w-48 px-3 py-2 text-center">Fases eliminatorias</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {scoreRows.map((row) => (
+                    <tr key={row.label} className="border-b border-emerald-100">
+                      <td className="px-3 py-2">
+                        <p className="font-semibold">{row.label}</p>
+                        <p className="mt-1 text-xs text-zinc-600">{row.description}</p>
+                      </td>
+                      <td className="px-3 py-2 text-center font-bold">{formatPoints(row.groupPoints)}</td>
+                      <td className="px-3 py-2 text-center font-bold">{formatPoints(row.knockoutPoints)}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-emerald-50 font-black">
+                    <td className="px-3 py-2">Total maximo sin X2 ni goleadores</td>
+                    <td className="px-3 py-2 text-center">{formatPoints(groupMaxPoints)}</td>
+                    <td className="px-3 py-2 text-center">{formatPoints(knockoutMaxPoints)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <div className="rounded-xl border border-emerald-200 bg-white p-3 text-sm text-zinc-800">
+                <p className="font-bold text-emerald-900">Ejemplo pleno</p>
+                <p className="mt-1">
+                  Si pronosticas 1-0 y el partido termina 1-0, sumas resultado correcto, goles del local,
+                  goles del visitante y diferencia.
+                </p>
+                <p className="mt-2 font-bold">
+                  Grupos: {formatPoints(groupMaxPoints)}. Eliminatorias: {formatPoints(knockoutMaxPoints)}.
+                </p>
+              </div>
+              <div className="rounded-xl border border-emerald-200 bg-white p-3 text-sm text-zinc-800">
+                <p className="font-bold text-emerald-900">Ejemplo parcial</p>
+                <p className="mt-1">
+                  Si pronosticas 2-0 y termina 3-1, aciertas ganador y diferencia de goles, pero no los goles exactos
+                  de ningun equipo.
+                </p>
+                <p className="mt-2 font-bold">
+                  Grupos: {formatPoints(rule.outcomePoints + rule.goalDifferencePoints)}. Eliminatorias:{" "}
+                  {formatPoints(multipliedPoints(rule.outcomePoints + rule.goalDifferencePoints, rule.knockoutMultiplier))}.
+                </p>
+              </div>
+            </div>
+          </div>
           <button
             type="button"
             onClick={saveRule}
@@ -915,6 +1014,10 @@ export default function AdminPanelClient({
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
             <div className="rounded-2xl border border-zinc-200 bg-white p-4">
               <p className="text-sm font-bold text-zinc-900">X2</p>
+              <p className="mt-1 text-xs text-zinc-600">
+                Duplica el puntaje base del partido cuando el usuario lo activa antes del cierre. Si el usuario hace
+                0 puntos base, el X2 se devuelve automaticamente.
+              </p>
               <label className="mt-2 flex items-center justify-between text-sm text-zinc-700">
                 Activar global
                 <input
@@ -934,10 +1037,19 @@ export default function AdminPanelClient({
                   onChange={(e) => setBonusConfig((v) => ({ ...v, x2UsesGroup: Number(e.target.value) || 0 }))}
                 />
               </label>
+              <div className="mt-3 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-900">
+                <p className="font-bold">Limites en grupos</p>
+                <p>Total de usos configurado aqui, maximo 4 por fecha y maximo 1 por dia de partidos.</p>
+                <p>Ejemplo: si un pleno vale {formatPoints(groupMaxPoints)}, con X2 vale {formatPoints(groupMaxPoints * 2)}.</p>
+              </div>
             </div>
 
             <div className="rounded-2xl border border-zinc-200 bg-white p-4">
               <p className="text-sm font-bold text-zinc-900">Goleadores</p>
+              <p className="mt-1 text-xs text-zinc-600">
+                Suma puntos extra por cada slot de goleador acertado. Los goleadores no se duplican con X2; se suman al
+                total despues del puntaje base.
+              </p>
               <label className="mt-2 flex items-center justify-between text-sm text-zinc-700">
                 Activar global
                 <input
@@ -959,6 +1071,11 @@ export default function AdminPanelClient({
                   onChange={(e) => setBonusConfig((v) => ({ ...v, scorerPoint: Number(e.target.value) || 0 }))}
                 />
               </label>
+              <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                <p className="font-bold">Como se usa</p>
+                <p>Si el usuario pronostica 2 goles para una seleccion, aparecen 2 espacios para elegir goleadores.</p>
+                <p>Cada espacio acertado suma {formatPoints(bonusConfig.scorerPoint)}.</p>
+              </div>
             </div>
           </div>
 

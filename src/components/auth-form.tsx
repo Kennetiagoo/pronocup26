@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { FileUploadField } from "@/components/file-upload-field";
@@ -214,6 +215,15 @@ export default function AuthForm({ paymentConfig, oauthError }: Props) {
             <GoogleLogo />
             {mode === "login" ? "Continuar con Google" : "Registrarse con Google"}
           </a>
+
+          <div className="mb-4 flex flex-wrap justify-center gap-3 text-xs font-semibold uppercase tracking-[0.1em] text-zinc-600">
+            <Link href="/" className="hover:text-zinc-950">
+              Inicio
+            </Link>
+            <Link href="/reglas" className="hover:text-zinc-950">
+              Reglas
+            </Link>
+          </div>
 
           {error ? <p className="mb-3 rounded-xl bg-rose-100 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
           {message ? (

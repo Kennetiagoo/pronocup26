@@ -1,0 +1,5172 @@
+{
+  "DZ": {
+    "sourceName": "Algeria",
+    "sourceCode": "ALG",
+    "players": [
+      {
+        "number": 1,
+        "name": "MASTIL Melvin"
+      },
+      {
+        "number": 2,
+        "name": "MANDI Aissa"
+      },
+      {
+        "number": 3,
+        "name": "ABADA Achraf"
+      },
+      {
+        "number": 4,
+        "name": "TOUGAI Mohamed Amine"
+      },
+      {
+        "number": 5,
+        "name": "BELAID Zineddine"
+      },
+      {
+        "number": 6,
+        "name": "ZERROUKI Ramiz"
+      },
+      {
+        "number": 7,
+        "name": "MAHREZ Riyad"
+      },
+      {
+        "number": 8,
+        "name": "AOUAR Houssem"
+      },
+      {
+        "number": 9,
+        "name": "GOUIRI Amine"
+      },
+      {
+        "number": 10,
+        "name": "CHAIBI Fares"
+      },
+      {
+        "number": 11,
+        "name": "HADJ MOUSSA Anis"
+      },
+      {
+        "number": 12,
+        "name": "BENBOUALI Nadhir"
+      },
+      {
+        "number": 13,
+        "name": "HADJAM Jaouen"
+      },
+      {
+        "number": 14,
+        "name": "BOUDAOUI Hicham"
+      },
+      {
+        "number": 15,
+        "name": "AIT-NOURI Rayan"
+      },
+      {
+        "number": 16,
+        "name": "BENBOT Oussama"
+      },
+      {
+        "number": 17,
+        "name": "BELGHALI Rak"
+      },
+      {
+        "number": 18,
+        "name": "AMOURA Mohamed"
+      },
+      {
+        "number": 19,
+        "name": "BENTALEB Nabil"
+      },
+      {
+        "number": 20,
+        "name": "BOULBINA Adil"
+      },
+      {
+        "number": 21,
+        "name": "BENSEBAINI Ramy"
+      },
+      {
+        "number": 22,
+        "name": "MAZA Ibrahim"
+      },
+      {
+        "number": 23,
+        "name": "ZIDANE Luca"
+      },
+      {
+        "number": 24,
+        "name": "TITRAOUI Yassine"
+      },
+      {
+        "number": 25,
+        "name": "GHEDJEMIS Fares"
+      },
+      {
+        "number": 26,
+        "name": "CHERGUI Samir"
+      }
+    ]
+  },
+  "AR": {
+    "sourceName": "Argentina",
+    "sourceCode": "ARG",
+    "players": [
+      {
+        "number": 1,
+        "name": "MUSSO Juan"
+      },
+      {
+        "number": 2,
+        "name": "BALERDI Leonardo"
+      },
+      {
+        "number": 3,
+        "name": "TAGLIAFICO Nicolas"
+      },
+      {
+        "number": 4,
+        "name": "MONTIEL Gonzalo"
+      },
+      {
+        "number": 5,
+        "name": "PAREDES Leandro"
+      },
+      {
+        "number": 6,
+        "name": "MARTINEZ Lisandro"
+      },
+      {
+        "number": 7,
+        "name": "DE PAUL Rodrigo"
+      },
+      {
+        "number": 8,
+        "name": "BARCO Valentin"
+      },
+      {
+        "number": 9,
+        "name": "ALVAREZ Julian"
+      },
+      {
+        "number": 10,
+        "name": "MESSI Lionel"
+      },
+      {
+        "number": 11,
+        "name": "LO CELSO Giovani"
+      },
+      {
+        "number": 12,
+        "name": "RULLI Geronimo"
+      },
+      {
+        "number": 13,
+        "name": "ROMERO Cristian"
+      },
+      {
+        "number": 14,
+        "name": "PALACIOS Exequiel"
+      },
+      {
+        "number": 15,
+        "name": "GONZALEZ Nico"
+      },
+      {
+        "number": 16,
+        "name": "ALMADA Thiago"
+      },
+      {
+        "number": 17,
+        "name": "SIMEONE Giuliano"
+      },
+      {
+        "number": 18,
+        "name": "PAZ Nico"
+      },
+      {
+        "number": 19,
+        "name": "OTAMENDI Nicolas"
+      },
+      {
+        "number": 20,
+        "name": "MAC ALLISTER Alexis"
+      },
+      {
+        "number": 21,
+        "name": "LOPEZ Jose Manuel"
+      },
+      {
+        "number": 22,
+        "name": "MARTINEZ Lautaro"
+      },
+      {
+        "number": 23,
+        "name": "MARTINEZ Emiliano"
+      },
+      {
+        "number": 24,
+        "name": "FERNANDEZ Enzo"
+      },
+      {
+        "number": 25,
+        "name": "MEDINA Facundo"
+      },
+      {
+        "number": 26,
+        "name": "MOLINA Nahuel"
+      }
+    ]
+  },
+  "AU": {
+    "sourceName": "Australia",
+    "sourceCode": "AUS",
+    "players": [
+      {
+        "number": 1,
+        "name": "RYAN Mathew"
+      },
+      {
+        "number": 2,
+        "name": "DEGENEK Milos"
+      },
+      {
+        "number": 3,
+        "name": "CIRCATI Alessandro"
+      },
+      {
+        "number": 4,
+        "name": "ITALIANO Jacob"
+      },
+      {
+        "number": 5,
+        "name": "BOS Jordan"
+      },
+      {
+        "number": 6,
+        "name": "GERIA Jason"
+      },
+      {
+        "number": 7,
+        "name": "LECKIE Mathew"
+      },
+      {
+        "number": 8,
+        "name": "METCALFE Connor"
+      },
+      {
+        "number": 9,
+        "name": "TOURE Mohamed"
+      },
+      {
+        "number": 10,
+        "name": "HRUSTIC Ajdin"
+      },
+      {
+        "number": 11,
+        "name": "MABIL Awer"
+      },
+      {
+        "number": 12,
+        "name": "IZZO Paul"
+      },
+      {
+        "number": 13,
+        "name": "ONEILL Aiden"
+      },
+      {
+        "number": 14,
+        "name": "DEVLIN Cameron"
+      },
+      {
+        "number": 15,
+        "name": "TREWIN Kai"
+      },
+      {
+        "number": 16,
+        "name": "BEHICH Aziz"
+      },
+      {
+        "number": 17,
+        "name": "IRANKUNDA Nestory"
+      },
+      {
+        "number": 18,
+        "name": "BEACH Patrick"
+      },
+      {
+        "number": 19,
+        "name": "SOUTTAR Harry"
+      },
+      {
+        "number": 20,
+        "name": "VOLPATO Cristian"
+      },
+      {
+        "number": 21,
+        "name": "BURGESS Cameron"
+      },
+      {
+        "number": 22,
+        "name": "IRVINE Jackson"
+      },
+      {
+        "number": 23,
+        "name": "VELUPILLAY Nishan"
+      },
+      {
+        "number": 24,
+        "name": "OKON-ENGSTLER Paul"
+      },
+      {
+        "number": 25,
+        "name": "HERRINGTON Lucas"
+      },
+      {
+        "number": 26,
+        "name": "YENGI Tete"
+      }
+    ]
+  },
+  "AT": {
+    "sourceName": "Austria",
+    "sourceCode": "AUT",
+    "players": [
+      {
+        "number": 1,
+        "name": "SCHLAGER Alexander"
+      },
+      {
+        "number": 2,
+        "name": "AFFENGRUBER David"
+      },
+      {
+        "number": 3,
+        "name": "DANSO Kevin"
+      },
+      {
+        "number": 4,
+        "name": "SCHLAGER Xaver"
+      },
+      {
+        "number": 5,
+        "name": "POSCH Stefan"
+      },
+      {
+        "number": 6,
+        "name": "SEIWALD Nicolas"
+      },
+      {
+        "number": 7,
+        "name": "ARNAUTOVIC Marko"
+      },
+      {
+        "number": 8,
+        "name": "ALABA David"
+      },
+      {
+        "number": 9,
+        "name": "SABITZER Marcel"
+      },
+      {
+        "number": 10,
+        "name": "GRILLITSCH Florian"
+      },
+      {
+        "number": 11,
+        "name": "GREGORITSCH Michael"
+      },
+      {
+        "number": 12,
+        "name": "WIEGELE Florian"
+      },
+      {
+        "number": 13,
+        "name": "PENTZ Patrick"
+      },
+      {
+        "number": 14,
+        "name": "KALAJDZIC Sasa"
+      },
+      {
+        "number": 15,
+        "name": "LIENHART Philipp"
+      },
+      {
+        "number": 16,
+        "name": "MWENE Phillip"
+      },
+      {
+        "number": 17,
+        "name": "CHUKWUEMEKA Carney"
+      },
+      {
+        "number": 18,
+        "name": "SCHMID Romano"
+      },
+      {
+        "number": 19,
+        "name": "BAUMGARTNER Christoph"
+      },
+      {
+        "number": 20,
+        "name": "LAIMER Konrad"
+      },
+      {
+        "number": 21,
+        "name": "WIMMER Patrick"
+      },
+      {
+        "number": 22,
+        "name": "PRASS Alexander"
+      },
+      {
+        "number": 23,
+        "name": "FRIEDL Marco"
+      },
+      {
+        "number": 24,
+        "name": "WANNER Paul"
+      },
+      {
+        "number": 25,
+        "name": "SVOBODA Michael"
+      },
+      {
+        "number": 26,
+        "name": "SCHOEPF Alessandro"
+      }
+    ]
+  },
+  "BE": {
+    "sourceName": "Belgium",
+    "sourceCode": "BEL",
+    "players": [
+      {
+        "number": 1,
+        "name": "COURTOIS Thibaut"
+      },
+      {
+        "number": 2,
+        "name": "DEBAST Zeno"
+      },
+      {
+        "number": 3,
+        "name": "THEATE Arthur"
+      },
+      {
+        "number": 4,
+        "name": "MECHELE Brandon"
+      },
+      {
+        "number": 5,
+        "name": "DE CUYPER Maxim"
+      },
+      {
+        "number": 6,
+        "name": "WITSEL Axel"
+      },
+      {
+        "number": 7,
+        "name": "DE BRUYNE Kevin"
+      },
+      {
+        "number": 8,
+        "name": "TIELEMANS Youri"
+      },
+      {
+        "number": 9,
+        "name": "LUKAKU Romelu"
+      },
+      {
+        "number": 10,
+        "name": "TROSSARD Leandro"
+      },
+      {
+        "number": 11,
+        "name": "DOKU Jeremy"
+      },
+      {
+        "number": 12,
+        "name": "LAMMENS Senne"
+      },
+      {
+        "number": 13,
+        "name": "PENDERS Mike"
+      },
+      {
+        "number": 14,
+        "name": "LUKEBAKIO Dodi"
+      },
+      {
+        "number": 15,
+        "name": "MEUNIER Thomas"
+      },
+      {
+        "number": 16,
+        "name": "DE WINTER Koni"
+      },
+      {
+        "number": 17,
+        "name": "DE KETELAERE Charles"
+      },
+      {
+        "number": 18,
+        "name": "SEYS Joaquin"
+      },
+      {
+        "number": 19,
+        "name": "MOREIRA Diego"
+      },
+      {
+        "number": 20,
+        "name": "VANAKEN Hans"
+      },
+      {
+        "number": 21,
+        "name": "CASTAGNE Timothy"
+      },
+      {
+        "number": 22,
+        "name": "SAELEMAEKERS Alexis"
+      },
+      {
+        "number": 23,
+        "name": "RASKIN Nicolas"
+      },
+      {
+        "number": 24,
+        "name": "ONANA Amadou"
+      },
+      {
+        "number": 25,
+        "name": "NGOY Nathan"
+      },
+      {
+        "number": 26,
+        "name": "FERNANDEZ-PARDO Matias"
+      }
+    ]
+  },
+  "BA": {
+    "sourceName": "Bosnia And Herzegovina",
+    "sourceCode": "BIH",
+    "players": [
+      {
+        "number": 1,
+        "name": "VASILJ Nikola"
+      },
+      {
+        "number": 2,
+        "name": "MUJAKIC Nihad"
+      },
+      {
+        "number": 3,
+        "name": "HADZIKADUNIC Dennis"
+      },
+      {
+        "number": 4,
+        "name": "MUHAREMOVIC Tarik"
+      },
+      {
+        "number": 5,
+        "name": "KOLASINAC Sead"
+      },
+      {
+        "number": 6,
+        "name": "TAHIROVIC Benjamin"
+      },
+      {
+        "number": 7,
+        "name": "DEDIC Amar"
+      },
+      {
+        "number": 8,
+        "name": "GIGOVIC Armin"
+      },
+      {
+        "number": 9,
+        "name": "BAZDAR Samed"
+      },
+      {
+        "number": 10,
+        "name": "DEMIROVIC Ermedin"
+      },
+      {
+        "number": 11,
+        "name": "DZEKO Edin"
+      },
+      {
+        "number": 12,
+        "name": "JURKAS Mladen"
+      },
+      {
+        "number": 13,
+        "name": "BASIC Ivan"
+      },
+      {
+        "number": 14,
+        "name": "SUNJIC Ivan"
+      },
+      {
+        "number": 15,
+        "name": "MEMIC Amar"
+      },
+      {
+        "number": 16,
+        "name": "HADZIAHMETOVIC Amir"
+      },
+      {
+        "number": 17,
+        "name": "BURNIC Dzenis"
+      },
+      {
+        "number": 18,
+        "name": "KATIC Nikola"
+      },
+      {
+        "number": 19,
+        "name": "ALAJBEGOVIC Kerim"
+      },
+      {
+        "number": 20,
+        "name": "BAJRAKTAREVIC Esmir"
+      },
+      {
+        "number": 21,
+        "name": "RADELJIC Stjepan"
+      },
+      {
+        "number": 22,
+        "name": "ZLOMISLIC Martin"
+      },
+      {
+        "number": 23,
+        "name": "TABAKOVIC Haris"
+      },
+      {
+        "number": 24,
+        "name": "CELIK Nidal"
+      },
+      {
+        "number": 25,
+        "name": "LUKIC Jovo"
+      },
+      {
+        "number": 26,
+        "name": "MAHMIC Ermin"
+      }
+    ]
+  },
+  "BR": {
+    "sourceName": "Brazil",
+    "sourceCode": "BRA",
+    "players": [
+      {
+        "number": 1,
+        "name": "ALISSON"
+      },
+      {
+        "number": 2,
+        "name": "WESLEY"
+      },
+      {
+        "number": 3,
+        "name": "GABRIEL MAGALHAES"
+      },
+      {
+        "number": 4,
+        "name": "MARQUINHOS"
+      },
+      {
+        "number": 5,
+        "name": "CASEMIRO"
+      },
+      {
+        "number": 6,
+        "name": "ALEX SANDRO"
+      },
+      {
+        "number": 7,
+        "name": "VINICIUS JUNIOR"
+      },
+      {
+        "number": 8,
+        "name": "BRUNO GUIMARAES"
+      },
+      {
+        "number": 9,
+        "name": "MATHEUS CUNHA"
+      },
+      {
+        "number": 10,
+        "name": "NEYMAR JR"
+      },
+      {
+        "number": 11,
+        "name": "RAPHINHA"
+      },
+      {
+        "number": 12,
+        "name": "WEVERTON"
+      },
+      {
+        "number": 13,
+        "name": "DANILO"
+      },
+      {
+        "number": 14,
+        "name": "BREMER"
+      },
+      {
+        "number": 15,
+        "name": "LEO PEREIRA"
+      },
+      {
+        "number": 16,
+        "name": "DOUGLAS SANTOS"
+      },
+      {
+        "number": 17,
+        "name": "FABINHO"
+      },
+      {
+        "number": 18,
+        "name": "DANILO SANTOS"
+      },
+      {
+        "number": 19,
+        "name": "ENDRICK"
+      },
+      {
+        "number": 20,
+        "name": "LUCAS PAQUETA"
+      },
+      {
+        "number": 21,
+        "name": "LUIZ HENRIQUE"
+      },
+      {
+        "number": 22,
+        "name": "GABRIEL MARTINELLI"
+      },
+      {
+        "number": 23,
+        "name": "EDERSON"
+      },
+      {
+        "number": 24,
+        "name": "ROGER IBANEZ"
+      },
+      {
+        "number": 25,
+        "name": "IGOR THIAGO"
+      },
+      {
+        "number": 26,
+        "name": "RAYAN"
+      }
+    ]
+  },
+  "CV": {
+    "sourceName": "Cabo Verde",
+    "sourceCode": "CPV",
+    "players": [
+      {
+        "number": 1,
+        "name": "VOZINHA"
+      },
+      {
+        "number": 2,
+        "name": "STOPIRA"
+      },
+      {
+        "number": 3,
+        "name": "DINEY BORGES"
+      },
+      {
+        "number": 4,
+        "name": "PICO LOPES"
+      },
+      {
+        "number": 5,
+        "name": "LOGAN COSTA"
+      },
+      {
+        "number": 6,
+        "name": "KEVIN PINA"
+      },
+      {
+        "number": 7,
+        "name": "JOVANE CABRAL"
+      },
+      {
+        "number": 8,
+        "name": "JOAO PAULO"
+      },
+      {
+        "number": 9,
+        "name": "GILSON BENCHIMOL"
+      },
+      {
+        "number": 10,
+        "name": "JAMIRO MONTEIRO"
+      },
+      {
+        "number": 11,
+        "name": "GARRY RODRIGUES"
+      },
+      {
+        "number": 12,
+        "name": "MARCIO ROSA"
+      },
+      {
+        "number": 13,
+        "name": "SIDNY LOPES CABRAL"
+      },
+      {
+        "number": 14,
+        "name": "DEROY DUARTE"
+      },
+      {
+        "number": 15,
+        "name": "LAROS DUARTE"
+      },
+      {
+        "number": 16,
+        "name": "YANNICK SEMEDO"
+      },
+      {
+        "number": 17,
+        "name": "WILLY SEMEDO"
+      },
+      {
+        "number": 18,
+        "name": "TELMO ARCANJO"
+      },
+      {
+        "number": 19,
+        "name": "DAILON LIVRAMENTO"
+      },
+      {
+        "number": 20,
+        "name": "RYAN MENDES"
+      },
+      {
+        "number": 21,
+        "name": "NUNO DA COSTA"
+      },
+      {
+        "number": 22,
+        "name": "STEVEN MOREIRA"
+      },
+      {
+        "number": 23,
+        "name": "CJ DOS SANTOS"
+      },
+      {
+        "number": 24,
+        "name": "WAGNER PINA"
+      },
+      {
+        "number": 25,
+        "name": "KELVIN PIRES"
+      },
+      {
+        "number": 26,
+        "name": "HELIO VARELA"
+      }
+    ]
+  },
+  "CA": {
+    "sourceName": "Canada",
+    "sourceCode": "CAN",
+    "players": [
+      {
+        "number": 1,
+        "name": "ST. CLAIR Dayne"
+      },
+      {
+        "number": 2,
+        "name": "JOHNSTON Alistair"
+      },
+      {
+        "number": 3,
+        "name": "JONES Ale"
+      },
+      {
+        "number": 4,
+        "name": "DE FOUGEROLLES Luc"
+      },
+      {
+        "number": 5,
+        "name": "WATERMAN Joel"
+      },
+      {
+        "number": 6,
+        "name": "CHOINIERE Mathieu"
+      },
+      {
+        "number": 7,
+        "name": "EUSTAQUIO Stephen"
+      },
+      {
+        "number": 8,
+        "name": "KONE Ismael"
+      },
+      {
+        "number": 9,
+        "name": "LARIN Cyle"
+      },
+      {
+        "number": 10,
+        "name": "DAVID Jonathan"
+      },
+      {
+        "number": 11,
+        "name": "MILLAR Liam"
+      },
+      {
+        "number": 12,
+        "name": "OLUWASEYI Tani"
+      },
+      {
+        "number": 13,
+        "name": "CORNELIUS Derek"
+      },
+      {
+        "number": 14,
+        "name": "SHAFFELBURG Jacob"
+      },
+      {
+        "number": 15,
+        "name": "BOMBITO Moise"
+      },
+      {
+        "number": 16,
+        "name": "CREPEAU Maxime"
+      },
+      {
+        "number": 17,
+        "name": "BUCHANAN Tajon"
+      },
+      {
+        "number": 18,
+        "name": "GOODMAN Owen"
+      },
+      {
+        "number": 19,
+        "name": "DAVIES Alphonso"
+      },
+      {
+        "number": 20,
+        "name": "AHMED Ali"
+      },
+      {
+        "number": 21,
+        "name": "OSORIO Jonathan"
+      },
+      {
+        "number": 22,
+        "name": "LARYEA Richie"
+      },
+      {
+        "number": 23,
+        "name": "SIGUR Niko"
+      },
+      {
+        "number": 24,
+        "name": "DAVID Promise"
+      },
+      {
+        "number": 25,
+        "name": "SALIBA Nathan"
+      },
+      {
+        "number": 26,
+        "name": "FLORES Marcelo"
+      }
+    ]
+  },
+  "CO": {
+    "sourceName": "Colombia",
+    "sourceCode": "COL",
+    "players": [
+      {
+        "number": 1,
+        "name": "OSPINA David"
+      },
+      {
+        "number": 2,
+        "name": "MUNOZ Daniel"
+      },
+      {
+        "number": 3,
+        "name": "LUCUMI Jhon"
+      },
+      {
+        "number": 4,
+        "name": "ARIAS Santiago"
+      },
+      {
+        "number": 5,
+        "name": "CASTANO Kevin"
+      },
+      {
+        "number": 6,
+        "name": "RIOS Richard"
+      },
+      {
+        "number": 7,
+        "name": "DIAZ Luis"
+      },
+      {
+        "number": 8,
+        "name": "CARRASCAL Jorge"
+      },
+      {
+        "number": 9,
+        "name": "CORDOBA Jhon"
+      },
+      {
+        "number": 10,
+        "name": "RODRIGUEZ James"
+      },
+      {
+        "number": 11,
+        "name": "ARIAS Jhon"
+      },
+      {
+        "number": 12,
+        "name": "VARGAS Camilo"
+      },
+      {
+        "number": 13,
+        "name": "MINA Yerry"
+      },
+      {
+        "number": 14,
+        "name": "PUERTA Gustavo"
+      },
+      {
+        "number": 15,
+        "name": "PORTILLA Juan"
+      },
+      {
+        "number": 16,
+        "name": "LERMA Jefferson"
+      },
+      {
+        "number": 17,
+        "name": "MOJICA Johan"
+      },
+      {
+        "number": 18,
+        "name": "DITTA Willer"
+      },
+      {
+        "number": 19,
+        "name": "HERNANDEZ Cucho"
+      },
+      {
+        "number": 20,
+        "name": "QUINTERO Juan"
+      },
+      {
+        "number": 21,
+        "name": "CAMPAZ Jaminton"
+      },
+      {
+        "number": 22,
+        "name": "MACHADO Deiver"
+      },
+      {
+        "number": 23,
+        "name": "SANCHEZ Davinson"
+      },
+      {
+        "number": 24,
+        "name": "MONTERO Alvaro"
+      },
+      {
+        "number": 25,
+        "name": "SUAREZ Luis"
+      },
+      {
+        "number": 26,
+        "name": "GOMEZ Andres"
+      }
+    ]
+  },
+  "CD": {
+    "sourceName": "Congo DR",
+    "sourceCode": "COD",
+    "players": [
+      {
+        "number": 1,
+        "name": "MP ASI Lionel"
+      },
+      {
+        "number": 2,
+        "name": "WAN-BISSAKA Aaron"
+      },
+      {
+        "number": 3,
+        "name": "KAPUADI Steve"
+      },
+      {
+        "number": 4,
+        "name": "TUANZEBE Axel"
+      },
+      {
+        "number": 5,
+        "name": "BATUBINSIKA Dylan"
+      },
+      {
+        "number": 6,
+        "name": "MUKAU Ngalayel"
+      },
+      {
+        "number": 7,
+        "name": "MBUKU Nathanael"
+      },
+      {
+        "number": 8,
+        "name": "MOUTOUSSAMY Samuel"
+      },
+      {
+        "number": 9,
+        "name": "CIPENGA Brian"
+      },
+      {
+        "number": 10,
+        "name": "BONGONDA Theo"
+      },
+      {
+        "number": 11,
+        "name": "KAKUTA Gael"
+      },
+      {
+        "number": 12,
+        "name": "KAYEMBE Joris"
+      },
+      {
+        "number": 13,
+        "name": "ELIA Meschack"
+      },
+      {
+        "number": 14,
+        "name": "SADIKI Noah"
+      },
+      {
+        "number": 15,
+        "name": "TSHIBOLA Aaron"
+      },
+      {
+        "number": 16,
+        "name": "FAYULU Timothy"
+      },
+      {
+        "number": 17,
+        "name": "BAKAMBU Cedric"
+      },
+      {
+        "number": 18,
+        "name": "PICKEL Charles"
+      },
+      {
+        "number": 19,
+        "name": "MAYELE Fiston"
+      },
+      {
+        "number": 20,
+        "name": "WISSA Yoane"
+      },
+      {
+        "number": 21,
+        "name": "EPOLO Matthieu"
+      },
+      {
+        "number": 22,
+        "name": "MBEMBA Chancel"
+      },
+      {
+        "number": 23,
+        "name": "BANZA Simon"
+      },
+      {
+        "number": 24,
+        "name": "KALULU Gedeon"
+      },
+      {
+        "number": 25,
+        "name": "KAYEMBE Edo"
+      },
+      {
+        "number": 26,
+        "name": "MASUAKU Arthur"
+      }
+    ]
+  },
+  "CI": {
+    "sourceName": "Côte D'Ivoire",
+    "sourceCode": "CIV",
+    "players": [
+      {
+        "number": 1,
+        "name": "FOFANA Yahia"
+      },
+      {
+        "number": 2,
+        "name": "DIOMANDE Ousmane"
+      },
+      {
+        "number": 3,
+        "name": "KONAN Ghislain"
+      },
+      {
+        "number": 4,
+        "name": "SERI Jean Michael"
+      },
+      {
+        "number": 5,
+        "name": "SINGO Wilfried"
+      },
+      {
+        "number": 6,
+        "name": "FOFANA Seko"
+      },
+      {
+        "number": 7,
+        "name": "KOSSOUNOU Odilon"
+      },
+      {
+        "number": 8,
+        "name": "KESSIE Franck"
+      },
+      {
+        "number": 9,
+        "name": "BONNY Ange-Yoan"
+      },
+      {
+        "number": 10,
+        "name": "ADINGRA Simon"
+      },
+      {
+        "number": 11,
+        "name": "DIOMANDE Yan"
+      },
+      {
+        "number": 12,
+        "name": "WAHI Elye"
+      },
+      {
+        "number": 13,
+        "name": "OPERI Christopher"
+      },
+      {
+        "number": 14,
+        "name": "DIAKITE Oumar"
+      },
+      {
+        "number": 15,
+        "name": "DIALLO Amad"
+      },
+      {
+        "number": 16,
+        "name": "KONE Mohamed"
+      },
+      {
+        "number": 17,
+        "name": "DOUE Guela"
+      },
+      {
+        "number": 18,
+        "name": "SANGARE Ibrahim"
+      },
+      {
+        "number": 19,
+        "name": "PEPE Nicolas"
+      },
+      {
+        "number": 20,
+        "name": "AGBADOU Emmanuel"
+      },
+      {
+        "number": 21,
+        "name": "NDICKA Evan"
+      },
+      {
+        "number": 22,
+        "name": "GUESSAND Evann"
+      },
+      {
+        "number": 23,
+        "name": "LAFONT Alban"
+      },
+      {
+        "number": 24,
+        "name": "TOURE Bazoumana"
+      },
+      {
+        "number": 25,
+        "name": "GUIAGON Parfait"
+      },
+      {
+        "number": 26,
+        "name": "OULAI Christ Inao"
+      }
+    ]
+  },
+  "HR": {
+    "sourceName": "Croatia",
+    "sourceCode": "CRO",
+    "players": [
+      {
+        "number": 1,
+        "name": "LIVAKOVIC Dominik"
+      },
+      {
+        "number": 2,
+        "name": "STANISIC Josip"
+      },
+      {
+        "number": 3,
+        "name": "PONGRACIC Marin"
+      },
+      {
+        "number": 4,
+        "name": "GVARDIOL Josko"
+      },
+      {
+        "number": 5,
+        "name": "CALETA-CAR Duje"
+      },
+      {
+        "number": 6,
+        "name": "SUTALO Josip"
+      },
+      {
+        "number": 7,
+        "name": "MORO Nikola"
+      },
+      {
+        "number": 8,
+        "name": "KOVACIC Mateo"
+      },
+      {
+        "number": 9,
+        "name": "KRAMARIC Andrej"
+      },
+      {
+        "number": 10,
+        "name": "MODRIC Luka"
+      },
+      {
+        "number": 11,
+        "name": "BUDIMIR Ante"
+      },
+      {
+        "number": 12,
+        "name": "PANDUR Ivor"
+      },
+      {
+        "number": 13,
+        "name": "VLASIC Nikola"
+      },
+      {
+        "number": 14,
+        "name": "PERISIC Ivan"
+      },
+      {
+        "number": 15,
+        "name": "PASALIC Mario"
+      },
+      {
+        "number": 16,
+        "name": "BATURINA Martin"
+      },
+      {
+        "number": 17,
+        "name": "SUCIC Petar"
+      },
+      {
+        "number": 18,
+        "name": "JAKIC Kristijan"
+      },
+      {
+        "number": 19,
+        "name": "FRUK Toni"
+      },
+      {
+        "number": 20,
+        "name": "MATANOVIC Igor"
+      },
+      {
+        "number": 21,
+        "name": "SUCIC Luka"
+      },
+      {
+        "number": 22,
+        "name": "VUSKOVIC Luka"
+      },
+      {
+        "number": 23,
+        "name": "KOTARSKI Dominik"
+      },
+      {
+        "number": 24,
+        "name": "PASALIC Marco"
+      },
+      {
+        "number": 25,
+        "name": "ERLIC Martin"
+      },
+      {
+        "number": 26,
+        "name": "MUSA Petar"
+      }
+    ]
+  },
+  "CW": {
+    "sourceName": "Curaçao",
+    "sourceCode": "CUW",
+    "players": [
+      {
+        "number": 1,
+        "name": "ROOM Eloy"
+      },
+      {
+        "number": 2,
+        "name": "SAMBO Shurandy"
+      },
+      {
+        "number": 3,
+        "name": "GAARI Jurien"
+      },
+      {
+        "number": 4,
+        "name": "VAN EIJMA Roshon"
+      },
+      {
+        "number": 5,
+        "name": "FLORANUS Sherel"
+      },
+      {
+        "number": 6,
+        "name": "ROEMERATOE Godfried"
+      },
+      {
+        "number": 7,
+        "name": "BACUNA Juninho"
+      },
+      {
+        "number": 8,
+        "name": "COMENENCIA Livano"
+      },
+      {
+        "number": 9,
+        "name": "LOCADIA Juergen"
+      },
+      {
+        "number": 10,
+        "name": "BACUNA Leandro"
+      },
+      {
+        "number": 11,
+        "name": "ANTONISSE Jeremy"
+      },
+      {
+        "number": 12,
+        "name": "HANSEN Sontje"
+      },
+      {
+        "number": 13,
+        "name": "NOSLIN Tyrese"
+      },
+      {
+        "number": 14,
+        "name": "GORRE Kenji"
+      },
+      {
+        "number": 15,
+        "name": "MARTHA Arjany"
+      },
+      {
+        "number": 16,
+        "name": "MARGARITHA Jearl"
+      },
+      {
+        "number": 17,
+        "name": "KUWAS Brandley"
+      },
+      {
+        "number": 18,
+        "name": "OBISPO Armando"
+      },
+      {
+        "number": 19,
+        "name": "KASTANEER Gervane"
+      },
+      {
+        "number": 20,
+        "name": "BRENET Joshua"
+      },
+      {
+        "number": 21,
+        "name": "CHONG Tahith"
+      },
+      {
+        "number": 22,
+        "name": "FELIDA Kevin"
+      },
+      {
+        "number": 23,
+        "name": "BAZOER Riechedly"
+      },
+      {
+        "number": 24,
+        "name": "FONVILLE Deveron"
+      },
+      {
+        "number": 25,
+        "name": "BODAK Tyrick"
+      },
+      {
+        "number": 26,
+        "name": "DOORNBUSCH Trevor"
+      }
+    ]
+  },
+  "CZ": {
+    "sourceName": "Czechia",
+    "sourceCode": "CZE",
+    "players": [
+      {
+        "number": 1,
+        "name": "KOVAR Matej"
+      },
+      {
+        "number": 2,
+        "name": "ZIMA David"
+      },
+      {
+        "number": 3,
+        "name": "HOLES Tomas"
+      },
+      {
+        "number": 4,
+        "name": "HRANAC Robin"
+      },
+      {
+        "number": 5,
+        "name": "COUFAL Vladimir"
+      },
+      {
+        "number": 6,
+        "name": "CHALOUPEK Stepan"
+      },
+      {
+        "number": 7,
+        "name": "KREJCI Ladislav"
+      },
+      {
+        "number": 8,
+        "name": "DARIDA Vladimir"
+      },
+      {
+        "number": 9,
+        "name": "HLOZEK Adam"
+      },
+      {
+        "number": 10,
+        "name": "SCHICK Patrik"
+      },
+      {
+        "number": 11,
+        "name": "KUCHTA Jan"
+      },
+      {
+        "number": 12,
+        "name": "CERV Lukas"
+      },
+      {
+        "number": 13,
+        "name": "CHYTIL Mojmir"
+      },
+      {
+        "number": 14,
+        "name": "JURASEK David"
+      },
+      {
+        "number": 15,
+        "name": "SULC Pavel"
+      },
+      {
+        "number": 16,
+        "name": "STANEK Jindrich"
+      },
+      {
+        "number": 17,
+        "name": "PROVOD Lukas"
+      },
+      {
+        "number": 18,
+        "name": "SADILEK Michal"
+      },
+      {
+        "number": 19,
+        "name": "CHORY Tomas"
+      },
+      {
+        "number": 20,
+        "name": "ZELENY Jaroslav"
+      },
+      {
+        "number": 21,
+        "name": "DOUDERA David"
+      },
+      {
+        "number": 22,
+        "name": "SOUCEK Tomas"
+      },
+      {
+        "number": 23,
+        "name": "HORNICEK Lukas"
+      },
+      {
+        "number": 24,
+        "name": "SOJKA Alexandr"
+      },
+      {
+        "number": 25,
+        "name": "SOCHUREK Hugo"
+      },
+      {
+        "number": 26,
+        "name": "VISINSKY Denis"
+      }
+    ]
+  },
+  "EC": {
+    "sourceName": "Ecuador",
+    "sourceCode": "ECU",
+    "players": [
+      {
+        "number": 1,
+        "name": "GALINDEZ Hernan"
+      },
+      {
+        "number": 2,
+        "name": "TORRES Felix"
+      },
+      {
+        "number": 3,
+        "name": "HINCAPIE Piero"
+      },
+      {
+        "number": 4,
+        "name": "ORDONEZ Joel"
+      },
+      {
+        "number": 5,
+        "name": "ALCIVAR Jordy"
+      },
+      {
+        "number": 6,
+        "name": "PACHO Willian"
+      },
+      {
+        "number": 7,
+        "name": "ESTUPINAN Pervis"
+      },
+      {
+        "number": 8,
+        "name": "VALENCIA Anthony"
+      },
+      {
+        "number": 9,
+        "name": "YEBOAH John"
+      },
+      {
+        "number": 10,
+        "name": "PAEZ Kendry"
+      },
+      {
+        "number": 11,
+        "name": "RODRIGUEZ Kevin"
+      },
+      {
+        "number": 12,
+        "name": "RAMIREZ Moises"
+      },
+      {
+        "number": 13,
+        "name": "VALENCIA Enner"
+      },
+      {
+        "number": 14,
+        "name": "MINDA Alan"
+      },
+      {
+        "number": 15,
+        "name": "VITE Pedro"
+      },
+      {
+        "number": 16,
+        "name": "CAICEDO Jordy"
+      },
+      {
+        "number": 17,
+        "name": "PRECIADO Angelo"
+      },
+      {
+        "number": 18,
+        "name": "CASTILLO Denil"
+      },
+      {
+        "number": 19,
+        "name": "PLATA Gonzalo"
+      },
+      {
+        "number": 20,
+        "name": "ANGULO Nilson"
+      },
+      {
+        "number": 21,
+        "name": "FRANCO Alan"
+      },
+      {
+        "number": 22,
+        "name": "VALLE Gonzalo"
+      },
+      {
+        "number": 23,
+        "name": "CAICEDO Moises"
+      },
+      {
+        "number": 24,
+        "name": "AREVALO Jeremy"
+      },
+      {
+        "number": 25,
+        "name": "POROZO Jackson"
+      },
+      {
+        "number": 26,
+        "name": "MEDINA Yaimar"
+      }
+    ]
+  },
+  "EG": {
+    "sourceName": "Egypt",
+    "sourceCode": "EGY",
+    "players": [
+      {
+        "number": 1,
+        "name": "MOHAMED ELSHENAWY"
+      },
+      {
+        "number": 2,
+        "name": "YASSER IBRAHIM"
+      },
+      {
+        "number": 3,
+        "name": "MOHAMED HANY"
+      },
+      {
+        "number": 4,
+        "name": "HOSSAM ABDELMAGUID"
+      },
+      {
+        "number": 5,
+        "name": "RAMY RABIA"
+      },
+      {
+        "number": 6,
+        "name": "MOHAMED ABDELMONEIM"
+      },
+      {
+        "number": 7,
+        "name": "TREZEGUET"
+      },
+      {
+        "number": 8,
+        "name": "EMAM ASHOUR"
+      },
+      {
+        "number": 9,
+        "name": "HAMZA ABDELKARIM"
+      },
+      {
+        "number": 10,
+        "name": "MOHAMED SALAH"
+      },
+      {
+        "number": 11,
+        "name": "MOSTAFA ZICO"
+      },
+      {
+        "number": 12,
+        "name": "HAISSEM HASSAN"
+      },
+      {
+        "number": 13,
+        "name": "AHMED FATOUH"
+      },
+      {
+        "number": 14,
+        "name": "HAMDY FATHY"
+      },
+      {
+        "number": 15,
+        "name": "KARIM HAFEZ"
+      },
+      {
+        "number": 16,
+        "name": "MAHDY SOLIMAN"
+      },
+      {
+        "number": 17,
+        "name": "MOHANAD LASHIN"
+      },
+      {
+        "number": 18,
+        "name": "NABIL DONGA"
+      },
+      {
+        "number": 19,
+        "name": "MARAWAN ATTIA"
+      },
+      {
+        "number": 20,
+        "name": "IBRAHIM ADEL"
+      },
+      {
+        "number": 21,
+        "name": "MAHMOUD SABER"
+      },
+      {
+        "number": 22,
+        "name": "OMAR MARMOUSH"
+      },
+      {
+        "number": 23,
+        "name": "MOSTAFA SHOUBIR"
+      },
+      {
+        "number": 24,
+        "name": "TAREK ALAA"
+      },
+      {
+        "number": 25,
+        "name": "ZIZO"
+      },
+      {
+        "number": 26,
+        "name": "MOHAMED ALAA"
+      }
+    ]
+  },
+  "FR": {
+    "sourceName": "France",
+    "sourceCode": "FRA",
+    "players": [
+      {
+        "number": 1,
+        "name": "SAMBA Brice"
+      },
+      {
+        "number": 2,
+        "name": "GUSTO Malo"
+      },
+      {
+        "number": 3,
+        "name": "DIGNE Lucas"
+      },
+      {
+        "number": 4,
+        "name": "UPAMECANO Dayot"
+      },
+      {
+        "number": 5,
+        "name": "KOUNDE Jules"
+      },
+      {
+        "number": 6,
+        "name": "KONE Manu"
+      },
+      {
+        "number": 7,
+        "name": "DEMBELE Ousmane"
+      },
+      {
+        "number": 8,
+        "name": "TCHOUAMENI Aurelien"
+      },
+      {
+        "number": 9,
+        "name": "THURAM Marcus"
+      },
+      {
+        "number": 10,
+        "name": "MBAPPE Kylian"
+      },
+      {
+        "number": 11,
+        "name": "OLISE Michael"
+      },
+      {
+        "number": 12,
+        "name": "BARCOLA Bradley"
+      },
+      {
+        "number": 13,
+        "name": "KANTE Ngolo"
+      },
+      {
+        "number": 14,
+        "name": "RABIOT Adrien"
+      },
+      {
+        "number": 15,
+        "name": "KONATE Ibrahima"
+      },
+      {
+        "number": 16,
+        "name": "MAIGNAN Mike"
+      },
+      {
+        "number": 17,
+        "name": "SALIBA William"
+      },
+      {
+        "number": 18,
+        "name": "ZAIRE-EMERY Warren"
+      },
+      {
+        "number": 19,
+        "name": "HERNANDEZ Theo"
+      },
+      {
+        "number": 20,
+        "name": "DOUE Desire"
+      },
+      {
+        "number": 21,
+        "name": "HERNANDEZ Lucas"
+      },
+      {
+        "number": 22,
+        "name": "MATETA Jean-Philippe"
+      },
+      {
+        "number": 23,
+        "name": "RISSER Robin"
+      },
+      {
+        "number": 24,
+        "name": "CHERKI Rayan"
+      },
+      {
+        "number": 25,
+        "name": "AKLIOUCHE Maghnes"
+      },
+      {
+        "number": 26,
+        "name": "LACROIX Maxence"
+      }
+    ]
+  },
+  "DE": {
+    "sourceName": "Germany",
+    "sourceCode": "GER",
+    "players": [
+      {
+        "number": 1,
+        "name": "NEUER Manuel"
+      },
+      {
+        "number": 2,
+        "name": "RUEDIGER Antonio"
+      },
+      {
+        "number": 3,
+        "name": "ANTON Waldemar"
+      },
+      {
+        "number": 4,
+        "name": "TAH Jonathan"
+      },
+      {
+        "number": 5,
+        "name": "PAVLOVIC Aleksandar"
+      },
+      {
+        "number": 6,
+        "name": "KIMMICH Joshua"
+      },
+      {
+        "number": 7,
+        "name": "HAVERTZ Kai"
+      },
+      {
+        "number": 8,
+        "name": "GORETZKA Leon"
+      },
+      {
+        "number": 9,
+        "name": "LEWELING Jamie"
+      },
+      {
+        "number": 10,
+        "name": "MUSIALA Jamal"
+      },
+      {
+        "number": 11,
+        "name": "WOLTEMADE Nick"
+      },
+      {
+        "number": 12,
+        "name": "BAUMANN Oliver"
+      },
+      {
+        "number": 13,
+        "name": "GROSS Pascal"
+      },
+      {
+        "number": 14,
+        "name": "BEIER Maximilian"
+      },
+      {
+        "number": 15,
+        "name": "SCHLOTTERBECK Nico"
+      },
+      {
+        "number": 16,
+        "name": "STILLER Angelo"
+      },
+      {
+        "number": 17,
+        "name": "WIRTZ Florian"
+      },
+      {
+        "number": 18,
+        "name": "BROWN Nathaniel"
+      },
+      {
+        "number": 19,
+        "name": "SANE Leroy"
+      },
+      {
+        "number": 20,
+        "name": "AMIRI Nadiem"
+      },
+      {
+        "number": 21,
+        "name": "NUEBEL Alexander"
+      },
+      {
+        "number": 22,
+        "name": "RAUM David"
+      },
+      {
+        "number": 23,
+        "name": "NMECHA Felix"
+      },
+      {
+        "number": 24,
+        "name": "THIAW Malick"
+      },
+      {
+        "number": 25,
+        "name": "KARL Lennart"
+      },
+      {
+        "number": 26,
+        "name": "UNDAV Deniz"
+      }
+    ]
+  },
+  "GH": {
+    "sourceName": "Ghana",
+    "sourceCode": "GHA",
+    "players": [
+      {
+        "number": 1,
+        "name": "ZIGI Lawrence Ati"
+      },
+      {
+        "number": 2,
+        "name": "SEIDU Alidu"
+      },
+      {
+        "number": 3,
+        "name": "YIRENKYI Caleb"
+      },
+      {
+        "number": 4,
+        "name": "ADJETEY Jonas"
+      },
+      {
+        "number": 5,
+        "name": "PARTEY Thomas"
+      },
+      {
+        "number": 6,
+        "name": "MUMIN Abdul"
+      },
+      {
+        "number": 7,
+        "name": "ISSAHAKU Fatawu"
+      },
+      {
+        "number": 8,
+        "name": "SIBO Kwasi"
+      },
+      {
+        "number": 9,
+        "name": "AYEW Jordan"
+      },
+      {
+        "number": 10,
+        "name": "THOMAS-ASANTE Brandon"
+      },
+      {
+        "number": 11,
+        "name": "SEMENYO Antoine"
+      },
+      {
+        "number": 12,
+        "name": "ANANG Joseph"
+      },
+      {
+        "number": 13,
+        "name": "BAAH Christopher Bonsu"
+      },
+      {
+        "number": 14,
+        "name": "MENSAH Gideon"
+      },
+      {
+        "number": 15,
+        "name": "OWUSU Elisha"
+      },
+      {
+        "number": 16,
+        "name": "ASARE Benjamin"
+      },
+      {
+        "number": 17,
+        "name": "RAHMAN Baba"
+      },
+      {
+        "number": 18,
+        "name": "OPOKU Jerome"
+      },
+      {
+        "number": 19,
+        "name": "WILLIAMS Inaki"
+      },
+      {
+        "number": 20,
+        "name": "BOAKYE Augustine"
+      },
+      {
+        "number": 21,
+        "name": "OPPONG Kojo Peprah"
+      },
+      {
+        "number": 22,
+        "name": "SULEMANA Kamaldeen"
+      },
+      {
+        "number": 23,
+        "name": "LUCKASSEN Derrick"
+      },
+      {
+        "number": 24,
+        "name": "NUAMAH Ernest"
+      },
+      {
+        "number": 25,
+        "name": "ADU Prince"
+      },
+      {
+        "number": 26,
+        "name": "SENAYA Marvin"
+      }
+    ]
+  },
+  "HT": {
+    "sourceName": "Haiti",
+    "sourceCode": "HAI",
+    "players": [
+      {
+        "number": 1,
+        "name": "PLACIDE Johny"
+      },
+      {
+        "number": 2,
+        "name": "ARCUS Carlens"
+      },
+      {
+        "number": 3,
+        "name": "THERMONCY Keeto"
+      },
+      {
+        "number": 4,
+        "name": "ADE Ricardo"
+      },
+      {
+        "number": 5,
+        "name": "DELCROIX Hannes"
+      },
+      {
+        "number": 6,
+        "name": "SAINTE Carl"
+      },
+      {
+        "number": 7,
+        "name": "ETIENNE Derrick"
+      },
+      {
+        "number": 8,
+        "name": "EXPERIENCE Martin"
+      },
+      {
+        "number": 9,
+        "name": "NAZON Duckens"
+      },
+      {
+        "number": 10,
+        "name": "BELLEGARDE Jean-RicnerJean Ricner"
+      },
+      {
+        "number": 11,
+        "name": "DEEDSON Louicius"
+      },
+      {
+        "number": 12,
+        "name": "PIERRE Alexandre"
+      },
+      {
+        "number": 13,
+        "name": "LACROIX Markhus"
+      },
+      {
+        "number": 14,
+        "name": "PIERRE Leverton"
+      },
+      {
+        "number": 15,
+        "name": "PROVIDENCE Ruben"
+      },
+      {
+        "number": 16,
+        "name": "JOSEPH Lenny"
+      },
+      {
+        "number": 17,
+        "name": "JEAN JACQUES Danley"
+      },
+      {
+        "number": 18,
+        "name": "ISIDOR Wilson"
+      },
+      {
+        "number": 19,
+        "name": "FORTUNE Yassin"
+      },
+      {
+        "number": 20,
+        "name": "PIERROT Frantzdy"
+      },
+      {
+        "number": 21,
+        "name": "CASIMIR Josue"
+      },
+      {
+        "number": 22,
+        "name": "DUVERNE Jean-Kevin"
+      },
+      {
+        "number": 23,
+        "name": "DUVERGER Josue"
+      },
+      {
+        "number": 24,
+        "name": "PAUGAIN Wilguens"
+      },
+      {
+        "number": 25,
+        "name": "SIMON Dominique"
+      },
+      {
+        "number": 26,
+        "name": "PIERRE Woodensky"
+      }
+    ]
+  },
+  "IR": {
+    "sourceName": "IR Iran",
+    "sourceCode": "IRN",
+    "players": [
+      {
+        "number": 1,
+        "name": "BEIRANVAND Alireza"
+      },
+      {
+        "number": 2,
+        "name": "HARDANI Saleh"
+      },
+      {
+        "number": 3,
+        "name": "HAJISAFI Ehsan"
+      },
+      {
+        "number": 4,
+        "name": "KHALILZADEH Shoja"
+      },
+      {
+        "number": 5,
+        "name": "MOHAMM ADI Milad"
+      },
+      {
+        "number": 6,
+        "name": "EZATOLAHI Saeid"
+      },
+      {
+        "number": 7,
+        "name": "JAHANBAKHSH Alireza"
+      },
+      {
+        "number": 8,
+        "name": "MOHEBBI Mohammad"
+      },
+      {
+        "number": 9,
+        "name": "TAREMI Mehdi"
+      },
+      {
+        "number": 10,
+        "name": "GHAYEDI Mehdi"
+      },
+      {
+        "number": 11,
+        "name": "ALIPOUR Ali"
+      },
+      {
+        "number": 12,
+        "name": "NIAZMAND Payam"
+      },
+      {
+        "number": 13,
+        "name": "KANANI Hossein"
+      },
+      {
+        "number": 14,
+        "name": "GHODDOS Saman"
+      },
+      {
+        "number": 15,
+        "name": "CHESHMI Roozbeh"
+      },
+      {
+        "number": 16,
+        "name": "TORABI Mehdi"
+      },
+      {
+        "number": 17,
+        "name": "YOUSEFI Arya"
+      },
+      {
+        "number": 18,
+        "name": "HOSSEINZADEH Amirhossein"
+      },
+      {
+        "number": 19,
+        "name": "NEMATI Ali"
+      },
+      {
+        "number": 20,
+        "name": "MOGHANLOO Shahriyar"
+      },
+      {
+        "number": 21,
+        "name": "GHORBANI Mohammad"
+      },
+      {
+        "number": 22,
+        "name": "HOSSEINI Hossein"
+      },
+      {
+        "number": 23,
+        "name": "REZAEIAN Ramin"
+      },
+      {
+        "number": 24,
+        "name": "DARGAHI Dennis"
+      },
+      {
+        "number": 25,
+        "name": "IRI Danial"
+      },
+      {
+        "number": 26,
+        "name": "RAZAGHINIA Amirmohammad"
+      }
+    ]
+  },
+  "IQ": {
+    "sourceName": "Iraq",
+    "sourceCode": "IRQ",
+    "players": [
+      {
+        "number": 1,
+        "name": "FAHAD TALIB"
+      },
+      {
+        "number": 2,
+        "name": "REBIN GHAREEB"
+      },
+      {
+        "number": 3,
+        "name": "HUSSEIN ALI"
+      },
+      {
+        "number": 4,
+        "name": "ZAID TAHSEEN"
+      },
+      {
+        "number": 5,
+        "name": "AKAM HASHIM"
+      },
+      {
+        "number": 6,
+        "name": "MUNAF YOUNUS"
+      },
+      {
+        "number": 7,
+        "name": "YOUSSEF AMYN"
+      },
+      {
+        "number": 8,
+        "name": "IBRAHIM BAYESH"
+      },
+      {
+        "number": 9,
+        "name": "ALI ALHAMADI"
+      },
+      {
+        "number": 10,
+        "name": "MOHANAD ALI"
+      },
+      {
+        "number": 11,
+        "name": "AHMED QASIM"
+      },
+      {
+        "number": 12,
+        "name": "JALAL HASSAN"
+      },
+      {
+        "number": 13,
+        "name": "ALI YOUSIF"
+      },
+      {
+        "number": 14,
+        "name": "ZIDANE IQBAL"
+      },
+      {
+        "number": 15,
+        "name": "AHMED YAHYA"
+      },
+      {
+        "number": 16,
+        "name": "AMIR ALAMM ARI"
+      },
+      {
+        "number": 17,
+        "name": "ALI JASIM"
+      },
+      {
+        "number": 18,
+        "name": "AYMEN HUSSEIN"
+      },
+      {
+        "number": 19,
+        "name": "KEVIN YAKOB"
+      },
+      {
+        "number": 20,
+        "name": "AIMAR SHER"
+      },
+      {
+        "number": 21,
+        "name": "MARKO FARJI"
+      },
+      {
+        "number": 22,
+        "name": "AHMED BASIL"
+      },
+      {
+        "number": 23,
+        "name": "MERCHAS DOSKI"
+      },
+      {
+        "number": 24,
+        "name": "ZAID ISMAEL"
+      },
+      {
+        "number": 25,
+        "name": "MUSTAFA SAADOON"
+      },
+      {
+        "number": 26,
+        "name": "FRANS PUTROS"
+      }
+    ]
+  },
+  "JP": {
+    "sourceName": "Japan",
+    "sourceCode": "JPN",
+    "players": [
+      {
+        "number": 1,
+        "name": "SUZUKI Zion"
+      },
+      {
+        "number": 2,
+        "name": "SUGAWARA Yukinari"
+      },
+      {
+        "number": 3,
+        "name": "TANIGUCHI Shogo"
+      },
+      {
+        "number": 4,
+        "name": "ITAKURA Kou"
+      },
+      {
+        "number": 5,
+        "name": "NAGATOMO Yuto"
+      },
+      {
+        "number": 6,
+        "name": "ENDO Wataru"
+      },
+      {
+        "number": 7,
+        "name": "TANAKA Ao"
+      },
+      {
+        "number": 8,
+        "name": "KUBO Takefusa"
+      },
+      {
+        "number": 9,
+        "name": "GOTO Keisuke"
+      },
+      {
+        "number": 10,
+        "name": "DOAN Ritsu"
+      },
+      {
+        "number": 11,
+        "name": "MAEDA Daizen"
+      },
+      {
+        "number": 12,
+        "name": "OSAKO Keisuke"
+      },
+      {
+        "number": 13,
+        "name": "NAKAMURA Keito"
+      },
+      {
+        "number": 14,
+        "name": "ITO Junya"
+      },
+      {
+        "number": 15,
+        "name": "KAMADA Daichi"
+      },
+      {
+        "number": 16,
+        "name": "WATANABE Tsuyoshi"
+      },
+      {
+        "number": 17,
+        "name": "SUZUKI Yuito"
+      },
+      {
+        "number": 18,
+        "name": "UEDA Ayase"
+      },
+      {
+        "number": 19,
+        "name": "OGAWA Koki"
+      },
+      {
+        "number": 20,
+        "name": "SEKO Ayumu"
+      },
+      {
+        "number": 21,
+        "name": "ITO Hiroki"
+      },
+      {
+        "number": 22,
+        "name": "TOMIYASU Takehiro"
+      },
+      {
+        "number": 23,
+        "name": "HAYAKAWA Tomoki"
+      },
+      {
+        "number": 24,
+        "name": "SANO Kaishu"
+      },
+      {
+        "number": 25,
+        "name": "SUZUKI Junnosuke"
+      },
+      {
+        "number": 26,
+        "name": "SHIOGAI Kento"
+      }
+    ]
+  },
+  "JO": {
+    "sourceName": "Jordan",
+    "sourceCode": "JOR",
+    "players": [
+      {
+        "number": 1,
+        "name": "YAZEED ABULAILA"
+      },
+      {
+        "number": 2,
+        "name": "MOHAMM AD ABUHASHEESH"
+      },
+      {
+        "number": 3,
+        "name": "ABDALLAH NASIB"
+      },
+      {
+        "number": 4,
+        "name": "HUSAM ABUDAHAB"
+      },
+      {
+        "number": 5,
+        "name": "YAZAN ALARAB"
+      },
+      {
+        "number": 6,
+        "name": "AMER JAMOUS"
+      },
+      {
+        "number": 7,
+        "name": "MOHAMM AD ABUZRAIQ"
+      },
+      {
+        "number": 8,
+        "name": "NOOR ALRAWABDEH"
+      },
+      {
+        "number": 9,
+        "name": "ALI OLWAN"
+      },
+      {
+        "number": 10,
+        "name": "MOUSA ALTAMARI"
+      },
+      {
+        "number": 11,
+        "name": "ODEH FAKHOURY"
+      },
+      {
+        "number": 12,
+        "name": "NOUR BANIATEYAH"
+      },
+      {
+        "number": 13,
+        "name": "MAHMOUD ALMARDI"
+      },
+      {
+        "number": 14,
+        "name": "RAJAEI AYED"
+      },
+      {
+        "number": 15,
+        "name": "IBRAHIM SADEH"
+      },
+      {
+        "number": 16,
+        "name": "MOHAMM AD ABUALNADI"
+      },
+      {
+        "number": 17,
+        "name": "SALEEM OBAID"
+      },
+      {
+        "number": 18,
+        "name": "IBRAHIM SABRA"
+      },
+      {
+        "number": 19,
+        "name": "SAED ALROSAN"
+      },
+      {
+        "number": 20,
+        "name": "MOHANNAD ABUTAHA"
+      },
+      {
+        "number": 21,
+        "name": "NIZAR ALRASHDAN"
+      },
+      {
+        "number": 22,
+        "name": "ABDALLAH ALFAKHORI"
+      },
+      {
+        "number": 23,
+        "name": "EHSAN HADDAD"
+      },
+      {
+        "number": 24,
+        "name": "ALI AZAIZEH"
+      },
+      {
+        "number": 25,
+        "name": "MOHAMM AD ALDAOUD"
+      },
+      {
+        "number": 26,
+        "name": "ANAS BADAWI"
+      }
+    ]
+  },
+  "KR": {
+    "sourceName": "Korea Republic",
+    "sourceCode": "KOR",
+    "players": [
+      {
+        "number": 1,
+        "name": "KIM Seunggyu"
+      },
+      {
+        "number": 2,
+        "name": "LEE Hanbeom"
+      },
+      {
+        "number": 3,
+        "name": "LEE Gihyuk"
+      },
+      {
+        "number": 4,
+        "name": "KIM Minjae"
+      },
+      {
+        "number": 5,
+        "name": "KIM Taehyeon"
+      },
+      {
+        "number": 6,
+        "name": "HWANG Inbeom"
+      },
+      {
+        "number": 7,
+        "name": "SON Heungmin"
+      },
+      {
+        "number": 8,
+        "name": "PAIK Seungho"
+      },
+      {
+        "number": 9,
+        "name": "CHO Guesung"
+      },
+      {
+        "number": 10,
+        "name": "LEE Jaesung"
+      },
+      {
+        "number": 11,
+        "name": "HWANG Heechan"
+      },
+      {
+        "number": 12,
+        "name": "SONG Bumkeun"
+      },
+      {
+        "number": 13,
+        "name": "LEE Taeseok"
+      },
+      {
+        "number": 14,
+        "name": "CHO Wije"
+      },
+      {
+        "number": 15,
+        "name": "KIM Moonhwan"
+      },
+      {
+        "number": 16,
+        "name": "PARK Jinseob"
+      },
+      {
+        "number": 17,
+        "name": "BAE Junho"
+      },
+      {
+        "number": 18,
+        "name": "OH Hyeongyu"
+      },
+      {
+        "number": 19,
+        "name": "LEE Kangin"
+      },
+      {
+        "number": 20,
+        "name": "YANG Hyunjun"
+      },
+      {
+        "number": 21,
+        "name": "JO Hyeonwoo"
+      },
+      {
+        "number": 22,
+        "name": "SEOL Youngwoo"
+      },
+      {
+        "number": 23,
+        "name": "CASTROP Jens"
+      },
+      {
+        "number": 24,
+        "name": "KIM Jingyu"
+      },
+      {
+        "number": 25,
+        "name": "EOM Jisung"
+      },
+      {
+        "number": 26,
+        "name": "LEE Donggyeong"
+      }
+    ]
+  },
+  "MX": {
+    "sourceName": "Mexico",
+    "sourceCode": "MEX",
+    "players": [
+      {
+        "number": 1,
+        "name": "RANGEL Raul"
+      },
+      {
+        "number": 2,
+        "name": "SANCHEZ Jorge"
+      },
+      {
+        "number": 3,
+        "name": "MONTES Cesar"
+      },
+      {
+        "number": 4,
+        "name": "ALVAREZ Edson"
+      },
+      {
+        "number": 5,
+        "name": "VASQUEZ Johan"
+      },
+      {
+        "number": 6,
+        "name": "LIRA Erik"
+      },
+      {
+        "number": 7,
+        "name": "ROMO Luis"
+      },
+      {
+        "number": 8,
+        "name": "FIDALGO Alvaro"
+      },
+      {
+        "number": 9,
+        "name": "JIMENEZ Raul"
+      },
+      {
+        "number": 10,
+        "name": "VEGA Alexis"
+      },
+      {
+        "number": 11,
+        "name": "GIMENEZ Santiago"
+      },
+      {
+        "number": 12,
+        "name": "ACEVEDO Carlos"
+      },
+      {
+        "number": 13,
+        "name": "OCHOA Guillermo"
+      },
+      {
+        "number": 14,
+        "name": "GONZALEZ Armando"
+      },
+      {
+        "number": 15,
+        "name": "REYES Israel"
+      },
+      {
+        "number": 16,
+        "name": "QUINONES Julian"
+      },
+      {
+        "number": 17,
+        "name": "PINEDA Orbelin"
+      },
+      {
+        "number": 18,
+        "name": "VARGAS Obed"
+      },
+      {
+        "number": 19,
+        "name": "MORA Gilberto"
+      },
+      {
+        "number": 20,
+        "name": "CHAVEZ Mateo"
+      },
+      {
+        "number": 21,
+        "name": "HUERTA Cesar"
+      },
+      {
+        "number": 22,
+        "name": "MARTINEZ Guillermo"
+      },
+      {
+        "number": 23,
+        "name": "GALLARDO Jesus"
+      },
+      {
+        "number": 24,
+        "name": "CHAVEZ Luis"
+      },
+      {
+        "number": 25,
+        "name": "ALVARADO Roberto"
+      },
+      {
+        "number": 26,
+        "name": "GUTIERREZ Brian"
+      }
+    ]
+  },
+  "MA": {
+    "sourceName": "Morocco",
+    "sourceCode": "MAR",
+    "players": [
+      {
+        "number": 1,
+        "name": "BOUNOU Yassine"
+      },
+      {
+        "number": 2,
+        "name": "HAKIMI Achraf"
+      },
+      {
+        "number": 3,
+        "name": "MAZRAOUI Noussair"
+      },
+      {
+        "number": 4,
+        "name": "AMRABAT Sofyan"
+      },
+      {
+        "number": 5,
+        "name": "AGUERD Nayef"
+      },
+      {
+        "number": 6,
+        "name": "BOUADDI Ayyoub"
+      },
+      {
+        "number": 7,
+        "name": "TALBI Chemsdine"
+      },
+      {
+        "number": 8,
+        "name": "OUNAHI Azzedine"
+      },
+      {
+        "number": 9,
+        "name": "RAHIMI Souane"
+      },
+      {
+        "number": 10,
+        "name": "DIAZ Brahim"
+      },
+      {
+        "number": 11,
+        "name": "SAIBARI Ismael"
+      },
+      {
+        "number": 12,
+        "name": "EL KAJOUI Munir"
+      },
+      {
+        "number": 13,
+        "name": "EL OUAHDI Zakaria"
+      },
+      {
+        "number": 14,
+        "name": "DIOP Issa"
+      },
+      {
+        "number": 15,
+        "name": "EL MOURABET Samir"
+      },
+      {
+        "number": 16,
+        "name": "YASSINE Gessime"
+      },
+      {
+        "number": 17,
+        "name": "EZZALZOULI Abde"
+      },
+      {
+        "number": 18,
+        "name": "RIAD Chadi"
+      },
+      {
+        "number": 19,
+        "name": "BELAMM ARI Youssef"
+      },
+      {
+        "number": 20,
+        "name": "EL KAABI Ayoub"
+      },
+      {
+        "number": 21,
+        "name": "AMAIMOUNI Ayoub"
+      },
+      {
+        "number": 22,
+        "name": "TAGNAOUTI Ahmed Reda"
+      },
+      {
+        "number": 23,
+        "name": "EL KHANNOUSS Bilal"
+      },
+      {
+        "number": 24,
+        "name": "EL AYNAOUI Neil"
+      },
+      {
+        "number": 25,
+        "name": "HALHAL Redouane"
+      },
+      {
+        "number": 26,
+        "name": "SALAH EDDINE Anass"
+      }
+    ]
+  },
+  "NL": {
+    "sourceName": "Netherlands",
+    "sourceCode": "NED",
+    "players": [
+      {
+        "number": 1,
+        "name": "VERBRUGGEN Bart"
+      },
+      {
+        "number": 2,
+        "name": "TIMBER Jurrien"
+      },
+      {
+        "number": 3,
+        "name": "DE ROON Marten"
+      },
+      {
+        "number": 4,
+        "name": "VAN DIJK Virgil"
+      },
+      {
+        "number": 5,
+        "name": "AKE Nathan"
+      },
+      {
+        "number": 6,
+        "name": "VAN HECKE Jan Paul"
+      },
+      {
+        "number": 7,
+        "name": "KLUIVERT Justin"
+      },
+      {
+        "number": 8,
+        "name": "GRAVENBERCH Ryan"
+      },
+      {
+        "number": 9,
+        "name": "WEGHORST Wout"
+      },
+      {
+        "number": 10,
+        "name": "DEPAY Memphis"
+      },
+      {
+        "number": 11,
+        "name": "GAKPO Cody"
+      },
+      {
+        "number": 12,
+        "name": "WIEFFER Mats"
+      },
+      {
+        "number": 13,
+        "name": "ROEFS Robin"
+      },
+      {
+        "number": 14,
+        "name": "REIJNDERS Tijjani"
+      },
+      {
+        "number": 15,
+        "name": "VAN DE VEN Micky"
+      },
+      {
+        "number": 16,
+        "name": "TIL Guus"
+      },
+      {
+        "number": 17,
+        "name": "LANG Noa"
+      },
+      {
+        "number": 18,
+        "name": "MALEN Donyell"
+      },
+      {
+        "number": 19,
+        "name": "BROBBEY Brian"
+      },
+      {
+        "number": 20,
+        "name": "KOOPMEINERS Teun"
+      },
+      {
+        "number": 21,
+        "name": "DE JONG Frenkie"
+      },
+      {
+        "number": 22,
+        "name": "DUMFRIES Denzel"
+      },
+      {
+        "number": 23,
+        "name": "FLEKKEN Mark"
+      },
+      {
+        "number": 24,
+        "name": "SUMMERVILLE Crysencio"
+      },
+      {
+        "number": 25,
+        "name": "HATO Jorrel"
+      },
+      {
+        "number": 26,
+        "name": "TIMBER Quinten"
+      }
+    ]
+  },
+  "NZ": {
+    "sourceName": "New Zealand",
+    "sourceCode": "NZL",
+    "players": [
+      {
+        "number": 1,
+        "name": "CROCOMBE Max"
+      },
+      {
+        "number": 2,
+        "name": "PAYNE Tim"
+      },
+      {
+        "number": 3,
+        "name": "DE VRIES Francis"
+      },
+      {
+        "number": 4,
+        "name": "BINDON Tyler"
+      },
+      {
+        "number": 5,
+        "name": "BOXALL Michael"
+      },
+      {
+        "number": 6,
+        "name": "BELL Joe"
+      },
+      {
+        "number": 7,
+        "name": "GARBETT Matthew"
+      },
+      {
+        "number": 8,
+        "name": "STAMENIC Marko"
+      },
+      {
+        "number": 9,
+        "name": "WOOD Chris"
+      },
+      {
+        "number": 10,
+        "name": "SINGH Sarpreet"
+      },
+      {
+        "number": 11,
+        "name": "JUST Elijah"
+      },
+      {
+        "number": 12,
+        "name": "PAULSEN Alex"
+      },
+      {
+        "number": 13,
+        "name": "CACACE Liberato"
+      },
+      {
+        "number": 14,
+        "name": "RUFER Alex"
+      },
+      {
+        "number": 15,
+        "name": "PIJNAKER Nando"
+      },
+      {
+        "number": 16,
+        "name": "SURMAN Finn"
+      },
+      {
+        "number": 17,
+        "name": "BARBAROUSES Kosta"
+      },
+      {
+        "number": 18,
+        "name": "WAINE Ben"
+      },
+      {
+        "number": 19,
+        "name": "OLD Ben"
+      },
+      {
+        "number": 20,
+        "name": "McCOWATT Callum"
+      },
+      {
+        "number": 21,
+        "name": "RANDALL Jesse"
+      },
+      {
+        "number": 22,
+        "name": "WOUD Michael"
+      },
+      {
+        "number": 23,
+        "name": "THOMAS Ryan"
+      },
+      {
+        "number": 24,
+        "name": "ELLIOT Callan"
+      },
+      {
+        "number": 25,
+        "name": "BAYLISS Lachlan"
+      },
+      {
+        "number": 26,
+        "name": "SMITH Tommy"
+      }
+    ]
+  },
+  "NO": {
+    "sourceName": "Norway",
+    "sourceCode": "NOR",
+    "players": [
+      {
+        "number": 1,
+        "name": "NYLAND Orjan"
+      },
+      {
+        "number": 2,
+        "name": "THORSBY Morten"
+      },
+      {
+        "number": 3,
+        "name": "AJER Kristoffer"
+      },
+      {
+        "number": 4,
+        "name": "OSTIGARD Leo"
+      },
+      {
+        "number": 5,
+        "name": "MOLLER WOLFE David"
+      },
+      {
+        "number": 6,
+        "name": "BERG Patrick"
+      },
+      {
+        "number": 7,
+        "name": "SORLOTH Alexander"
+      },
+      {
+        "number": 8,
+        "name": "BERGE Sander"
+      },
+      {
+        "number": 9,
+        "name": "HAALAND Erling"
+      },
+      {
+        "number": 10,
+        "name": "ODEGAARD Martin"
+      },
+      {
+        "number": 11,
+        "name": "STRAND LARSEN Jorgen"
+      },
+      {
+        "number": 12,
+        "name": "TANGVIK Sander"
+      },
+      {
+        "number": 13,
+        "name": "SELVIK Egil"
+      },
+      {
+        "number": 14,
+        "name": "AURSNES Fredrik"
+      },
+      {
+        "number": 15,
+        "name": "BJORKAN Fredrik Andre"
+      },
+      {
+        "number": 16,
+        "name": "HOLMGREN PEDERSEN Marcus"
+      },
+      {
+        "number": 17,
+        "name": "HEGGEM Torbjorn"
+      },
+      {
+        "number": 18,
+        "name": "THORSTVEDT Kristian"
+      },
+      {
+        "number": 19,
+        "name": "AASGAARD Thelo"
+      },
+      {
+        "number": 20,
+        "name": "NUSA Antonio"
+      },
+      {
+        "number": 21,
+        "name": "SCHJELDERUP Andreas"
+      },
+      {
+        "number": 22,
+        "name": "BOBB Oscar"
+      },
+      {
+        "number": 23,
+        "name": "HAUGE Jens Petter"
+      },
+      {
+        "number": 24,
+        "name": "LANGAS Sondre"
+      },
+      {
+        "number": 25,
+        "name": "FALCHENER Henrik"
+      },
+      {
+        "number": 26,
+        "name": "RYERSON Julian"
+      }
+    ]
+  },
+  "PA": {
+    "sourceName": "Panama",
+    "sourceCode": "PAN",
+    "players": [
+      {
+        "number": 1,
+        "name": "MEJIA Luis"
+      },
+      {
+        "number": 2,
+        "name": "BLACKMAN Cesar"
+      },
+      {
+        "number": 3,
+        "name": "CORDOBA Jose"
+      },
+      {
+        "number": 4,
+        "name": "ESCOBAR Fidel"
+      },
+      {
+        "number": 5,
+        "name": "FARINA Edgardo"
+      },
+      {
+        "number": 6,
+        "name": "MARTINEZ Cristian"
+      },
+      {
+        "number": 7,
+        "name": "RODRIGUEZ Jose Luis"
+      },
+      {
+        "number": 8,
+        "name": "CARRASQUILLA Adalberto"
+      },
+      {
+        "number": 9,
+        "name": "RODRIGUEZ Tomas"
+      },
+      {
+        "number": 10,
+        "name": "DIAZ Ismael"
+      },
+      {
+        "number": 11,
+        "name": "BARCENAS Edgar Yoel"
+      },
+      {
+        "number": 12,
+        "name": "SAMUDIO Cesar"
+      },
+      {
+        "number": 13,
+        "name": "RAMOS Jiovany"
+      },
+      {
+        "number": 14,
+        "name": "HARVEY Carlos"
+      },
+      {
+        "number": 15,
+        "name": "DAVIS Eric"
+      },
+      {
+        "number": 16,
+        "name": "ANDRADE Andres"
+      },
+      {
+        "number": 17,
+        "name": "FAJARDO Jose"
+      },
+      {
+        "number": 18,
+        "name": "WATERMAN Cecilio"
+      },
+      {
+        "number": 19,
+        "name": "QUINTERO Alberto"
+      },
+      {
+        "number": 20,
+        "name": "GODOY Anibal"
+      },
+      {
+        "number": 21,
+        "name": "YANIS Cesar"
+      },
+      {
+        "number": 22,
+        "name": "MOSQUERA Orlando"
+      },
+      {
+        "number": 23,
+        "name": "MURILLO Amir"
+      },
+      {
+        "number": 24,
+        "name": "LONDONO Azarias"
+      },
+      {
+        "number": 25,
+        "name": "MILLER Roderick"
+      },
+      {
+        "number": 26,
+        "name": "GUTIERREZ Jorge"
+      }
+    ]
+  },
+  "PY": {
+    "sourceName": "Paraguay",
+    "sourceCode": "PAR",
+    "players": [
+      {
+        "number": 1,
+        "name": "FERNANDEZ Gatito"
+      },
+      {
+        "number": 2,
+        "name": "VELAZQUEZ Gustavo"
+      },
+      {
+        "number": 3,
+        "name": "ALDERETE Omar"
+      },
+      {
+        "number": 4,
+        "name": "CACERES Juan Jose"
+      },
+      {
+        "number": 5,
+        "name": "BALBUENA Fabian"
+      },
+      {
+        "number": 6,
+        "name": "ALONSO Junior"
+      },
+      {
+        "number": 7,
+        "name": "SOSA Ramon"
+      },
+      {
+        "number": 8,
+        "name": "GOMEZ Diego"
+      },
+      {
+        "number": 9,
+        "name": "SANABRIA Antonio"
+      },
+      {
+        "number": 10,
+        "name": "ALMIRON Miguel"
+      },
+      {
+        "number": 11,
+        "name": "MAURICIO"
+      },
+      {
+        "number": 12,
+        "name": "GILL Orlando"
+      },
+      {
+        "number": 13,
+        "name": "CANALE Jose"
+      },
+      {
+        "number": 14,
+        "name": "CUBAS Andres"
+      },
+      {
+        "number": 15,
+        "name": "GOMEZ Gustavo"
+      },
+      {
+        "number": 16,
+        "name": "BOBADILLA Damian"
+      },
+      {
+        "number": 17,
+        "name": "ROMERO GAMARRA Alejandro"
+      },
+      {
+        "number": 18,
+        "name": "ARCE Alex"
+      },
+      {
+        "number": 19,
+        "name": "ENCISO Julio"
+      },
+      {
+        "number": 20,
+        "name": "OJEDA Braian"
+      },
+      {
+        "number": 21,
+        "name": "AVALOS Gabriel"
+      },
+      {
+        "number": 22,
+        "name": "OLVEIRA Gaston"
+      },
+      {
+        "number": 23,
+        "name": "GALARZA Matias"
+      },
+      {
+        "number": 24,
+        "name": "CABALLERO Gustavo"
+      },
+      {
+        "number": 25,
+        "name": "PITTA Isidro"
+      },
+      {
+        "number": 26,
+        "name": "MAIDANA Alexandro"
+      }
+    ]
+  },
+  "PT": {
+    "sourceName": "Portugal",
+    "sourceCode": "POR",
+    "players": [
+      {
+        "number": 1,
+        "name": "DIOGO COSTA"
+      },
+      {
+        "number": 2,
+        "name": "NELSON SEMEDO"
+      },
+      {
+        "number": 3,
+        "name": "RUBEN DIAS"
+      },
+      {
+        "number": 4,
+        "name": "TOMAS ARAUJO"
+      },
+      {
+        "number": 5,
+        "name": "DIOGO DALOT"
+      },
+      {
+        "number": 6,
+        "name": "MATHEUS NUNES"
+      },
+      {
+        "number": 7,
+        "name": "CRISTIANO RONALDO"
+      },
+      {
+        "number": 8,
+        "name": "BRUNO FERNANDES"
+      },
+      {
+        "number": 9,
+        "name": "GONCALO RAMOS"
+      },
+      {
+        "number": 10,
+        "name": "BERNARDO SILVA"
+      },
+      {
+        "number": 11,
+        "name": "JOAO FELIX"
+      },
+      {
+        "number": 12,
+        "name": "JOSE SA"
+      },
+      {
+        "number": 13,
+        "name": "RENATO VEIGA"
+      },
+      {
+        "number": 14,
+        "name": "GONCALO INACIO"
+      },
+      {
+        "number": 15,
+        "name": "JOAO NEVES"
+      },
+      {
+        "number": 16,
+        "name": "FRANCISCO TRINCAO"
+      },
+      {
+        "number": 17,
+        "name": "RAFAEL LEAO"
+      },
+      {
+        "number": 18,
+        "name": "PEDRO NETO"
+      },
+      {
+        "number": 19,
+        "name": "GONCALO GUEDES"
+      },
+      {
+        "number": 20,
+        "name": "JOAO CANCELO"
+      },
+      {
+        "number": 21,
+        "name": "RUBEN NEVES"
+      },
+      {
+        "number": 22,
+        "name": "RUI SILVA"
+      },
+      {
+        "number": 23,
+        "name": "VITINHA"
+      },
+      {
+        "number": 24,
+        "name": "SAMU COSTA"
+      },
+      {
+        "number": 25,
+        "name": "NUNO MENDES"
+      },
+      {
+        "number": 26,
+        "name": "FRANCISCO CONCEICAO"
+      }
+    ]
+  },
+  "QA": {
+    "sourceName": "Qatar",
+    "sourceCode": "QAT",
+    "players": [
+      {
+        "number": 1,
+        "name": "MAHMOUD ABUNADA"
+      },
+      {
+        "number": 2,
+        "name": "PEDRO MIGUEL"
+      },
+      {
+        "number": 3,
+        "name": "LUCAS MENDES"
+      },
+      {
+        "number": 4,
+        "name": "ISSA LAYE"
+      },
+      {
+        "number": 5,
+        "name": "JASSEM GABER"
+      },
+      {
+        "number": 6,
+        "name": "ABDULAZIZ HATEM"
+      },
+      {
+        "number": 7,
+        "name": "AHMED ALAAELDIN"
+      },
+      {
+        "number": 8,
+        "name": "EDMILSON JUNIOR"
+      },
+      {
+        "number": 9,
+        "name": "MOHAMMED MUNTARI"
+      },
+      {
+        "number": 10,
+        "name": "HASSAN ALHAYDOS"
+      },
+      {
+        "number": 11,
+        "name": "AKRAM AFIF"
+      },
+      {
+        "number": 12,
+        "name": "KARIM BOUDIAF"
+      },
+      {
+        "number": 13,
+        "name": "AYOUB ALOUI"
+      },
+      {
+        "number": 14,
+        "name": "HOMAM AHMED"
+      },
+      {
+        "number": 15,
+        "name": "YUSUF ABDURISAG"
+      },
+      {
+        "number": 16,
+        "name": "BOUALEM KHOUKHI"
+      },
+      {
+        "number": 17,
+        "name": "AHMED ALGANEHI"
+      },
+      {
+        "number": 18,
+        "name": "SULTAN ALBRAKE"
+      },
+      {
+        "number": 19,
+        "name": "ALMOEZ ALI"
+      },
+      {
+        "number": 20,
+        "name": "AHMED FATHY"
+      },
+      {
+        "number": 21,
+        "name": "SALAH ZAKARIA"
+      },
+      {
+        "number": 22,
+        "name": "MESHAAL BARSHAM"
+      },
+      {
+        "number": 23,
+        "name": "ASSIM MADIBO"
+      },
+      {
+        "number": 24,
+        "name": "TAHSIN JAMSHID"
+      },
+      {
+        "number": 25,
+        "name": "ALHASHMI ALHUSSEIN"
+      },
+      {
+        "number": 26,
+        "name": "MOHAMED MANAI"
+      }
+    ]
+  },
+  "SA": {
+    "sourceName": "Saudi Arabia",
+    "sourceCode": "KSA",
+    "players": [
+      {
+        "number": 1,
+        "name": "NAWAF ALAQIDI"
+      },
+      {
+        "number": 2,
+        "name": "ALI MAJRASHI"
+      },
+      {
+        "number": 3,
+        "name": "ALI LAJAMI"
+      },
+      {
+        "number": 4,
+        "name": "ABDULELAH ALAMRI"
+      },
+      {
+        "number": 5,
+        "name": "HASSAN ALTAMBAKTI"
+      },
+      {
+        "number": 6,
+        "name": "NASSER ALDAWSARI"
+      },
+      {
+        "number": 7,
+        "name": "MUSAB ALJUWAYR"
+      },
+      {
+        "number": 8,
+        "name": "AIMAN YAHYA"
+      },
+      {
+        "number": 9,
+        "name": "FERAS ALBRIKAN"
+      },
+      {
+        "number": 10,
+        "name": "SALEM ALDAWSARI"
+      },
+      {
+        "number": 11,
+        "name": "SALEH ALSHEHRI"
+      },
+      {
+        "number": 12,
+        "name": "SAUD ABDULHAMID"
+      },
+      {
+        "number": 13,
+        "name": "NAWAF BU WASHL"
+      },
+      {
+        "number": 14,
+        "name": "HASSAN KADISH"
+      },
+      {
+        "number": 15,
+        "name": "ABDULLAH ALKHAIBARI"
+      },
+      {
+        "number": 16,
+        "name": "ZIYAD ALJOHANI"
+      },
+      {
+        "number": 17,
+        "name": "KHALID ALGHANNAM"
+      },
+      {
+        "number": 18,
+        "name": "ALA ALHAJJI"
+      },
+      {
+        "number": 19,
+        "name": "ABDULLAH ALHAMDDAN"
+      },
+      {
+        "number": 20,
+        "name": "SULTAN MANDASH"
+      },
+      {
+        "number": 21,
+        "name": "MOHAMMED ALOWAIS"
+      },
+      {
+        "number": 22,
+        "name": "AHMED ALKASSAR"
+      },
+      {
+        "number": 23,
+        "name": "MOHAMED KANNO"
+      },
+      {
+        "number": 24,
+        "name": "MOTEB ALHARBI"
+      },
+      {
+        "number": 25,
+        "name": "JEHAD THIKRI"
+      },
+      {
+        "number": 26,
+        "name": "MOHAMMED ABU ALSHAMAT"
+      }
+    ]
+  },
+  "GB": {
+    "sourceName": "Scotland",
+    "sourceCode": "SCO",
+    "players": [
+      {
+        "number": 1,
+        "name": "GUNN Angus"
+      },
+      {
+        "number": 2,
+        "name": "HICKEY Aaron"
+      },
+      {
+        "number": 3,
+        "name": "ROBERTSON Andy"
+      },
+      {
+        "number": 4,
+        "name": "McTOMINAY Scott"
+      },
+      {
+        "number": 5,
+        "name": "HANLEY Grant"
+      },
+      {
+        "number": 6,
+        "name": "TIERNEY Kieran"
+      },
+      {
+        "number": 7,
+        "name": "McGINN John"
+      },
+      {
+        "number": 8,
+        "name": "FLETCHER Tyler"
+      },
+      {
+        "number": 9,
+        "name": "DYKES Lyndon"
+      },
+      {
+        "number": 10,
+        "name": "ADAMS Che"
+      },
+      {
+        "number": 11,
+        "name": "CHRISTIE Ryan"
+      },
+      {
+        "number": 12,
+        "name": "KELLY Liam"
+      },
+      {
+        "number": 13,
+        "name": "HENDRY Jack"
+      },
+      {
+        "number": 14,
+        "name": "STEWART Ross"
+      },
+      {
+        "number": 15,
+        "name": "SOUTTAR John"
+      },
+      {
+        "number": 16,
+        "name": "HYAM Dominic"
+      },
+      {
+        "number": 17,
+        "name": "GANNON-DOAK Ben"
+      },
+      {
+        "number": 18,
+        "name": "HIRST George"
+      },
+      {
+        "number": 19,
+        "name": "FERGUSON Lewis"
+      },
+      {
+        "number": 20,
+        "name": "SHANKLAND Lawrence"
+      },
+      {
+        "number": 21,
+        "name": "GORDON Craig"
+      },
+      {
+        "number": 22,
+        "name": "PATTERSON Nathan"
+      },
+      {
+        "number": 23,
+        "name": "McLEAN Kenny"
+      },
+      {
+        "number": 24,
+        "name": "RALSTON Anthony"
+      },
+      {
+        "number": 25,
+        "name": "CURTIS Findlay"
+      },
+      {
+        "number": 26,
+        "name": "McKENNA Scott"
+      }
+    ]
+  },
+  "SN": {
+    "sourceName": "Senegal",
+    "sourceCode": "SEN",
+    "players": [
+      {
+        "number": 1,
+        "name": "DIOUF Yehvann"
+      },
+      {
+        "number": 2,
+        "name": "SARR Mamadou"
+      },
+      {
+        "number": 3,
+        "name": "KOULIBALY Kalidou"
+      },
+      {
+        "number": 4,
+        "name": "SECK Abdoulaye"
+      },
+      {
+        "number": 5,
+        "name": "GUEYE Idrissa Gana"
+      },
+      {
+        "number": 6,
+        "name": "CISS Pathe"
+      },
+      {
+        "number": 7,
+        "name": "DIAO Assane"
+      },
+      {
+        "number": 8,
+        "name": "CAMARA Lamine"
+      },
+      {
+        "number": 9,
+        "name": "DIENG Bamba"
+      },
+      {
+        "number": 10,
+        "name": "MANE Sadio"
+      },
+      {
+        "number": 11,
+        "name": "JACKSON Nicolas"
+      },
+      {
+        "number": 12,
+        "name": "NDIAYE Cherif"
+      },
+      {
+        "number": 13,
+        "name": "NDIAYE Iliman"
+      },
+      {
+        "number": 14,
+        "name": "JAKOBS Ismail"
+      },
+      {
+        "number": 15,
+        "name": "DIATTA Krepin"
+      },
+      {
+        "number": 16,
+        "name": "MENDY Edouard"
+      },
+      {
+        "number": 17,
+        "name": "SARR Pape Matar"
+      },
+      {
+        "number": 18,
+        "name": "SARR Ismaila"
+      },
+      {
+        "number": 19,
+        "name": "NIAKHATE Moussa"
+      },
+      {
+        "number": 20,
+        "name": "MBAYE Ibrahim"
+      },
+      {
+        "number": 21,
+        "name": "DIARRA Habib"
+      },
+      {
+        "number": 22,
+        "name": "NDIAYE Bara Sapoko"
+      },
+      {
+        "number": 23,
+        "name": "DIAW Mory"
+      },
+      {
+        "number": 24,
+        "name": "MENDY Antoine"
+      },
+      {
+        "number": 25,
+        "name": "DIOUF El Hadji MalickEl Hadji Malick"
+      },
+      {
+        "number": 26,
+        "name": "GUEYE Pape"
+      }
+    ]
+  },
+  "ZA": {
+    "sourceName": "South Africa",
+    "sourceCode": "RSA",
+    "players": [
+      {
+        "number": 1,
+        "name": "WILLIAMS Ronwen"
+      },
+      {
+        "number": 2,
+        "name": "MATULUDI Thabang"
+      },
+      {
+        "number": 3,
+        "name": "NDAMANE Khulumani"
+      },
+      {
+        "number": 4,
+        "name": "MOKOENA Teboho"
+      },
+      {
+        "number": 5,
+        "name": "MBATHA Thalente"
+      },
+      {
+        "number": 6,
+        "name": "MODIBA Aubrey"
+      },
+      {
+        "number": 7,
+        "name": "APPOLLIS Oswin"
+      },
+      {
+        "number": 8,
+        "name": "MOREMI Tshepang"
+      },
+      {
+        "number": 9,
+        "name": "FOSTER Lyle"
+      },
+      {
+        "number": 10,
+        "name": "MOFOKENG Relebohile"
+      },
+      {
+        "number": 11,
+        "name": "ZWANE Themba"
+      },
+      {
+        "number": 12,
+        "name": "MASEKO Thapelo"
+      },
+      {
+        "number": 13,
+        "name": "SITHOLE Sphephelo"
+      },
+      {
+        "number": 14,
+        "name": "MBOKAZI Mbekezeli"
+      },
+      {
+        "number": 15,
+        "name": "RAYNERS Iqraam"
+      },
+      {
+        "number": 16,
+        "name": "CHAINE Sipho"
+      },
+      {
+        "number": 17,
+        "name": "MAKGOPA Evidence"
+      },
+      {
+        "number": 18,
+        "name": "KABINI Samukelo"
+      },
+      {
+        "number": 19,
+        "name": "SIBISI Nkosinathi"
+      },
+      {
+        "number": 20,
+        "name": "MUDAU Khuliso"
+      },
+      {
+        "number": 21,
+        "name": "OKON Ime"
+      },
+      {
+        "number": 22,
+        "name": "GOSS Ricardo"
+      },
+      {
+        "number": 23,
+        "name": "ADAMS Jayden"
+      },
+      {
+        "number": 24,
+        "name": "MAKHANYA Olwethu"
+      },
+      {
+        "number": 25,
+        "name": "SEBELEBELE Kamogelo"
+      },
+      {
+        "number": 26,
+        "name": "CROSS Bradley"
+      }
+    ]
+  },
+  "ES": {
+    "sourceName": "Spain",
+    "sourceCode": "ESP",
+    "players": [
+      {
+        "number": 1,
+        "name": "RAYA David"
+      },
+      {
+        "number": 2,
+        "name": "PUBILL Marc"
+      },
+      {
+        "number": 3,
+        "name": "GRIMALDO Alex"
+      },
+      {
+        "number": 4,
+        "name": "GARCIA Eric"
+      },
+      {
+        "number": 5,
+        "name": "LLORENTE Marcos"
+      },
+      {
+        "number": 6,
+        "name": "MERINO Mikel"
+      },
+      {
+        "number": 7,
+        "name": "TORRES Ferran"
+      },
+      {
+        "number": 8,
+        "name": "RUIZ Fabian"
+      },
+      {
+        "number": 9,
+        "name": "GAVI"
+      },
+      {
+        "number": 10,
+        "name": "OLMO Dani"
+      },
+      {
+        "number": 11,
+        "name": "PINO Yeremy"
+      },
+      {
+        "number": 12,
+        "name": "PORRO Pedro"
+      },
+      {
+        "number": 13,
+        "name": "GARCIA Joan"
+      },
+      {
+        "number": 14,
+        "name": "LAPORTE Aymeric"
+      },
+      {
+        "number": 15,
+        "name": "BAENA Alex"
+      },
+      {
+        "number": 16,
+        "name": "RODRI"
+      },
+      {
+        "number": 17,
+        "name": "WILLIAMS Nico"
+      },
+      {
+        "number": 18,
+        "name": "ZUBIMENDI Martin"
+      },
+      {
+        "number": 19,
+        "name": "YAMAL Lamine"
+      },
+      {
+        "number": 20,
+        "name": "PEDRI"
+      },
+      {
+        "number": 21,
+        "name": "OYARZABAL Mikel"
+      },
+      {
+        "number": 22,
+        "name": "CUBARSI Pau"
+      },
+      {
+        "number": 23,
+        "name": "SIMON Unai"
+      },
+      {
+        "number": 24,
+        "name": "CUCURELLA Marc"
+      },
+      {
+        "number": 25,
+        "name": "MUNOZ Victor"
+      },
+      {
+        "number": 26,
+        "name": "IGLESIAS Borja"
+      }
+    ]
+  },
+  "SE": {
+    "sourceName": "Sweden",
+    "sourceCode": "SWE",
+    "players": [
+      {
+        "number": 1,
+        "name": "WIDELL ZETTERSTROM Jacob"
+      },
+      {
+        "number": 2,
+        "name": "LAGERBIELKE Gustaf"
+      },
+      {
+        "number": 3,
+        "name": "LINDELOF Victor"
+      },
+      {
+        "number": 4,
+        "name": "HIEN Isak"
+      },
+      {
+        "number": 5,
+        "name": "GUDMUNDSSON Gabriel"
+      },
+      {
+        "number": 6,
+        "name": "JOHANSSON Herman"
+      },
+      {
+        "number": 7,
+        "name": "BERGVALL Lucas"
+      },
+      {
+        "number": 8,
+        "name": "SVENSSON Daniel"
+      },
+      {
+        "number": 9,
+        "name": "ISAK Alexander"
+      },
+      {
+        "number": 10,
+        "name": "NYGREN Benjamin"
+      },
+      {
+        "number": 11,
+        "name": "ELANGA Anthony"
+      },
+      {
+        "number": 12,
+        "name": "JOHANSSON Viktor"
+      },
+      {
+        "number": 13,
+        "name": "SEMA Ken"
+      },
+      {
+        "number": 14,
+        "name": "EKDAL Hjalmar"
+      },
+      {
+        "number": 15,
+        "name": "STARFELT Carl"
+      },
+      {
+        "number": 16,
+        "name": "KARLSTROM Jesper"
+      },
+      {
+        "number": 17,
+        "name": "GYOKERES Viktor"
+      },
+      {
+        "number": 18,
+        "name": "AYARI Yasin"
+      },
+      {
+        "number": 19,
+        "name": "SVANBERG Mattias"
+      },
+      {
+        "number": 20,
+        "name": "SMITH Eric"
+      },
+      {
+        "number": 21,
+        "name": "BERNHARDSSON Alexander"
+      },
+      {
+        "number": 22,
+        "name": "ZENELI Besfort"
+      },
+      {
+        "number": 23,
+        "name": "NORDFELDT Kristoffer"
+      },
+      {
+        "number": 24,
+        "name": "STROUD Elliot"
+      },
+      {
+        "number": 25,
+        "name": "NILSSON Gustaf"
+      },
+      {
+        "number": 26,
+        "name": "ALI Taha"
+      }
+    ]
+  },
+  "CH": {
+    "sourceName": "Switzerland",
+    "sourceCode": "SUI",
+    "players": [
+      {
+        "number": 1,
+        "name": "KOBEL Gregor"
+      },
+      {
+        "number": 2,
+        "name": "MUHEIM Miro"
+      },
+      {
+        "number": 3,
+        "name": "WIDMER Silvan"
+      },
+      {
+        "number": 4,
+        "name": "ELVEDI Nico"
+      },
+      {
+        "number": 5,
+        "name": "AKANJI Manuel"
+      },
+      {
+        "number": 6,
+        "name": "ZAKARIA Denis"
+      },
+      {
+        "number": 7,
+        "name": "EMBOLO Breel"
+      },
+      {
+        "number": 8,
+        "name": "FREULER Remo"
+      },
+      {
+        "number": 9,
+        "name": "MANZAMBI Johan"
+      },
+      {
+        "number": 10,
+        "name": "XHAKA Granit"
+      },
+      {
+        "number": 11,
+        "name": "NDOYE Dan"
+      },
+      {
+        "number": 12,
+        "name": "MV OGO Yvon"
+      },
+      {
+        "number": 13,
+        "name": "RODRIGUEZ Ricardo"
+      },
+      {
+        "number": 14,
+        "name": "JASHARI Ardon"
+      },
+      {
+        "number": 15,
+        "name": "SOW Djibril"
+      },
+      {
+        "number": 16,
+        "name": "FASSNACHT Christian"
+      },
+      {
+        "number": 17,
+        "name": "VARGAS Ruben"
+      },
+      {
+        "number": 18,
+        "name": "COEMERT Eray"
+      },
+      {
+        "number": 19,
+        "name": "OKAFOR Noah"
+      },
+      {
+        "number": 20,
+        "name": "AEBISCHER Michel"
+      },
+      {
+        "number": 21,
+        "name": "KELLER Marvin"
+      },
+      {
+        "number": 22,
+        "name": "RIEDER Fabian"
+      },
+      {
+        "number": 23,
+        "name": "AMDOUNI Zeki"
+      },
+      {
+        "number": 24,
+        "name": "AMENDA Aurele"
+      },
+      {
+        "number": 25,
+        "name": "JAQUEZ Luca"
+      },
+      {
+        "number": 26,
+        "name": "ITTEN Cedric"
+      }
+    ]
+  },
+  "TN": {
+    "sourceName": "Tunisia",
+    "sourceCode": "TUN",
+    "players": [
+      {
+        "number": 1,
+        "name": "CHAMAKH Mouhib"
+      },
+      {
+        "number": 2,
+        "name": "ABDI Ali"
+      },
+      {
+        "number": 3,
+        "name": "TALBI Montassar"
+      },
+      {
+        "number": 4,
+        "name": "REKIK Omar"
+      },
+      {
+        "number": 5,
+        "name": "AROUS Adam"
+      },
+      {
+        "number": 6,
+        "name": "BRONN Dylan"
+      },
+      {
+        "number": 7,
+        "name": "ACHOURI Elias"
+      },
+      {
+        "number": 8,
+        "name": "SAAD Elias"
+      },
+      {
+        "number": 9,
+        "name": "MASTOURI Hazem"
+      },
+      {
+        "number": 10,
+        "name": "MEJBRI Hannibal"
+      },
+      {
+        "number": 11,
+        "name": "GHARBI Ismael"
+      },
+      {
+        "number": 12,
+        "name": "BEN OUANES Mortadha"
+      },
+      {
+        "number": 13,
+        "name": "KHEDIRA Rani"
+      },
+      {
+        "number": 14,
+        "name": "AYARI Khalil"
+      },
+      {
+        "number": 15,
+        "name": "HADJ MAHMOUD Mohamed"
+      },
+      {
+        "number": 16,
+        "name": "DAHMEN Aymen"
+      },
+      {
+        "number": 17,
+        "name": "SKHIRI Ellyes"
+      },
+      {
+        "number": 18,
+        "name": "ELLOUMI Rayan"
+      },
+      {
+        "number": 19,
+        "name": "CHAOUAT Firas"
+      },
+      {
+        "number": 20,
+        "name": "VALERY Yan"
+      },
+      {
+        "number": 21,
+        "name": "BEN HMIDA Mohamed Amine"
+      },
+      {
+        "number": 22,
+        "name": "BEN HESSEN Sabri"
+      },
+      {
+        "number": 23,
+        "name": "NEFFATI Moutaz"
+      },
+      {
+        "number": 24,
+        "name": "CHIKHAOUI Raed"
+      },
+      {
+        "number": 25,
+        "name": "SLIMANE Anis"
+      },
+      {
+        "number": 26,
+        "name": "TOUNEKTI Sebastian"
+      }
+    ]
+  },
+  "TR": {
+    "sourceName": "Türkiye",
+    "sourceCode": "TUR",
+    "players": [
+      {
+        "number": 1,
+        "name": "GUNOK Mert"
+      },
+      {
+        "number": 2,
+        "name": "CELIK Zeki"
+      },
+      {
+        "number": 3,
+        "name": "DEMIRAL Merih"
+      },
+      {
+        "number": 4,
+        "name": "SOYUNCU Caglar"
+      },
+      {
+        "number": 5,
+        "name": "OZCAN Salih"
+      },
+      {
+        "number": 6,
+        "name": "KOKCU Orkun"
+      },
+      {
+        "number": 7,
+        "name": "AKTURKOGLU Kerem"
+      },
+      {
+        "number": 8,
+        "name": "GULER Arda"
+      },
+      {
+        "number": 9,
+        "name": "GUL Deniz"
+      },
+      {
+        "number": 10,
+        "name": "CALHANOGLU Hakan"
+      },
+      {
+        "number": 11,
+        "name": "YILDIZ Kenan"
+      },
+      {
+        "number": 12,
+        "name": "BAYINDIR Altay"
+      },
+      {
+        "number": 13,
+        "name": "ELMALI Eren"
+      },
+      {
+        "number": 14,
+        "name": "BARDAKCI Abdulkerim"
+      },
+      {
+        "number": 15,
+        "name": "KABAK Ozan"
+      },
+      {
+        "number": 16,
+        "name": "YUKSEK Ismail"
+      },
+      {
+        "number": 17,
+        "name": "KAHVECI Irfan Can"
+      },
+      {
+        "number": 18,
+        "name": "MULDUR Mert"
+      },
+      {
+        "number": 19,
+        "name": "AKGUN Yunus"
+      },
+      {
+        "number": 20,
+        "name": "KADIOGLU Ferdi"
+      },
+      {
+        "number": 21,
+        "name": "YILMAZ Baris Alper"
+      },
+      {
+        "number": 22,
+        "name": "AYHAN Kaan"
+      },
+      {
+        "number": 23,
+        "name": "CAKIR Ugurcan"
+      },
+      {
+        "number": 24,
+        "name": "AYDIN Oguz"
+      },
+      {
+        "number": 25,
+        "name": "AKAYDIN Samet"
+      },
+      {
+        "number": 26,
+        "name": "UZUN Can"
+      }
+    ]
+  },
+  "UY": {
+    "sourceName": "Uruguay",
+    "sourceCode": "URU",
+    "players": [
+      {
+        "number": 1,
+        "name": "ROCHET Sergio"
+      },
+      {
+        "number": 2,
+        "name": "GIMENEZ Jose Maria"
+      },
+      {
+        "number": 3,
+        "name": "CACERES Sebastian"
+      },
+      {
+        "number": 4,
+        "name": "ARAUJO Ronald"
+      },
+      {
+        "number": 5,
+        "name": "UGARTE Manuel"
+      },
+      {
+        "number": 6,
+        "name": "BENTANCUR Rodrigo"
+      },
+      {
+        "number": 7,
+        "name": "DE LA CRUZ Nicolas"
+      },
+      {
+        "number": 8,
+        "name": "VALVERDE Federico"
+      },
+      {
+        "number": 9,
+        "name": "NUNEZ Darwin"
+      },
+      {
+        "number": 10,
+        "name": "DE ARRASCAETA Giorgian"
+      },
+      {
+        "number": 11,
+        "name": "PELLISTRI Facundo"
+      },
+      {
+        "number": 12,
+        "name": "MELE Santiago"
+      },
+      {
+        "number": 13,
+        "name": "VARELA Guillermo"
+      },
+      {
+        "number": 14,
+        "name": "CANOBBIO Agustin"
+      },
+      {
+        "number": 15,
+        "name": "MARTINEZ Emiliano"
+      },
+      {
+        "number": 16,
+        "name": "OLIVERA Mathias"
+      },
+      {
+        "number": 17,
+        "name": "VINA Matias"
+      },
+      {
+        "number": 18,
+        "name": "RODRIGUEZ Brian"
+      },
+      {
+        "number": 19,
+        "name": "AGUIRRE Rodrigo"
+      },
+      {
+        "number": 20,
+        "name": "ARAUJO Maxi"
+      },
+      {
+        "number": 21,
+        "name": "VINAS Federico"
+      },
+      {
+        "number": 22,
+        "name": "PIQUEREZ Joaquin"
+      },
+      {
+        "number": 23,
+        "name": "MUSLERA Fernando"
+      },
+      {
+        "number": 24,
+        "name": "BUENO Santiago"
+      },
+      {
+        "number": 25,
+        "name": "SANABRIA Juan Manuel"
+      },
+      {
+        "number": 26,
+        "name": "ZALAZAR Rodrigo"
+      }
+    ]
+  },
+  "US": {
+    "sourceName": "USA",
+    "sourceCode": "USA",
+    "players": [
+      {
+        "number": 1,
+        "name": "TURNER Matt"
+      },
+      {
+        "number": 2,
+        "name": "DEST Sergino"
+      },
+      {
+        "number": 3,
+        "name": "RICHARDS Chris"
+      },
+      {
+        "number": 4,
+        "name": "ADAMS Tyler"
+      },
+      {
+        "number": 5,
+        "name": "ROBINSON Antonee"
+      },
+      {
+        "number": 6,
+        "name": "TRUSTY Auston"
+      },
+      {
+        "number": 7,
+        "name": "REYNA Giovanni"
+      },
+      {
+        "number": 8,
+        "name": "McKENNIE Weston"
+      },
+      {
+        "number": 9,
+        "name": "PEPI Ricardo"
+      },
+      {
+        "number": 10,
+        "name": "PULISIC Christian"
+      },
+      {
+        "number": 11,
+        "name": "AARONSON Brenden"
+      },
+      {
+        "number": 12,
+        "name": "ROBINSON Miles"
+      },
+      {
+        "number": 13,
+        "name": "REAM Tim"
+      },
+      {
+        "number": 14,
+        "name": "BERHALTER Sebastian"
+      },
+      {
+        "number": 15,
+        "name": "ROLDAN Cristian"
+      },
+      {
+        "number": 16,
+        "name": "FREEMAN Alex"
+      },
+      {
+        "number": 17,
+        "name": "TILLMAN Malik"
+      },
+      {
+        "number": 18,
+        "name": "ARFSTEN Max"
+      },
+      {
+        "number": 19,
+        "name": "WRIGHT Haji"
+      },
+      {
+        "number": 20,
+        "name": "BALOGUN Folarin"
+      },
+      {
+        "number": 21,
+        "name": "WEAH Timothy"
+      },
+      {
+        "number": 22,
+        "name": "McKENZIE Mark"
+      },
+      {
+        "number": 23,
+        "name": "SCALLY Joe"
+      },
+      {
+        "number": 24,
+        "name": "FREESE Matt"
+      },
+      {
+        "number": 25,
+        "name": "BRADY Chris"
+      },
+      {
+        "number": 26,
+        "name": "ZENDEJAS Alex"
+      }
+    ]
+  },
+  "UZ": {
+    "sourceName": "Uzbekistan",
+    "sourceCode": "UZB",
+    "players": [
+      {
+        "number": 1,
+        "name": "YUSUPOV Utkir"
+      },
+      {
+        "number": 2,
+        "name": "KHUSANOV Abdukodir"
+      },
+      {
+        "number": 3,
+        "name": "ALIJONOV Khojiakbar"
+      },
+      {
+        "number": 4,
+        "name": "SAYFIEV Farrukh"
+      },
+      {
+        "number": 5,
+        "name": "ASHURMATOV Rustam"
+      },
+      {
+        "number": 6,
+        "name": "MOZGOVOY Akmal"
+      },
+      {
+        "number": 7,
+        "name": "SHUKUROV Otabek"
+      },
+      {
+        "number": 8,
+        "name": "ISKANDEROV Jamshid"
+      },
+      {
+        "number": 9,
+        "name": "XAMROBEKOV Odiljon"
+      },
+      {
+        "number": 10,
+        "name": "MASHARIPOV Jaloliddin"
+      },
+      {
+        "number": 11,
+        "name": "URUNOV Oston"
+      },
+      {
+        "number": 12,
+        "name": "NEMATOV Abduvohid"
+      },
+      {
+        "number": 13,
+        "name": "NASRULLAEV Sherzod"
+      },
+      {
+        "number": 14,
+        "name": "SHOMURODOV Eldor"
+      },
+      {
+        "number": 15,
+        "name": "ESHMURODOV Umar"
+      },
+      {
+        "number": 16,
+        "name": "ERGASHEV Botirali"
+      },
+      {
+        "number": 17,
+        "name": "KHAMDAMOV Dostonbek"
+      },
+      {
+        "number": 18,
+        "name": "ABDULLAEV Abdulla"
+      },
+      {
+        "number": 19,
+        "name": "GANIEV Azizjon"
+      },
+      {
+        "number": 20,
+        "name": "AMONOV Azizbek"
+      },
+      {
+        "number": 21,
+        "name": "SERGEEV Igor"
+      },
+      {
+        "number": 22,
+        "name": "FAYZULLAEV Abbosbek"
+      },
+      {
+        "number": 23,
+        "name": "ESANOV Sherzod"
+      },
+      {
+        "number": 24,
+        "name": "KARIMOV Behruzjon"
+      },
+      {
+        "number": 25,
+        "name": "ULMASALIYEV Avazbek"
+      },
+      {
+        "number": 26,
+        "name": "UROZOV Jakhongir"
+      }
+    ]
+  }
+}

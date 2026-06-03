@@ -2,7 +2,7 @@
 
 import { MatchStatus, MatchStage, PaymentStatus, UserRole } from "@prisma/client";
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { FileUploadField } from "@/components/file-upload-field";
@@ -87,6 +87,7 @@ type BettorStanding = {
   nombres: string;
   apellidos: string;
   username: string;
+  paymentStatus: PaymentStatus;
   totalPoints: number;
   predictionCount: number;
   groupPoints: number;
@@ -152,18 +153,35 @@ type X2InfoModalState = {
   remainingDayAfter: number;
 };
 
-type StandingRow = {
-  team: string;
-  teamCode: string | null;
-  pj: number;
-  g: number;
-  e: number;
-  p: number;
-  gf: number;
-  gc: number;
-  dg: number;
-  pts: number;
-};
+type PickFilter = "ALL" | "PENDING" | "SAVED" | "OPEN";
+
+const DEFAULT_ENTRY_FEE_COP = 50000;
+const PRIZE_TIERS = [
+  {
+    position: 1,
+    label: "Primer lugar",
+    shortLabel: "1er lugar",
+    share: 0.7,
+    badgeClass: "border-amber-300 bg-amber-100 text-amber-900",
+    rowClass: "bg-amber-50",
+  },
+  {
+    position: 2,
+    label: "Segundo lugar",
+    shortLabel: "2do lugar",
+    share: 0.2,
+    badgeClass: "border-slate-300 bg-slate-100 text-slate-800",
+    rowClass: "bg-slate-50",
+  },
+  {
+    position: 3,
+    label: "Tercer lugar",
+    shortLabel: "3er lugar",
+    share: 0.1,
+    badgeClass: "border-orange-300 bg-orange-100 text-orange-900",
+    rowClass: "bg-orange-50",
+  },
+] as const;
 
 const GROUP_FILTERS = [
   "ALL",
@@ -340,6 +358,18 @@ function formatUtcDate(iso: string) {
   return `${year}-${month}-${day} ${hour}:${minute} UTC`;
 }
 
+function formatMoneyCOP(value: number) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function pluralize(count: number, singular: string, plural: string) {
+  return count === 1 ? singular : plural;
+}
+
 function formatKickoffTimeColombia(iso: string) {
   return new Intl.DateTimeFormat("es-CO", {
     hour: "numeric",
@@ -374,6 +404,10 @@ function buildStandings(matches: MatchClient[]) {
   return buildWorldCupGroupStandings(matches);
 }
 
+function hasSavedPrediction(match: MatchClient) {
+  return match.ownPredictionHome !== null && match.ownPredictionAway !== null;
+}
+
 async function readErrorMessage(res: Response) {
   try {
     const payload = (await res.json()) as ApiError;
@@ -398,6 +432,7 @@ export default function PronosticoClient({
   const [matches, setMatches] = useState(initialMatches);
   const [activeStage, setActiveStage] = useState<"ALL" | MatchStage>("ALL");
   const [activeGroup, setActiveGroup] = useState<GroupFilter>("ALL");
+  const [activePickFilter, setActivePickFilter] = useState<PickFilter>("ALL");
   const [busySaveId, setBusySaveId] = useState<string | null>(null);
   const [busyUpload, setBusyUpload] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
@@ -438,6 +473,14 @@ export default function PronosticoClient({
     () => matches.reduce((sum, match) => sum + (match.ownPredictionPoints ?? 0), 0),
     [matches],
   );
+  const entryFeeCop = Number(paymentConfig?.amount ?? DEFAULT_ENTRY_FEE_COP);
+  const normalizedEntryFeeCop = Number.isFinite(entryFeeCop) && entryFeeCop > 0 ? entryFeeCop : DEFAULT_ENTRY_FEE_COP;
+  const approvedBettorCount = bettorStandings.filter((row) => row.paymentStatus === "APROBADO").length;
+  const prizePoolCop = approvedBettorCount * normalizedEntryFeeCop;
+  const prizeTiers = PRIZE_TIERS.map((tier) => ({
+    ...tier,
+    amount: Math.round(prizePoolCop * tier.share),
+  }));
 
   const standings = useMemo(() => buildStandings(matches), [matches]);
   const groupMatchdayByMatch = useMemo(() => {
@@ -495,6 +538,37 @@ export default function PronosticoClient({
     }
     return counter;
   }, [matches]);
+  const isLocked = useCallback(
+    (match: MatchClient) => {
+      if (match.status === "FINAL") return true;
+      if (user.role === "ADMIN") return false;
+      if (!scoringRule) return false;
+      const deadline = new Date(match.kickoff).getTime() - scoringRule.lockMinutesBeforeKickoff * 60 * 1000;
+      return nowMs >= deadline;
+    },
+    [nowMs, scoringRule, user.role],
+  );
+  const pickFilterOptions = useMemo(
+    () => [
+      { key: "ALL" as const, label: "Todos", count: matches.length },
+      {
+        key: "PENDING" as const,
+        label: "Pendientes",
+        count: matches.filter((match) => !hasSavedPrediction(match)).length,
+      },
+      {
+        key: "SAVED" as const,
+        label: "Guardados",
+        count: matches.filter((match) => hasSavedPrediction(match)).length,
+      },
+      {
+        key: "OPEN" as const,
+        label: "Abiertos",
+        count: matches.filter((match) => !isLocked(match)).length,
+      },
+    ],
+    [isLocked, matches],
+  );
   const filteredMatches = useMemo(() => {
     let scoped = matches;
     if (activeStage !== "ALL") {
@@ -505,8 +579,17 @@ export default function PronosticoClient({
         (match) => match.stage === "GROUP" && (match.groupName ?? "").toUpperCase() === activeGroup,
       );
     }
+    if (activePickFilter === "PENDING") {
+      scoped = scoped.filter((match) => !hasSavedPrediction(match));
+    }
+    if (activePickFilter === "SAVED") {
+      scoped = scoped.filter((match) => hasSavedPrediction(match));
+    }
+    if (activePickFilter === "OPEN") {
+      scoped = scoped.filter((match) => !isLocked(match));
+    }
     return scoped;
-  }, [matches, activeStage, activeGroup]);
+  }, [matches, activeStage, activeGroup, activePickFilter, isLocked]);
 
   function pushToast(kind: "success" | "error", text: string) {
     const id = Date.now() + Math.floor(Math.random() * 1000);
@@ -514,13 +597,6 @@ export default function PronosticoClient({
     window.setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, 3600);
-  }
-
-  function isLocked(match: MatchClient) {
-    if (user.role === "ADMIN") return false;
-    if (!scoringRule) return false;
-    const deadline = new Date(match.kickoff).getTime() - scoringRule.lockMinutesBeforeKickoff * 60 * 1000;
-    return nowMs >= deadline;
   }
 
   async function onLogout() {
@@ -830,11 +906,28 @@ export default function PronosticoClient({
               <h2 className="wc-title mt-1 text-4xl text-zinc-950 sm:text-5xl">Tabla de Apostadores</h2>
             </div>
             <span className="rounded-full border border-zinc-300 bg-zinc-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-zinc-700">
-              {bettorStandings.length} jugadores
+              {bettorStandings.length} {pluralize(bettorStandings.length, "jugador", "jugadores")}
             </span>
           </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+              <p className="wc-eyebrow text-blue-800">Bolsa acumulada</p>
+              <p className="mt-2 text-2xl font-black text-blue-950">{formatMoneyCOP(prizePoolCop)}</p>
+              <p className="mt-1 text-xs text-blue-800">
+                {approvedBettorCount} {pluralize(approvedBettorCount, "apostador aprobado", "apostadores aprobados")} x{" "}
+                {formatMoneyCOP(normalizedEntryFeeCop)}
+              </p>
+            </div>
+            {prizeTiers.map((tier) => (
+              <div key={tier.position} className={`rounded-2xl border p-4 ${tier.badgeClass}`}>
+                <p className="wc-eyebrow">{tier.label}</p>
+                <p className="mt-2 text-2xl font-black">{formatMoneyCOP(tier.amount)}</p>
+                <p className="mt-1 text-xs font-semibold">{Math.round(tier.share * 100)}% de la bolsa</p>
+              </div>
+            ))}
+          </div>
           <div className="mt-4 overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
-            <table className="min-w-full table-fixed text-left text-sm text-zinc-900">
+            <table className="w-full min-w-[980px] table-fixed text-left text-sm text-zinc-900">
               <thead className="bg-zinc-50 text-zinc-700">
                 <tr className="border-b border-zinc-200">
                   <th className="w-16 px-3 py-2">#</th>
@@ -843,29 +936,48 @@ export default function PronosticoClient({
                   <th className="w-24 px-3 py-2">KO</th>
                   <th className="w-24 px-3 py-2">Plenos</th>
                   <th className="w-28 px-3 py-2">Puntos</th>
+                  <th className="w-40 px-3 py-2">Premio</th>
                   <th className="w-28 px-3 py-2">Picks</th>
                 </tr>
               </thead>
               <tbody>
                 {bettorStandings.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-3 py-4 text-zinc-600">
+                    <td colSpan={8} className="px-3 py-4 text-zinc-600">
                       Aun no hay apostadores con perfil completo.
                     </td>
                   </tr>
                 ) : (
                   bettorStandings.map((row) => {
                     const isCurrentUser = row.userId === user.id;
+                    const prizeTier = prizeTiers.find((tier) => tier.position === row.position);
                     return (
                       <tr
                         key={row.userId}
-                        className={`border-b border-zinc-100 ${isCurrentUser ? "bg-amber-50" : "bg-white"}`}
+                        className={`border-b border-zinc-100 ${
+                          prizeTier?.rowClass ?? (isCurrentUser ? "bg-blue-50" : "bg-white")
+                        }`}
                       >
-                        <td className="px-3 py-2 font-bold">{row.position}</td>
+                        <td className="px-3 py-2">
+                          <span
+                            className={`inline-flex min-w-9 justify-center rounded-full border px-2 py-1 text-xs font-black ${
+                              prizeTier?.badgeClass ?? "border-zinc-300 bg-zinc-100 text-zinc-800"
+                            }`}
+                          >
+                            {row.position}
+                          </span>
+                        </td>
                         <td className="px-3 py-2">
                           <p className="font-semibold text-zinc-900">
                             {(row.username || `${row.nombres} ${row.apellidos}`).toUpperCase()}
                           </p>
+                          {prizeTier ? (
+                            <span
+                              className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] ${prizeTier.badgeClass}`}
+                            >
+                              {prizeTier.shortLabel}
+                            </span>
+                          ) : null}
                         </td>
                         <td className="px-3 py-2 text-zinc-700">{row.groupPoints}</td>
                         <td className="px-3 py-2 text-zinc-700">{row.knockoutPoints}</td>
@@ -876,6 +988,9 @@ export default function PronosticoClient({
                           </span>
                         </td>
                         <td className="px-3 py-2 font-bold text-zinc-900">{row.totalPoints}</td>
+                        <td className="px-3 py-2 font-bold text-zinc-900">
+                          {prizeTier ? formatMoneyCOP(prizeTier.amount) : "-"}
+                        </td>
                         <td className="px-3 py-2 text-zinc-700">{row.predictionCount}</td>
                       </tr>
                     );
@@ -988,6 +1103,28 @@ export default function PronosticoClient({
         </section>
 
         <section>
+          <div className="mb-3 flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-3 shadow-[0_6px_18px_rgba(0,0,0,0.07)] sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="wc-eyebrow">Mis picks</p>
+              <p className="text-sm text-zinc-600">Filtra la lista para avanzar mas rapido.</p>
+            </div>
+            <div className="wc-scrollbar-none flex gap-2 overflow-x-auto pb-1 sm:pb-0">
+              {pickFilterOptions.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => setActivePickFilter(option.key)}
+                  className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition ${
+                    activePickFilter === option.key
+                      ? "border-blue-300 bg-blue-100 text-blue-900 shadow-[0_4px_12px_rgba(37,99,235,0.16)]"
+                      : "border-zinc-300 bg-zinc-50 text-zinc-700 hover:bg-zinc-100"
+                  }`}
+                >
+                  {option.label} ({option.count})
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="wc-scrollbar-none mb-3 overflow-x-auto pb-1">
             <div className="flex w-max min-w-full gap-2 px-1 md:w-full md:min-w-0 md:flex-wrap md:justify-center">
               {STAGE_FILTERS_ES.map((item) => (
@@ -1039,9 +1176,16 @@ export default function PronosticoClient({
             </div>
           </div>
 
+          {filteredMatches.length === 0 ? (
+            <div className="rounded-2xl border border-zinc-200 bg-white p-5 text-center text-sm text-zinc-600 shadow-[0_6px_18px_rgba(0,0,0,0.07)]">
+              No hay partidos para los filtros seleccionados.
+            </div>
+          ) : null}
+
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filteredMatches.map((match) => {
               const locked = isLocked(match);
+              const finalized = match.status === "FINAL";
               const form = formByMatch[match.id] ?? {
                 home: "",
                 away: "",
@@ -1078,12 +1222,14 @@ export default function PronosticoClient({
                     <p className="wc-eyebrow text-zinc-700">Partido {match.matchNumber}</p>
                     <span
                       className={`rounded-full border px-3 py-1 text-[10px] font-extrabold tracking-[0.15em] ${
-                        locked
+                        finalized
+                          ? "border-zinc-300 bg-zinc-100 text-zinc-700"
+                          : locked
                           ? "border-rose-300 bg-rose-100 text-rose-700"
                           : "border-emerald-300 bg-emerald-100 text-emerald-700"
                       }`}
                     >
-                      {locked ? "Bloqueado" : "Abierto"}
+                      {finalized ? "Finalizado" : locked ? "Bloqueado" : "Abierto"}
                     </span>
                   </div>
 
