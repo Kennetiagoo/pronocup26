@@ -8,10 +8,10 @@ export async function GET() {
   try {
     await requireAdmin();
     const users = await prisma.user.findMany({
-      where: { role: "USER" },
       orderBy: { createdAt: "asc" },
       select: {
         id: true,
+        role: true,
         nombres: true,
         apellidos: true,
         username: true,
@@ -19,6 +19,17 @@ export async function GET() {
         paymentStatus: true,
         createdAt: true,
         countryCode: true,
+        paymentProofs: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: {
+            id: true,
+            status: true,
+            rejectionNote: true,
+            blobUrl: true,
+            createdAt: true,
+          },
+        },
       },
     });
     return ok({ users });

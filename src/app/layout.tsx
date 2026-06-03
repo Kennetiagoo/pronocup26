@@ -18,6 +18,12 @@ export const metadata: Metadata = {
   title: "Prono Cup 2026",
   description:
     "Aplicacion web de pronosticos del Mundial 2026 con login, tabla de posiciones y panel admin.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico?v=mundial-2026", sizes: "any" },
+      { url: "/icon.svg?v=mundial-2026", type: "image/svg+xml" },
+    ],
+  },
 };
 
 export default function RootLayout({

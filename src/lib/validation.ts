@@ -66,6 +66,11 @@ export const rejectProofSchema = z.object({
   rejectionNote: z.string().trim().min(5).max(500),
 });
 
+export const updateUserPaymentStatusSchema = z.object({
+  paymentStatus: z.enum(["SIN_COMPROBANTE", "EN_REVISION", "APROBADO", "RECHAZADO"]),
+  rejectionNote: z.string().trim().min(5).max(500).optional(),
+});
+
 export const updateScoringRuleSchema = z.object({
   officialModeEnabled: z.boolean(),
   knockoutMultiplier: z.number().int().min(1).max(5),

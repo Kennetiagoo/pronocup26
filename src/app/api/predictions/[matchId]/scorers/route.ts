@@ -80,7 +80,7 @@ export async function PUT(
     }
 
     const lockAt = match.kickoff.getTime() - rule.lockMinutesBeforeKickoff * 60 * 1000;
-    if (user.role !== UserRole.ADMIN && Date.now() >= lockAt) {
+    if (Date.now() >= lockAt) {
       throw new ApiError(422, "UNPROCESSABLE", "Este partido ya esta bloqueado para pronosticos.");
     }
 

@@ -45,7 +45,10 @@ body {
 body {
   position: relative;
   overflow-x: hidden;
-  background: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(3, 10, 27, 0.6), rgba(3, 18, 18, 0.34) 42%, rgba(3, 18, 8, 0.56)),
+    linear-gradient(90deg, rgba(4, 12, 32, 0.28), rgba(255, 255, 255, 0.08), rgba(4, 18, 12, 0.24)),
+    url("/backgrounds/futbol-genial.jpg") center / cover fixed no-repeat;
   color: var(--foreground);
   font-family: var(--font-readable);
   line-height: 1.45;
@@ -58,7 +61,6 @@ body::after {
   pointer-events: none;
   position: fixed;
   inset: 0;
-  z-index: -1;
 }
 
 .wc-page {
@@ -75,21 +77,23 @@ body::after {
 }
 
 .wc-card {
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  background: rgba(255, 255, 255, 0.92);
   color: #111111;
+  backdrop-filter: blur(14px) saturate(1.08);
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.06),
-    0 8px 24px rgba(0, 0, 0, 0.08);
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 18px 42px rgba(0, 0, 0, 0.18);
 }
 
 .wc-card-soft {
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.86);
   color: #111111;
+  backdrop-filter: blur(12px) saturate(1.06);
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.05),
-    0 6px 18px rgba(0, 0, 0, 0.07);
+    0 1px 2px rgba(0, 0, 0, 0.09),
+    0 14px 34px rgba(0, 0, 0, 0.15);
 }
 
 .wc-title {

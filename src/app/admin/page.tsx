@@ -38,10 +38,10 @@ export default async function AdminPage() {
       },
     }),
     prisma.user.findMany({
-      where: { role: "USER" },
       orderBy: { createdAt: "asc" },
       select: {
         id: true,
+        role: true,
         nombres: true,
         apellidos: true,
         username: true,
@@ -49,6 +49,17 @@ export default async function AdminPage() {
         paymentStatus: true,
         countryCode: true,
         createdAt: true,
+        paymentProofs: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: {
+            id: true,
+            status: true,
+            rejectionNote: true,
+            blobUrl: true,
+            createdAt: true,
+          },
+        },
       },
     }),
     prisma.paymentProof.findMany({
@@ -85,6 +96,10 @@ export default async function AdminPage() {
   const serializedUsers = users.map((u) => ({
     ...u,
     createdAt: u.createdAt.toISOString(),
+    paymentProofs: u.paymentProofs.map((proof) => ({
+      ...proof,
+      createdAt: proof.createdAt.toISOString(),
+    })),
   }));
 
   const serializedProofs = proofs.map((proof) => ({

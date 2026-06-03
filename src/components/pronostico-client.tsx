@@ -2,7 +2,7 @@
 
 import { MatchStatus, MatchStage, PaymentStatus, UserRole } from "@prisma/client";
 import Link from "next/link";
-import { FormEvent, useCallback, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { FileUploadField } from "@/components/file-upload-field";
@@ -440,7 +440,7 @@ export default function PronosticoClient({
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastState[]>([]);
   const [x2InfoModal, setX2InfoModal] = useState<X2InfoModalState | null>(null);
-  const [nowMs] = useState(() => Date.parse(serverNowIso));
+  const [nowMs, setNowMs] = useState(() => Date.parse(serverNowIso));
   const [formByMatch, setFormByMatch] = useState<
     Record<
       string,
@@ -481,6 +481,12 @@ export default function PronosticoClient({
     ...tier,
     amount: Math.round(prizePoolCop * tier.share),
   }));
+
+  useEffect(() => {
+    setNowMs(Date.now());
+    const timer = window.setInterval(() => setNowMs(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const standings = useMemo(() => buildStandings(matches), [matches]);
   const groupMatchdayByMatch = useMemo(() => {
@@ -541,12 +547,11 @@ export default function PronosticoClient({
   const isLocked = useCallback(
     (match: MatchClient) => {
       if (match.status === "FINAL") return true;
-      if (user.role === "ADMIN") return false;
       if (!scoringRule) return false;
       const deadline = new Date(match.kickoff).getTime() - scoringRule.lockMinutesBeforeKickoff * 60 * 1000;
       return nowMs >= deadline;
     },
-    [nowMs, scoringRule, user.role],
+    [nowMs, scoringRule],
   );
   const pickFilterOptions = useMemo(
     () => [

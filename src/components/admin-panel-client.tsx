@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { MatchStatus, PaymentStatus } from "@prisma/client";
+import { MatchStatus, PaymentStatus, UserRole } from "@prisma/client";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -51,6 +51,7 @@ type SafeMatch = {
 
 type SafeUserRow = {
   id: string;
+  role: UserRole;
   nombres: string;
   apellidos: string;
   username: string | null;
@@ -58,6 +59,13 @@ type SafeUserRow = {
   paymentStatus: PaymentStatus;
   countryCode: string;
   createdAt: string;
+  paymentProofs?: Array<{
+    id: number;
+    status: PaymentStatus;
+    rejectionNote: string | null;
+    blobUrl: string;
+    createdAt: string;
+  }>;
 };
 
 type SafeProof = {
@@ -271,6 +279,7 @@ export default function AdminPanelClient({
     Record<string, TeamPlayerOption[]>
   >({});
   const [scorerDraftByMatch, setScorerDraftByMatch] = useState<Record<string, MatchScorerDraft>>({});
+  const [proofFileByUser, setProofFileByUser] = useState<Record<string, File | null>>({});
 
   useEffect(() => {
     if (!paymentQrFile) {
@@ -380,6 +389,16 @@ export default function AdminPanelClient({
     if (filterStage === "ALL") return matches;
     return matches.filter((match) => match.stage === filterStage);
   }, [matches, filterStage]);
+  const userStatusSummary = useMemo(
+    () =>
+      ({
+        SIN_COMPROBANTE: users.filter((user) => user.paymentStatus === "SIN_COMPROBANTE").length,
+        EN_REVISION: users.filter((user) => user.paymentStatus === "EN_REVISION").length,
+        APROBADO: users.filter((user) => user.paymentStatus === "APROBADO").length,
+        RECHAZADO: users.filter((user) => user.paymentStatus === "RECHAZADO").length,
+      }) satisfies Record<PaymentStatus, number>,
+    [users],
+  );
 
   async function refreshAdminData() {
     const [usersRes, matchesRes, ruleRes, proofsRes, bonusRes] = await Promise.all([
@@ -392,7 +411,16 @@ export default function AdminPanelClient({
 
     if (usersRes.ok) {
       const payload = (await usersRes.json()) as { users: SafeUserRow[] };
-      setUsers(payload.users.map((u) => ({ ...u, createdAt: new Date(u.createdAt).toISOString() })));
+      setUsers(
+        payload.users.map((u) => ({
+          ...u,
+          createdAt: new Date(u.createdAt).toISOString(),
+          paymentProofs: (u.paymentProofs ?? []).map((proof) => ({
+            ...proof,
+            createdAt: new Date(proof.createdAt).toISOString(),
+          })),
+        })),
+      );
     }
     if (matchesRes.ok) {
       const payload = (await matchesRes.json()) as { matches: SafeMatch[] };
@@ -728,6 +756,60 @@ export default function AdminPanelClient({
         return;
       }
       setNotice("Comprobante rechazado.");
+      await refreshAdminData();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function updateUserPaymentStatus(userId: string, paymentStatus: PaymentStatus) {
+    const rejectionNote =
+      paymentStatus === "RECHAZADO" ? window.prompt("Motivo de rechazo para el usuario:") : undefined;
+    if (paymentStatus === "RECHAZADO" && !rejectionNote) return;
+
+    setBusy(true);
+    setNotice(null);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/payment-status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentStatus, rejectionNote }),
+      });
+      if (!res.ok) {
+        setError(await readErrorMessage(res));
+        return;
+      }
+      setNotice(`Usuario actualizado a: ${statusLabel(paymentStatus)}.`);
+      await refreshAdminData();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function uploadUserProof(userId: string) {
+    const file = proofFileByUser[userId];
+    if (!file) {
+      setError("Selecciona un comprobante antes de subirlo.");
+      return;
+    }
+
+    setBusy(true);
+    setNotice(null);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("proof", file);
+      const res = await fetch(`/api/admin/users/${userId}/payment-proof`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        setError(await readErrorMessage(res));
+        return;
+      }
+      setProofFileByUser((current) => ({ ...current, [userId]: null }));
+      setNotice("Comprobante cargado y usuario enviado a revisión.");
       await refreshAdminData();
     } finally {
       setBusy(false);
@@ -1189,18 +1271,16 @@ export default function AdminPanelClient({
         </section>
 
         <section className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
-          <p className="wc-eyebrow">Plantillas</p>
-          <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Jugadores por seleccion</h2>
-          <p className="mt-2 text-sm text-zinc-700">
-            Carga los jugadores disponibles para habilitar picks de goleadores.
-          </p>
-
-          <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
+              <p className="wc-eyebrow">Plantillas</p>
+              <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Jugadores por seleccion</h2>
+            </div>
+            <div className="flex flex-wrap items-end gap-2">
               <label className="text-sm text-zinc-700">
                 Seleccion
                 <select
-                  className="wc-input mt-1 min-w-[170px] px-3 py-2 text-sm"
+                  className="wc-input mt-1 min-w-[180px] px-3 py-2 text-sm"
                   value={selectedTeamCode}
                   onChange={(e) => setSelectedTeamCode(e.target.value)}
                 >
@@ -1209,186 +1289,168 @@ export default function AdminPanelClient({
                   ) : (
                     teamCodeOptions.map((code) => (
                       <option key={code} value={code}>
-                        {code}
+                        {code} - {teamCodeLabelMap.get(code) ?? "Seleccion"}
                       </option>
                     ))
                   )}
                 </select>
               </label>
-              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
-                {selectedTeamLabel || "Seleccion no elegida"}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => {
                   if (selectedTeamCode) void loadTeamPlayers(selectedTeamCode);
                 }}
                 disabled={teamPlayersBusy || !selectedTeamCode}
-                className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-2 text-sm text-zinc-800 hover:bg-zinc-200 disabled:opacity-60"
+                className="rounded-xl border border-zinc-300 bg-zinc-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-zinc-800 hover:bg-zinc-200 disabled:opacity-60"
               >
                 Recargar
               </button>
               <button
                 type="button"
-                onClick={() => setTeamPlayers((rows) => [...rows, { name: "", number: null }].slice(0, 26))}
-                disabled={teamPlayersBusy || teamPlayers.length >= 26}
-                className="rounded-xl border border-emerald-300 bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-200 disabled:opacity-60"
+                onClick={saveTeamPlayers}
+                disabled={!canSaveTeamPlayers}
+                className="wc-button-primary px-4 py-2 text-xs disabled:opacity-60"
               >
-                Agregar jugador
-              </button>
-              <button
-                type="button"
-                onClick={() => setTeamPlayers((rows) => rows.filter((row) => row.name.trim().length > 0))}
-                disabled={teamPlayersBusy || teamPlayers.length === 0}
-                className="rounded-xl border border-amber-300 bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-200 disabled:opacity-60"
-              >
-                Limpiar vacios
+                Guardar
               </button>
             </div>
           </div>
 
-          <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-zinc-600">
-                Progreso plantilla
-              </p>
-              <p className="text-sm font-bold text-zinc-800">
-                {cleanedTeamPlayers.length} / 26
-              </p>
-            </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-100">
-              <div
-                className="h-full rounded-full bg-[linear-gradient(90deg,rgba(21,175,200,0.94),rgba(36,94,214,0.92),rgba(114,45,212,0.9))] transition-all"
-                style={{ width: `${teamPlayersProgress}%` }}
-              />
-            </div>
-            {duplicateNameCount > 0 ? (
-              <p className="mt-2 text-xs font-semibold text-rose-700">
-                Hay {duplicateNameCount} nombre(s) repetido(s). Debes corregirlos para guardar.
-              </p>
-            ) : null}
-          </div>
-
-          <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-zinc-600">
-              Pegado masivo
-            </p>
-            <p className="mt-1 text-xs text-zinc-600">
-              Formatos soportados por linea: `10 Juan Perez`, `10 - Juan Perez`, `10[TAB]Juan Perez` o solo nombre.
-            </p>
-            <textarea
-              value={bulkPlayersInput}
-              onChange={(e) => setBulkPlayersInput(e.target.value)}
-              rows={5}
-              placeholder={"10 Juan Perez\n9 Maria Gomez\nRodrigo Martinez"}
-              className="wc-input mt-2 w-full px-3 py-2 text-sm"
-            />
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => applyBulkPlayers(false)}
-                disabled={teamPlayersBusy || bulkPlayersInput.trim().length === 0}
-                className="rounded-xl border border-cyan-300 bg-cyan-100 px-4 py-2 text-sm font-semibold text-cyan-900 hover:bg-cyan-200 disabled:opacity-60"
-              >
-                Reemplazar con pegado
-              </button>
-              <button
-                type="button"
-                onClick={() => applyBulkPlayers(true)}
-                disabled={teamPlayersBusy || bulkPlayersInput.trim().length === 0 || teamPlayers.length >= 26}
-                className="rounded-xl border border-indigo-300 bg-indigo-100 px-4 py-2 text-sm font-semibold text-indigo-900 hover:bg-indigo-200 disabled:opacity-60"
-              >
-                Agregar desde pegado
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4">
-            {teamPlayersBusy ? (
-              <p className="text-sm text-zinc-600">Cargando plantilla...</p>
-            ) : (
-              <div className="space-y-2">
-                {teamPlayers.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-600">
-                    Sin jugadores cargados. Agrega al menos uno para esta seleccion.
-                  </div>
-                ) : null}
-                {teamPlayers.length > 0 ? (
-                  <div className="grid gap-2 rounded-xl bg-zinc-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-zinc-600 sm:grid-cols-[60px_110px_1fr_100px]">
-                    <span>#</span>
-                    <span>Dorsal</span>
-                    <span>Nombre</span>
-                    <span>Accion</span>
-                  </div>
-                ) : null}
-                {teamPlayers.map((row, idx) => (
-                  <div
-                    key={`${row.id ?? "new"}-${idx}`}
-                    className="grid gap-2 rounded-xl border border-zinc-200 p-2 sm:grid-cols-[60px_110px_1fr_100px] sm:items-center"
+          <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-zinc-600">
+                    {selectedTeamLabel || "Seleccion no elegida"}
+                  </p>
+                  <p className="text-sm font-bold text-zinc-900">
+                    {cleanedTeamPlayers.length} / 26 validos
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTeamPlayers((rows) => [...rows, { name: "", number: null }].slice(0, 26))}
+                    disabled={teamPlayersBusy || teamPlayers.length >= 26}
+                    className="rounded-xl border border-emerald-300 bg-emerald-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-emerald-800 hover:bg-emerald-200 disabled:opacity-60"
                   >
-                    <span className="text-sm font-semibold text-zinc-700">{idx + 1}</span>
-                    <input
-                      type="number"
-                      min={0}
-                      max={99}
-                      value={row.number ?? ""}
-                      onChange={(e) =>
-                        setTeamPlayers((rows) =>
-                          rows.map((current, i) =>
-                            i === idx
-                              ? {
-                                  ...current,
-                                  number: e.target.value === "" ? null : Number(e.target.value),
-                                }
-                              : current,
-                          ),
-                        )
-                      }
-                      className="wc-input px-3 py-2 text-sm"
-                      placeholder="N°"
-                    />
-                    <input
-                      type="text"
-                      value={row.name}
-                      onChange={(e) =>
-                        setTeamPlayers((rows) =>
-                          rows.map((current, i) =>
-                            i === idx ? { ...current, name: e.target.value } : current,
-                          ),
-                        )
-                      }
-                      className="wc-input px-3 py-2 text-sm"
-                      placeholder="Nombre del jugador"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setTeamPlayers((rows) => rows.filter((_, i) => i !== idx))
-                      }
-                      className="rounded-xl border border-rose-300 bg-rose-100 px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-rose-700 hover:bg-rose-200"
-                    >
-                      Quitar
-                    </button>
-                  </div>
-                ))}
+                    Agregar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTeamPlayers((rows) => rows.filter((row) => row.name.trim().length > 0))}
+                    disabled={teamPlayersBusy || teamPlayers.length === 0}
+                    className="rounded-xl border border-amber-300 bg-amber-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-amber-800 hover:bg-amber-200 disabled:opacity-60"
+                  >
+                    Limpiar
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100">
+                <div
+                  className="h-full rounded-full bg-[linear-gradient(90deg,rgba(21,175,200,0.94),rgba(36,94,214,0.92),rgba(114,45,212,0.9))] transition-all"
+                  style={{ width: `${teamPlayersProgress}%` }}
+                />
+              </div>
+              {duplicateNameCount > 0 ? (
+                <p className="mt-2 text-xs font-semibold text-rose-700">
+                  {duplicateNameCount} nombre(s) repetido(s).
+                </p>
+              ) : null}
 
-          <div className="mt-4 flex items-center justify-between gap-3">
-            <p className="text-xs text-zinc-600">
-              Filas: {teamPlayers.length} | Jugadores validos: {cleanedTeamPlayers.length}
-            </p>
-            <button
-              type="button"
-              onClick={saveTeamPlayers}
-              disabled={!canSaveTeamPlayers}
-              className="wc-button-primary px-5 py-3 text-sm disabled:opacity-60"
-            >
-              Guardar plantilla
-            </button>
+              <div className="mt-3 max-h-[430px] overflow-auto pr-1">
+                {teamPlayersBusy ? (
+                  <p className="text-sm text-zinc-600">Cargando plantilla...</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {teamPlayers.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-600">
+                        Sin jugadores cargados.
+                      </div>
+                    ) : null}
+                    {teamPlayers.map((row, idx) => (
+                      <div
+                        key={`${row.id ?? "new"}-${idx}`}
+                        className="grid grid-cols-[34px_72px_minmax(0,1fr)_74px] items-center gap-2 rounded-xl border border-zinc-200 bg-white p-2"
+                      >
+                        <span className="text-xs font-bold text-zinc-600">{idx + 1}</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={99}
+                          value={row.number ?? ""}
+                          onChange={(e) =>
+                            setTeamPlayers((rows) =>
+                              rows.map((current, i) =>
+                                i === idx
+                                  ? {
+                                      ...current,
+                                      number: e.target.value === "" ? null : Number(e.target.value),
+                                    }
+                                  : current,
+                              ),
+                            )
+                          }
+                          className="wc-input px-2 py-1.5 text-sm"
+                          placeholder="N°"
+                        />
+                        <input
+                          type="text"
+                          value={row.name}
+                          onChange={(e) =>
+                            setTeamPlayers((rows) =>
+                              rows.map((current, i) =>
+                                i === idx ? { ...current, name: e.target.value } : current,
+                              ),
+                            )
+                          }
+                          className="wc-input min-w-0 px-2 py-1.5 text-sm"
+                          placeholder="Nombre del jugador"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setTeamPlayers((rows) => rows.filter((_, i) => i !== idx))}
+                          className="rounded-lg border border-rose-300 bg-rose-100 px-2 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-rose-700 hover:bg-rose-200"
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <details className="rounded-2xl border border-zinc-200 bg-white p-3">
+              <summary className="cursor-pointer text-xs font-bold uppercase tracking-[0.1em] text-zinc-700">
+                Pegado masivo
+              </summary>
+              <textarea
+                value={bulkPlayersInput}
+                onChange={(e) => setBulkPlayersInput(e.target.value)}
+                rows={8}
+                placeholder={"10 Juan Perez\n9 Maria Gomez\nRodrigo Martinez"}
+                className="wc-input mt-3 w-full px-3 py-2 text-sm"
+              />
+              <div className="mt-2 grid gap-2">
+                <button
+                  type="button"
+                  onClick={() => applyBulkPlayers(false)}
+                  disabled={teamPlayersBusy || bulkPlayersInput.trim().length === 0}
+                  className="rounded-xl border border-cyan-300 bg-cyan-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-cyan-900 hover:bg-cyan-200 disabled:opacity-60"
+                >
+                  Reemplazar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyBulkPlayers(true)}
+                  disabled={teamPlayersBusy || bulkPlayersInput.trim().length === 0 || teamPlayers.length >= 26}
+                  className="rounded-xl border border-indigo-300 bg-indigo-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-indigo-900 hover:bg-indigo-200 disabled:opacity-60"
+                >
+                  Agregar al final
+                </button>
+              </div>
+            </details>
           </div>
         </section>
 
@@ -1396,32 +1458,159 @@ export default function AdminPanelClient({
           <div className="flex items-center justify-between">
             <h2 className="wc-title text-4xl text-zinc-950 sm:text-5xl">Gestion de Usuarios</h2>
             <span className="rounded-full border border-zinc-300 bg-zinc-100 px-4 py-1 text-xs font-bold uppercase tracking-[0.12em] text-zinc-700">
-              {users.length} JUGADORES
+              {users.length} USUARIOS
             </span>
           </div>
           <p className="mt-2 text-sm text-zinc-700 sm:text-base">
-            El administrador no participa en la tabla general y no aparece en esta lista.
+            Cambia estados de pago, sube comprobantes por el usuario y deja ingresos listos sin esperar que cada
+            jugador complete todo desde su panel.
           </p>
-          <div className="mt-4 rounded-2xl border border-zinc-200 bg-white">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {(
+              [
+                ["APROBADO", "Aprobados"],
+                ["EN_REVISION", "En revision"],
+                ["SIN_COMPROBANTE", "Sin comprobante"],
+                ["RECHAZADO", "Rechazados"],
+              ] as const
+            ).map(([status, label]) => (
+              <div key={status} className={`rounded-2xl border p-4 ${statusBadge(status)}`}>
+                <p className="text-xs font-bold uppercase tracking-[0.12em]">{label}</p>
+                <p className="mt-1 text-3xl font-black">{userStatusSummary[status]}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 space-y-3">
             {users.length === 0 ? (
-              <p className="p-5 text-sm text-zinc-600">No hay usuarios registrados para mostrar.</p>
+              <p className="rounded-2xl border border-zinc-200 bg-white p-5 text-sm text-zinc-600">
+                No hay usuarios registrados para mostrar.
+              </p>
             ) : (
-              users.map((u) => (
+              users.map((u) => {
+                const latestProof = u.paymentProofs?.[0] ?? null;
+                const isAdminUser = u.role === "ADMIN";
+                return (
                 <div
                   key={u.id}
-                  className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 px-4 py-3 last:border-b-0"
+                  className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-[0_8px_22px_rgba(0,0,0,0.08)]"
                 >
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-900 sm:text-base">
-                      {u.nombres} {u.apellidos} @{u.username ?? "sin-usuario"}
-                    </p>
-                    <p className="text-xs text-zinc-500 sm:text-sm">{u.email}</p>
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-zinc-900 sm:text-base">
+                        {u.nombres} {u.apellidos} @{u.username ?? "sin-usuario"}
+                      </p>
+                      <p className="text-xs text-zinc-500 sm:text-sm">{u.email}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        {isAdminUser ? (
+                          <span className="rounded-full border border-violet-300 bg-violet-100 px-3 py-1 text-sm font-bold text-violet-800">
+                            Admin
+                          </span>
+                        ) : null}
+                        <span className={`rounded-full border px-3 py-1 text-sm ${statusBadge(u.paymentStatus)}`}>
+                          {statusLabel(u.paymentStatus)}
+                        </span>
+                        <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-zinc-600">
+                          {u.countryCode}
+                        </span>
+                      </div>
+                      {isAdminUser ? (
+                        <p className="mt-3 rounded-xl border border-violet-200 bg-violet-50 p-3 text-sm text-violet-800">
+                          Cuenta administradora incluida en la lista.
+                        </p>
+                      ) : latestProof ? (
+                        <div className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold text-zinc-800">Ultimo comprobante</span>
+                            <span className={`rounded-full border px-2 py-0.5 text-xs ${statusBadge(latestProof.status)}`}>
+                              {statusLabel(latestProof.status)}
+                            </span>
+                            <a
+                              href={latestProof.blobUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-lg border border-cyan-300 bg-cyan-50 px-2 py-1 text-xs font-bold uppercase tracking-[0.08em] text-cyan-800 hover:bg-cyan-100"
+                            >
+                              Ver archivo
+                            </a>
+                          </div>
+                          {latestProof.rejectionNote ? (
+                            <p className="mt-2 text-xs text-rose-700">Motivo: {latestProof.rejectionNote}</p>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <p className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-600">
+                          Este usuario aun no tiene comprobantes cargados.
+                        </p>
+                      )}
+                    </div>
+                    {isAdminUser ? (
+                      <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4 text-sm text-violet-800 lg:w-[420px]">
+                        El admin se muestra para control interno.
+                      </div>
+                    ) : (
+                      <div className="grid min-w-0 gap-3 lg:w-[420px]">
+                        <FileUploadField
+                          id={`admin-user-proof-${u.id}`}
+                          label="Subir comprobante"
+                          hint="JPG, PNG o PDF. Al subirlo queda en revision."
+                          accept=".jpg,.jpeg,.png,.pdf"
+                          file={proofFileByUser[u.id] ?? null}
+                          onChange={(file) =>
+                            setProofFileByUser((current) => ({
+                              ...current,
+                              [u.id]: file,
+                            }))
+                          }
+                          className="border-zinc-300 bg-zinc-50"
+                        />
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => uploadUserProof(u.id)}
+                            disabled={busy || !proofFileByUser[u.id]}
+                            className="rounded-xl border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-cyan-800 hover:bg-cyan-100 disabled:opacity-50"
+                          >
+                            Subir
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => updateUserPaymentStatus(u.id, "EN_REVISION")}
+                            disabled={busy || u.paymentStatus === "EN_REVISION"}
+                            className="rounded-xl border border-amber-300 bg-amber-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-amber-800 hover:bg-amber-200 disabled:opacity-50"
+                          >
+                            A revision
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => updateUserPaymentStatus(u.id, "APROBADO")}
+                            disabled={busy || u.paymentStatus === "APROBADO"}
+                            className="rounded-xl border border-emerald-300 bg-emerald-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-emerald-800 hover:bg-emerald-200 disabled:opacity-50"
+                          >
+                            Aprobar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => updateUserPaymentStatus(u.id, "RECHAZADO")}
+                            disabled={busy || u.paymentStatus === "RECHAZADO"}
+                            className="rounded-xl border border-rose-300 bg-rose-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-rose-700 hover:bg-rose-200 disabled:opacity-50"
+                          >
+                            Rechazar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => updateUserPaymentStatus(u.id, "SIN_COMPROBANTE")}
+                            disabled={busy || u.paymentStatus === "SIN_COMPROBANTE"}
+                            className="rounded-xl border border-zinc-300 bg-zinc-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-zinc-700 hover:bg-zinc-200 disabled:opacity-50"
+                          >
+                            Reset
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <span className={`rounded-full border px-3 py-1 text-sm ${statusBadge(u.paymentStatus)}`}>
-                    {statusLabel(u.paymentStatus)}
-                  </span>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         </section>
