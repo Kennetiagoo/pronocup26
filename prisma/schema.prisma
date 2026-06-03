@@ -1,0 +1,272 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum MatchStage {
+  GROUP
+  ROUND_OF_32
+  ROUND_OF_16
+  QUARTER_FINAL
+  SEMI_FINAL
+  THIRD_PLACE
+  FINAL
+}
+
+enum MatchStatus {
+  SCHEDULED
+  FINAL
+}
+
+enum TeamSide {
+  HOME
+  AWAY
+}
+
+enum PaymentStatus {
+  SIN_COMPROBANTE
+  EN_REVISION
+  APROBADO
+  RECHAZADO
+}
+
+model User {
+  id            String        @id
+  name          String
+  email         String        @unique
+  passwordHash  String
+  role          UserRole      @default(USER)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  countryCode   String        @default("CO")
+  nombres       String        @default("")
+  apellidos     String        @default("")
+  username      String?       @unique
+  paymentStatus PaymentStatus @default(SIN_COMPROBANTE)
+
+  Prediction            Prediction[]
+  paymentProofs         PaymentProof[] @relation("UserPaymentProofs")
+  reviewedPaymentProofs PaymentProof[] @relation("ReviewerPaymentProofs")
+  auditLogs             AuditLog[]     @relation("ActorAuditLogs")
+  reviewedAuditLogs     AuditLog[]     @relation("ReviewedAuditLogs")
+}
+
+model Match {
+  id           String      @id
+  matchNumber  Int         @unique
+  stage        MatchStage
+  groupName    String?
+  kickoff      DateTime
+  kickoffLocal String
+  utcOffset    String
+  stadium      String
+  city         String
+  homeTeam     String
+  awayTeam     String
+  homeTeamCode String?
+  awayTeamCode String?
+  homeScore    Int?
+  awayScore    Int?
+  status       MatchStatus @default(SCHEDULED)
+  isTopMatch   Boolean     @default(false)
+  topMultiplier Float      @default(1.5)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime
+  Prediction   Prediction[]
+  officialScorers MatchOfficialScorer[]
+
+  @@index([kickoff])
+  @@index([stage])
+}
+
+model Prediction {
+  id        String   @id
+  userId    String
+  matchId   String
+  homeScore Int
+  awayScore Int
+  points    Int      @default(0)
+  basePoints Int     @default(0)
+  bonusPoints Int    @default(0)
+  scorerPoints Int   @default(0)
+  scorerPointApplied Int @default(0)
+  usedX2 Boolean     @default(false)
+  x2Returned Boolean @default(false)
+  topApplied Boolean @default(false)
+  appliedMultiplier Float @default(1)
+  bonusActivatedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scorerPicks PredictionScorerPick[]
+
+  @@unique([userId, matchId])
+  @@index([matchId])
+}
+
+model ScoringRule {
+  id                       Int      @id @default(1)
+  officialModeEnabled      Boolean  @default(true)
+  knockoutMultiplier       Int      @default(2)
+  exactScorePoints         Int      @default(5)
+  goalDifferencePoints     Int      @default(3)
+  outcomePoints            Int      @default(2)
+  singleTeamGoalsPoints    Int      @default(1)
+  drawOutcomeBonus         Int      @default(0)
+  lockMinutesBeforeKickoff Int      @default(15)
+  allowSelfRegistration    Boolean  @default(true)
+  updatedAt                DateTime
+}
+
+model BonusConfig {
+  id Int @id @default(1)
+
+  x2EnabledGlobal       Boolean @default(true)
+  x2GroupEnabled        Boolean @default(true)
+  x2RoundOf32Enabled    Boolean @default(false)
+  x2RoundOf16Enabled    Boolean @default(false)
+  x2QuarterFinalEnabled Boolean @default(false)
+  x2SemiFinalEnabled    Boolean @default(false)
+  x2ThirdPlaceEnabled   Boolean @default(false)
+  x2FinalEnabled        Boolean @default(false)
+
+  topMatchEnabledGlobal       Boolean @default(true)
+  topGroupEnabled             Boolean @default(true)
+  topRoundOf32Enabled         Boolean @default(true)
+  topRoundOf16Enabled         Boolean @default(true)
+  topQuarterFinalEnabled      Boolean @default(true)
+  topSemiFinalEnabled         Boolean @default(true)
+  topThirdPlaceEnabled        Boolean @default(true)
+  topFinalEnabled             Boolean @default(true)
+  topMatchAllowCombinationWithX2 Boolean @default(false)
+
+  scorersEnabledGlobal       Boolean @default(true)
+  scorersGroupEnabled        Boolean @default(false)
+  scorersRoundOf32Enabled    Boolean @default(true)
+  scorersRoundOf16Enabled    Boolean @default(true)
+  scorersQuarterFinalEnabled Boolean @default(true)
+  scorersSemiFinalEnabled    Boolean @default(true)
+  scorersThirdPlaceEnabled   Boolean @default(true)
+  scorersFinalEnabled        Boolean @default(true)
+
+  x2UsesGroup Int @default(10)
+  topMultiplier Float @default(1.5)
+  scorerPoint Int @default(1)
+
+  activatedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TeamPlayer {
+  id Int @id @default(autoincrement())
+  teamCode String
+  name String
+  number Int?
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  officialGoals MatchOfficialScorer[]
+  predictionPicks PredictionScorerPick[]
+
+  @@unique([teamCode, name])
+  @@index([teamCode, isActive])
+}
+
+model MatchOfficialScorer {
+  id Int @id @default(autoincrement())
+  matchId String
+  teamSide TeamSide
+  slotIndex Int
+  playerId Int
+  createdAt DateTime @default(now())
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player TeamPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, teamSide, slotIndex])
+  @@index([matchId])
+}
+
+model PredictionScorerPick {
+  id Int @id @default(autoincrement())
+  predictionId String
+  teamSide TeamSide
+  slotIndex Int
+  playerId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  prediction Prediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  player TeamPlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([predictionId, teamSide, slotIndex])
+  @@index([predictionId])
+}
+
+model PaymentProof {
+  id            Int           @id @default(autoincrement())
+  userId        String
+  blobUrl       String
+  blobPath      String
+  fileHash      String
+  mimeType      String
+  fileSize      Int
+  status        PaymentStatus @default(EN_REVISION)
+  rejectionNote String?
+  createdAt     DateTime      @default(now())
+  reviewedAt    DateTime?
+  reviewedById  String?
+
+  user       User  @relation("UserPaymentProofs", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User? @relation("ReviewerPaymentProofs", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+}
+
+model PaymentConfig {
+  id           Int      @id @default(autoincrement())
+  isActive     Boolean  @default(true)
+  qrBlobUrl    String?
+  qrBlobPath   String?
+  qrCropX      Float?
+  qrCropY      Float?
+  qrZoom       Float?
+  qrWidth      Float?
+  qrHeight     Float?
+  amount       Decimal  @db.Decimal(10, 2)
+  currency     String   @default("COP")
+  instructions String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  auditLogs AuditLog[]
+}
+
+model AuditLog {
+  id              Int      @id @default(autoincrement())
+  action          String
+  entityType      String
+  entityId        String
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  actorId         String?
+  reviewedUserId  String?
+  paymentConfigId Int?
+
+  actor         User?          @relation("ActorAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+  reviewedUser  User?          @relation("ReviewedAuditLogs", fields: [reviewedUserId], references: [id], onDelete: SetNull)
+  paymentConfig PaymentConfig? @relation(fields: [paymentConfigId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId, createdAt(sort: Desc)])
+}
