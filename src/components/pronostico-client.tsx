@@ -96,6 +96,8 @@ type BettorStanding = {
   partialLevel2: number;
   partialLevel3: number;
   partialLevel4: number;
+  x2UsedCount: number;
+  x2LeftCount: number;
   registeredAt: string;
 };
 
@@ -151,6 +153,7 @@ type X2InfoModalState = {
   remainingGroupAfter: number;
   remainingDayBefore: number;
   remainingDayAfter: number;
+  matchDateLabel: string;
 };
 
 type PickFilter = "ALL" | "PENDING" | "SAVED" | "OPEN";
@@ -408,6 +411,10 @@ function hasSavedPrediction(match: MatchClient) {
   return match.ownPredictionHome !== null && match.ownPredictionAway !== null;
 }
 
+function formatPoints(points: number) {
+  return `${points} pts`;
+}
+
 async function readErrorMessage(res: Response) {
   try {
     const payload = (await res.json()) as ApiError;
@@ -441,6 +448,7 @@ export default function PronosticoClient({
   const [toasts, setToasts] = useState<ToastState[]>([]);
   const [x2InfoModal, setX2InfoModal] = useState<X2InfoModalState | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.parse(serverNowIso));
+  const [editingSavedMatchById, setEditingSavedMatchById] = useState<Record<string, boolean>>({});
   const [formByMatch, setFormByMatch] = useState<
     Record<
       string,
@@ -481,6 +489,66 @@ export default function PronosticoClient({
     ...tier,
     amount: Math.round(prizePoolCop * tier.share),
   }));
+  const scoringSummaryCards = scoringRule
+    ? [
+        ...(scoringRule.officialModeEnabled
+          ? []
+          : [
+              {
+                key: "exact-score",
+                label: "Marcador exacto",
+                value: scoringRule.exactScorePoints,
+                help: "Pleno clasico",
+                className: "border-emerald-200 bg-emerald-50 text-emerald-800",
+              },
+            ]),
+        {
+          key: "outcome",
+          label: scoringRule.officialModeEnabled ? "Resultado correcto" : "Ganador / empate",
+          value: scoringRule.outcomePoints,
+          help: "Ganador o empate",
+          className: scoringRule.officialModeEnabled
+            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+            : "border-lime-200 bg-lime-50 text-lime-800",
+        },
+        {
+          key: "home-goals",
+          label: "Goles local",
+          value: scoringRule.singleTeamGoalsPoints,
+          help: "Marcador del local",
+          className: "border-cyan-200 bg-cyan-50 text-cyan-800",
+        },
+        {
+          key: "away-goals",
+          label: "Goles visitante",
+          value: scoringRule.singleTeamGoalsPoints,
+          help: "Marcador del visitante",
+          className: "border-sky-200 bg-sky-50 text-sky-800",
+        },
+        {
+          key: "goal-difference",
+          label: "Diferencia",
+          value: scoringRule.goalDifferencePoints,
+          help: "Diferencia exacta",
+          className: "border-amber-200 bg-amber-50 text-amber-800",
+        },
+        {
+          key: "draw-bonus",
+          label: "Bonus empate",
+          value: scoringRule.drawOutcomeBonus,
+          help: "Si el empate coincide",
+          className: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800",
+        },
+        {
+          key: "lock",
+          label: "Cierre de picks",
+          value: scoringRule.lockMinutesBeforeKickoff,
+          suffix: "min",
+          help: "Antes del inicio",
+          className: "border-rose-200 bg-rose-50 text-rose-800",
+        },
+      ]
+    : [];
 
   useEffect(() => {
     setNowMs(Date.now());
@@ -638,6 +706,18 @@ export default function PronosticoClient({
   }
 
   async function onSavePrediction(matchId: string) {
+    const match = matches.find((item) => item.id === matchId);
+    if (!match) {
+      setError("Partido no encontrado en pantalla.");
+      pushToast("error", "No se guardo: partido no encontrado.");
+      return;
+    }
+    if (hasSavedPrediction(match) && !editingSavedMatchById[matchId]) {
+      setEditingSavedMatchById((current) => ({ ...current, [matchId]: true }));
+      pushToast("success", "Pronostico habilitado para editar.");
+      return;
+    }
+
     const form = formByMatch[matchId];
     if (!form || form.home === "" || form.away === "") {
       setError("Debes ingresar ambos marcadores.");
@@ -657,13 +737,6 @@ export default function PronosticoClient({
     setError(null);
     setMessage(null);
     try {
-      const match = matches.find((item) => item.id === matchId);
-      if (!match) {
-        setError("Partido no encontrado en pantalla.");
-        pushToast("error", "No se guardo: partido no encontrado.");
-        return;
-      }
-
       const activationMs = Date.parse(bonusConfig.activatedAt);
       const isFutureForBonus = Date.parse(match.kickoff) > activationMs;
       const x2Enabled = isFutureForBonus && isEnabledForStage(bonusConfig, "x2", match.stage);
@@ -760,6 +833,7 @@ export default function PronosticoClient({
             : match,
         ),
       );
+      setEditingSavedMatchById((current) => ({ ...current, [matchId]: false }));
       setMessage("Pronostico guardado.");
       pushToast("success", "Pronostico guardado correctamente.");
     } finally {
@@ -932,7 +1006,7 @@ export default function PronosticoClient({
             ))}
           </div>
           <div className="mt-4 overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
-            <table className="w-full min-w-[980px] table-fixed text-left text-sm text-zinc-900">
+            <table className="w-full min-w-[1060px] table-fixed text-left text-sm text-zinc-900">
               <thead className="bg-zinc-50 text-zinc-700">
                 <tr className="border-b border-zinc-200">
                   <th className="w-16 px-3 py-2">#</th>
@@ -941,6 +1015,7 @@ export default function PronosticoClient({
                   <th className="w-24 px-3 py-2">KO</th>
                   <th className="w-24 px-3 py-2">Plenos</th>
                   <th className="w-28 px-3 py-2">Puntos</th>
+                  <th className="w-28 px-3 py-2">X2</th>
                   <th className="w-40 px-3 py-2">Premio</th>
                   <th className="w-28 px-3 py-2">Picks</th>
                 </tr>
@@ -948,7 +1023,7 @@ export default function PronosticoClient({
               <tbody>
                 {bettorStandings.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-3 py-4 text-zinc-600">
+                    <td colSpan={9} className="px-3 py-4 text-zinc-600">
                       Aun no hay apostadores con perfil completo.
                     </td>
                   </tr>
@@ -993,6 +1068,11 @@ export default function PronosticoClient({
                           </span>
                         </td>
                         <td className="px-3 py-2 font-bold text-zinc-900">{row.totalPoints}</td>
+                        <td className="px-3 py-2 text-zinc-700">
+                          <span className="font-bold text-zinc-900">{row.x2UsedCount}</span>
+                          <span className="text-[11px] text-zinc-500"> usados</span>
+                          <span className="ml-1 text-[11px] text-zinc-500">/ {row.x2LeftCount} libres</span>
+                        </td>
                         <td className="px-3 py-2 font-bold text-zinc-900">
                           {prizeTier ? formatMoneyCOP(prizeTier.amount) : "-"}
                         </td>
@@ -1006,31 +1086,39 @@ export default function PronosticoClient({
           </div>
         </section>
 
-        <section className="grid gap-4 rounded-[1.8rem] border border-zinc-200 bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.08)] sm:p-5 md:grid-cols-3">
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center md:text-left">
-            <p className="wc-eyebrow">
-              {scoringRule?.officialModeEnabled ? "Resultado correcto" : "Marcador exacto"}
-            </p>
-            <p className="wc-title mt-2 inline-flex rounded-xl px-3 py-1 text-5xl text-emerald-800 sm:text-6xl">
-              {(scoringRule?.officialModeEnabled ? scoringRule?.outcomePoints : scoringRule?.exactScorePoints) ?? 0} pts
-            </p>
+        <section className="rounded-[1.8rem] border border-zinc-200 bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.08)] sm:p-5">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            {scoringSummaryCards.map((card) => (
+              <div key={card.key} className={`min-h-32 rounded-2xl border p-4 ${card.className}`}>
+                <p className="wc-eyebrow">{card.label}</p>
+                <p className="wc-title mt-3 text-4xl sm:text-5xl">
+                  {card.value} {card.suffix ?? "pts"}
+                </p>
+                <p className="mt-2 text-xs font-semibold text-zinc-700">{card.help}</p>
+              </div>
+            ))}
           </div>
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-center md:text-left">
-            <p className="wc-eyebrow">
-              {scoringRule?.officialModeEnabled ? "Goles por equipo" : "Ganador / empate"}
-            </p>
-            <p className="wc-title mt-2 inline-flex rounded-xl px-3 py-1 text-5xl text-amber-800 sm:text-6xl">
-              {(scoringRule?.officialModeEnabled
-                ? scoringRule?.singleTeamGoalsPoints
-                : scoringRule?.outcomePoints) ?? 0} pts
-            </p>
-          </div>
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center md:text-left">
-            <p className="wc-eyebrow">Cierre de picks</p>
-            <p className="wc-title mt-2 inline-flex rounded-xl px-3 py-1 text-5xl text-rose-800 sm:text-6xl">
-              {scoringRule?.lockMinutesBeforeKickoff ?? 0} min
-            </p>
-          </div>
+          {scoringRule ? (
+            <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-zinc-700">
+              <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1">
+                Pleno grupos:{" "}
+                {formatPoints(
+                  scoringRule.outcomePoints +
+                    scoringRule.singleTeamGoalsPoints * 2 +
+                    scoringRule.goalDifferencePoints,
+                )}
+              </span>
+              <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1">
+                Pleno eliminatorias:{" "}
+                {formatPoints(
+                  (scoringRule.outcomePoints +
+                    scoringRule.singleTeamGoalsPoints * 2 +
+                    scoringRule.goalDifferencePoints) *
+                    Math.max(1, scoringRule.knockoutMultiplier),
+                )}
+              </span>
+            </div>
+          ) : null}
         </section>
 
         {scoringRule?.officialModeEnabled ? (
@@ -1191,6 +1279,25 @@ export default function PronosticoClient({
             {filteredMatches.map((match) => {
               const locked = isLocked(match);
               const finalized = match.status === "FINAL";
+              const savedPrediction = hasSavedPrediction(match);
+              const editingSavedPrediction = Boolean(editingSavedMatchById[match.id]);
+              const inputsDisabled =
+                locked || !canSubmitPredictions || (savedPrediction && !editingSavedPrediction);
+              const saveButtonDisabled = busySaveId === match.id || locked || !canSubmitPredictions;
+              const saveButtonText =
+                busySaveId === match.id
+                  ? "Guardando..."
+                  : !canSubmitPredictions
+                    ? "Pago pendiente"
+                    : locked
+                      ? savedPrediction
+                        ? "Guardado"
+                        : "Bloqueado"
+                      : savedPrediction && !editingSavedPrediction
+                        ? "Editar pronostico"
+                        : savedPrediction
+                          ? "Guardar cambios"
+                          : "Guardar";
               const form = formByMatch[match.id] ?? {
                 home: "",
                 away: "",
@@ -1221,21 +1328,32 @@ export default function PronosticoClient({
               return (
                 <article
                   key={match.id}
-                  className="overflow-hidden rounded-[1.6rem] border border-zinc-200 bg-white p-4 shadow-[0_10px_30px_rgba(0,0,0,0.14)]"
+                  className={`overflow-hidden rounded-[1.6rem] border p-4 shadow-[0_10px_30px_rgba(0,0,0,0.14)] ${
+                    savedPrediction && !editingSavedPrediction
+                      ? "border-emerald-300 bg-emerald-50/95"
+                      : "border-zinc-200 bg-white"
+                  }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="wc-eyebrow text-zinc-700">Partido {match.matchNumber}</p>
-                    <span
-                      className={`rounded-full border px-3 py-1 text-[10px] font-extrabold tracking-[0.15em] ${
-                        finalized
-                          ? "border-zinc-300 bg-zinc-100 text-zinc-700"
-                          : locked
-                          ? "border-rose-300 bg-rose-100 text-rose-700"
-                          : "border-emerald-300 bg-emerald-100 text-emerald-700"
-                      }`}
-                    >
-                      {finalized ? "Finalizado" : locked ? "Bloqueado" : "Abierto"}
-                    </span>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      {savedPrediction ? (
+                        <span className="rounded-full border border-emerald-300 bg-white px-3 py-1 text-[10px] font-extrabold tracking-[0.15em] text-emerald-700">
+                          Guardado
+                        </span>
+                      ) : null}
+                      <span
+                        className={`rounded-full border px-3 py-1 text-[10px] font-extrabold tracking-[0.15em] ${
+                          finalized
+                            ? "border-zinc-300 bg-zinc-100 text-zinc-700"
+                            : locked
+                            ? "border-rose-300 bg-rose-100 text-rose-700"
+                            : "border-emerald-300 bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
+                        {finalized ? "Finalizado" : locked ? "Bloqueado" : "Abierto"}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="mt-2">
@@ -1285,7 +1403,7 @@ export default function PronosticoClient({
                         min={0}
                         max={30}
                         value={form.home}
-                        disabled={locked || !canSubmitPredictions}
+                        disabled={inputsDisabled}
                         onChange={(e) =>
                           setFormByMatch((value) => ({
                             ...value,
@@ -1308,7 +1426,7 @@ export default function PronosticoClient({
                         min={0}
                         max={30}
                         value={form.away}
-                        disabled={locked || !canSubmitPredictions}
+                        disabled={inputsDisabled}
                         onChange={(e) =>
                           setFormByMatch((value) => ({
                             ...value,
@@ -1328,8 +1446,7 @@ export default function PronosticoClient({
                           type="checkbox"
                           checked={form.useX2}
                           disabled={
-                            locked ||
-                            !canSubmitPredictions ||
+                            inputsDisabled ||
                             x2LimitReached
                           }
                           onChange={(e) => {
@@ -1350,6 +1467,7 @@ export default function PronosticoClient({
                               remainingGroupAfter: Math.max(0, x2LeftGroup - 1),
                               remainingDayBefore: x2LeftKickoffDay,
                               remainingDayAfter: Math.max(0, x2LeftKickoffDay - 1),
+                              matchDateLabel: kickoffDateCol,
                             });
                           }}
                         />
@@ -1375,7 +1493,7 @@ export default function PronosticoClient({
                               <select
                                 key={`home-${slot}`}
                                 value={form.homeScorerIds[slot] ?? ""}
-                                disabled={locked || !canSubmitPredictions}
+                                disabled={inputsDisabled}
                                 onChange={(e) => {
                                   const playerId = Number(e.target.value);
                                   setFormByMatch((value) => {
@@ -1410,7 +1528,7 @@ export default function PronosticoClient({
                               <select
                                 key={`away-${slot}`}
                                 value={form.awayScorerIds[slot] ?? ""}
-                                disabled={locked || !canSubmitPredictions}
+                                disabled={inputsDisabled}
                                 onChange={(e) => {
                                   const playerId = Number(e.target.value);
                                   setFormByMatch((value) => {
@@ -1457,11 +1575,15 @@ export default function PronosticoClient({
 
                   <button
                     type="button"
-                    disabled={busySaveId === match.id || locked || !canSubmitPredictions}
+                    disabled={saveButtonDisabled}
                     onClick={() => onSavePrediction(match.id)}
-                    className="mt-4 w-full rounded-2xl border border-indigo-200 bg-[linear-gradient(90deg,rgba(102,45,215,0.96),rgba(31,94,221,0.96),rgba(23,185,179,0.93))] px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[0_6px_16px_rgba(37,99,235,0.24)] transition hover:brightness-105 disabled:opacity-60"
+                    className={`mt-4 w-full rounded-2xl border px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] shadow-[0_6px_16px_rgba(37,99,235,0.24)] transition hover:brightness-105 disabled:opacity-60 ${
+                      savedPrediction && !editingSavedPrediction && !locked
+                        ? "border-emerald-600 bg-emerald-600 text-white"
+                        : "border-indigo-200 bg-[linear-gradient(90deg,rgba(102,45,215,0.96),rgba(31,94,221,0.96),rgba(23,185,179,0.93))] text-white"
+                    }`}
                   >
-                    {busySaveId === match.id ? "Guardando..." : "Guardar"}
+                    {saveButtonText}
                   </button>
                 </article>
               );
@@ -1494,10 +1616,13 @@ export default function PronosticoClient({
                   </p>
                 </div>
                 <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Hoy</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                    Dia del partido
+                  </p>
                   <p className="text-base font-bold text-zinc-900">
                     {x2InfoModal.remainingDayBefore} {"->"} {x2InfoModal.remainingDayAfter}
                   </p>
+                  <p className="mt-1 text-[11px] text-zinc-500">{x2InfoModal.matchDateLabel}</p>
                 </div>
               </div>
               <div className="space-y-1 text-sm">
@@ -1506,13 +1631,13 @@ export default function PronosticoClient({
               </div>
               {x2InfoModal.remainingDayAfter === 0 ? (
                 <p className="font-semibold text-amber-700">
-                  Ojo: despues de este, hoy ya no podras activar otro X2.
+                  Ojo: despues de este, no podras activar otro X2 en partidos de ese mismo dia.
                 </p>
               ) : null}
               <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-900">
                 <p className="font-semibold">Reglas rapidas</p>
                 <p>Maximo 12 en fase de grupos, 4 por fecha y 1 por dia.</p>
-                <p>Ejemplo: si hoy ya usaste 1, no puedes activar otro hasta manana.</p>
+                <p>Ejemplo: si ya usaste 1 en esa fecha de partido, no puedes activar otro para otro partido del mismo dia.</p>
                 <p>Ejemplo: si usas 4 en Fecha {x2InfoModal.groupMatchday}, debes esperar la siguiente fecha.</p>
               </div>
             </div>

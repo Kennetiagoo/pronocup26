@@ -27,7 +27,7 @@ const rules = [
       "En grupos hay limites: maximo 12 X2 en toda la fase de grupos, maximo 4 por fecha y maximo 1 por dia de partidos.",
       "Si usas X2 y ese partido te da 0 puntos base, el X2 se devuelve automaticamente y vuelve a quedar disponible.",
       "Ejemplo: sin X2 haces 5 puntos base. Con X2 haces 10 puntos base. Si ademas aciertas goleadores, esos puntos se agregan despues.",
-      "Ejemplo: si hoy ya usaste 1 X2, no puedes activar otro X2 en otro partido del mismo dia.",
+      "Ejemplo: si ya usaste 1 X2 en una fecha de partido, no puedes activar otro X2 en otro partido de ese mismo dia.",
     ],
   },
   {
@@ -115,8 +115,10 @@ export default function RulesPage() {
           <p className="wc-eyebrow">Desempates</p>
           <h2 className="mt-2 text-2xl font-extrabold text-zinc-950">Orden de la tabla</h2>
           <p className="mt-2 text-sm text-zinc-700">
-            La tabla ordena por puntos totales, plenos, aciertos parciales, cantidad de picks y fecha de registro. Si
-            todo sigue igual, se usa el usuario visible en orden alfabetico.
+            La tabla ordena primero por puntos totales. Si hay empate, queda mejor ubicado quien haya usado menos X2
+            activos en fase de grupos; si el empate sigue, queda mejor ubicado quien tenga mas X2 disponibles sin usar.
+            Luego se aplican plenos, aciertos parciales, cantidad de picks y fecha de registro. Si todo sigue igual, se
+            usa el usuario visible en orden alfabetico.
           </p>
           <p className="mt-2 text-sm text-zinc-700">
             El admin puede aparecer en la tabla si tambien participa como apostador. En ese caso compite bajo las mismas

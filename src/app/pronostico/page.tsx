@@ -208,6 +208,8 @@ export default async function PronosticoPage() {
         userId: true,
         points: true,
         basePoints: true,
+        usedX2: true,
+        x2Returned: true,
         Match: {
           select: {
             stage: true,
@@ -242,6 +244,7 @@ export default async function PronosticoPage() {
       partialLevel2: number;
       partialLevel3: number;
       partialLevel4: number;
+      x2UsedCount: number;
     }
   >();
   for (const row of allPredictionsForStandings) {
@@ -254,6 +257,7 @@ export default async function PronosticoPage() {
       partialLevel2: 0,
       partialLevel3: 0,
       partialLevel4: 0,
+      x2UsedCount: 0,
     };
     current.totalPoints += row.points ?? 0;
     current.predictionCount += 1;
@@ -267,6 +271,7 @@ export default async function PronosticoPage() {
     else if (basePoints === buckets.p2) current.partialLevel2 += 1;
     else if (basePoints === buckets.p3) current.partialLevel3 += 1;
     else if (basePoints === buckets.p4) current.partialLevel4 += 1;
+    if (row.Match.stage === "GROUP" && row.usedX2 && !row.x2Returned) current.x2UsedCount += 1;
 
     totalsByUser.set(row.userId, current);
   }
@@ -287,10 +292,14 @@ export default async function PronosticoPage() {
       partialLevel2: totalsByUser.get(u.id)?.partialLevel2 ?? 0,
       partialLevel3: totalsByUser.get(u.id)?.partialLevel3 ?? 0,
       partialLevel4: totalsByUser.get(u.id)?.partialLevel4 ?? 0,
+      x2UsedCount: totalsByUser.get(u.id)?.x2UsedCount ?? 0,
+      x2LeftCount: Math.max(0, bonusConfig.x2UsesGroup - (totalsByUser.get(u.id)?.x2UsedCount ?? 0)),
       registeredAt: u.createdAt.toISOString(),
     }))
     .sort((a, b) => {
       if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      if (a.x2UsedCount !== b.x2UsedCount) return a.x2UsedCount - b.x2UsedCount;
+      if (b.x2LeftCount !== a.x2LeftCount) return b.x2LeftCount - a.x2LeftCount;
       if (b.perfectHits !== a.perfectHits) return b.perfectHits - a.perfectHits;
       if (b.partialLevel2 !== a.partialLevel2) return b.partialLevel2 - a.partialLevel2;
       if (b.partialLevel3 !== a.partialLevel3) return b.partialLevel3 - a.partialLevel3;
