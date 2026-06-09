@@ -99,6 +99,14 @@ type BettorStanding = {
   x2UsedCount: number;
   x2LeftCount: number;
   registeredAt: string;
+  previousPosition: number;
+  movement: "UP" | "DOWN" | "SAME";
+  movementDelta: number;
+  lastFive: Array<{
+    matchNumber: number;
+    status: "MISS" | "POINTS" | "MAX" | "ZERO";
+    points: number;
+  }>;
 };
 
 type BonusConfigClient = {
@@ -415,6 +423,54 @@ function formatPoints(points: number) {
   return `${points} pts`;
 }
 
+function rankingMedal(position: number) {
+  if (position === 1) {
+    return {
+      label: "ORO",
+      className: "border-amber-400 bg-amber-200 text-amber-950 shadow-[0_0_0_4px_rgba(251,191,36,0.18)]",
+    };
+  }
+  if (position === 2) {
+    return {
+      label: "PLATA",
+      className: "border-slate-300 bg-slate-200 text-slate-900 shadow-[0_0_0_4px_rgba(148,163,184,0.18)]",
+    };
+  }
+  if (position === 3) {
+    return {
+      label: "BRONCE",
+      className: "border-orange-300 bg-orange-200 text-orange-950 shadow-[0_0_0_4px_rgba(251,146,60,0.18)]",
+    };
+  }
+  return null;
+}
+
+function movementPresentation(row: BettorStanding) {
+  if (row.movement === "UP") {
+    return {
+      label: row.movementDelta > 0 ? `Subio ${row.movementDelta}` : "Subio",
+      className: "border-emerald-300 bg-emerald-100 text-emerald-800",
+    };
+  }
+  if (row.movement === "DOWN") {
+    return {
+      label: row.movementDelta > 0 ? `Bajo ${row.movementDelta}` : "Bajo",
+      className: "border-rose-300 bg-rose-100 text-rose-800",
+    };
+  }
+  return {
+    label: "Igual",
+    className: "border-zinc-300 bg-zinc-100 text-zinc-700",
+  };
+}
+
+function streakPresentation(status: BettorStanding["lastFive"][number]["status"]) {
+  if (status === "MAX") return { label: "Pleno", className: "border-emerald-600 bg-emerald-500 text-white" };
+  if (status === "POINTS") return { label: "Sumo puntos", className: "border-amber-500 bg-amber-400 text-amber-950" };
+  if (status === "ZERO") return { label: "Sin puntos", className: "border-rose-600 bg-rose-500 text-white" };
+  return { label: "Sin pick", className: "border-zinc-300 bg-zinc-300 text-zinc-700" };
+}
+
 async function readErrorMessage(res: Response) {
   try {
     const payload = (await res.json()) as ApiError;
@@ -448,6 +504,7 @@ export default function PronosticoClient({
   const [toasts, setToasts] = useState<ToastState[]>([]);
   const [x2InfoModal, setX2InfoModal] = useState<X2InfoModalState | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.parse(serverNowIso));
+  const [showRankingInfo, setShowRankingInfo] = useState(false);
   const [editingSavedMatchById, setEditingSavedMatchById] = useState<Record<string, boolean>>({});
   const [formByMatch, setFormByMatch] = useState<
     Record<
@@ -984,10 +1041,50 @@ export default function PronosticoClient({
               <p className="wc-eyebrow">Ranking</p>
               <h2 className="wc-title mt-1 text-4xl text-zinc-950 sm:text-5xl">Tabla de Apostadores</h2>
             </div>
-            <span className="rounded-full border border-zinc-300 bg-zinc-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-zinc-700">
-              {bettorStandings.length} {pluralize(bettorStandings.length, "jugador", "jugadores")}
-            </span>
+            <div className="flex flex-wrap justify-center gap-2 sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setShowRankingInfo((value) => !value)}
+                className="rounded-full border border-indigo-300 bg-indigo-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-indigo-800 hover:bg-indigo-100"
+              >
+                {showRankingInfo ? "Ocultar detalle" : "Como se ordena"}
+              </button>
+              <span className="rounded-full border border-zinc-300 bg-zinc-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-zinc-700">
+                {bettorStandings.length} {pluralize(bettorStandings.length, "jugador", "jugadores")}
+              </span>
+            </div>
           </div>
+          {showRankingInfo ? (
+            <div className="mt-4 grid gap-3 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950 lg:grid-cols-[1.35fr_1fr]">
+              <div>
+                <p className="font-black uppercase tracking-[0.08em]">Orden de desempate</p>
+                <p className="mt-2">
+                  La tabla ordena por puntos totales. Si hay empate, gana quien haya usado menos X2 activos; si sigue
+                  empatado, gana quien conserve mas X2 libres. Despues entran plenos, parciales, picks guardados, fecha
+                  de registro y usuario visible.
+                </p>
+              </div>
+              <div>
+                <p className="font-black uppercase tracking-[0.08em]">Racha ultimos 5</p>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs font-bold">
+                  {[
+                    ["MAX", "Pleno"],
+                    ["POINTS", "Sumo puntos"],
+                    ["ZERO", "Pick sin puntos"],
+                    ["MISS", "Sin pick"],
+                  ].map(([status, label]) => {
+                    const item = streakPresentation(status as BettorStanding["lastFive"][number]["status"]);
+                    return (
+                      <span key={status} className="inline-flex items-center gap-1">
+                        <span className={`h-3 w-3 rounded-full border ${item.className}`} />
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : null}
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
               <p className="wc-eyebrow text-blue-800">Bolsa acumulada</p>
@@ -999,18 +1096,25 @@ export default function PronosticoClient({
             </div>
             {prizeTiers.map((tier) => (
               <div key={tier.position} className={`rounded-2xl border p-4 ${tier.badgeClass}`}>
-                <p className="wc-eyebrow">{tier.label}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="wc-eyebrow">{tier.label}</p>
+                  <span className="rounded-full border border-current px-2 py-1 text-[10px] font-black">
+                    {rankingMedal(tier.position)?.label}
+                  </span>
+                </div>
                 <p className="mt-2 text-2xl font-black">{formatMoneyCOP(tier.amount)}</p>
                 <p className="mt-1 text-xs font-semibold">{Math.round(tier.share * 100)}% de la bolsa</p>
               </div>
             ))}
           </div>
           <div className="mt-4 overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
-            <table className="w-full min-w-[1060px] table-fixed text-left text-sm text-zinc-900">
+            <table className="w-full min-w-[1260px] table-fixed text-left text-sm text-zinc-900">
               <thead className="bg-zinc-50 text-zinc-700">
                 <tr className="border-b border-zinc-200">
                   <th className="w-16 px-3 py-2">#</th>
                   <th className="px-3 py-2">Apostador</th>
+                  <th className="w-28 px-3 py-2">Mov.</th>
+                  <th className="w-32 px-3 py-2">Ultimos 5</th>
                   <th className="w-24 px-3 py-2">Grupo</th>
                   <th className="w-24 px-3 py-2">KO</th>
                   <th className="w-24 px-3 py-2">Plenos</th>
@@ -1023,7 +1127,7 @@ export default function PronosticoClient({
               <tbody>
                 {bettorStandings.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-3 py-4 text-zinc-600">
+                    <td colSpan={11} className="px-3 py-4 text-zinc-600">
                       Aun no hay apostadores con perfil completo.
                     </td>
                   </tr>
@@ -1031,6 +1135,8 @@ export default function PronosticoClient({
                   bettorStandings.map((row) => {
                     const isCurrentUser = row.userId === user.id;
                     const prizeTier = prizeTiers.find((tier) => tier.position === row.position);
+                    const medal = rankingMedal(row.position);
+                    const movement = movementPresentation(row);
                     return (
                       <tr
                         key={row.userId}
@@ -1041,7 +1147,7 @@ export default function PronosticoClient({
                         <td className="px-3 py-2">
                           <span
                             className={`inline-flex min-w-9 justify-center rounded-full border px-2 py-1 text-xs font-black ${
-                              prizeTier?.badgeClass ?? "border-zinc-300 bg-zinc-100 text-zinc-800"
+                              medal?.className ?? prizeTier?.badgeClass ?? "border-zinc-300 bg-zinc-100 text-zinc-800"
                             }`}
                           >
                             {row.position}
@@ -1055,9 +1161,37 @@ export default function PronosticoClient({
                             <span
                               className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] ${prizeTier.badgeClass}`}
                             >
-                              {prizeTier.shortLabel}
+                              {medal?.label ?? prizeTier.shortLabel} - {prizeTier.shortLabel}
                             </span>
                           ) : null}
+                        </td>
+                        <td className="px-3 py-2">
+                          <span
+                            className={`inline-flex rounded-full border px-2 py-1 text-[11px] font-black uppercase tracking-[0.06em] ${movement.className}`}
+                          >
+                            {movement.label}
+                          </span>
+                          <p className="mt-1 text-[10px] text-zinc-500">Antes #{row.previousPosition}</p>
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="flex gap-1">
+                            {row.lastFive.length === 0 ? (
+                              <span className="text-[11px] text-zinc-500">Sin resultados</span>
+                            ) : (
+                              row.lastFive.map((item) => {
+                                const streak = streakPresentation(item.status);
+                                return (
+                                  <span
+                                    key={`${row.userId}-${item.matchNumber}`}
+                                    title={`Partido ${item.matchNumber}: ${streak.label} (${item.points} pts)`}
+                                    className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-[10px] font-black ${streak.className}`}
+                                  >
+                                    {item.status === "MISS" ? "-" : item.points}
+                                  </span>
+                                );
+                              })
+                            )}
+                          </div>
                         </td>
                         <td className="px-3 py-2 text-zinc-700">{row.groupPoints}</td>
                         <td className="px-3 py-2 text-zinc-700">{row.knockoutPoints}</td>
