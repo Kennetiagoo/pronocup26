@@ -619,6 +619,13 @@ export default async function PronosticoPage() {
         scorersSemiFinalEnabled: bonusConfig.scorersSemiFinalEnabled,
         scorersThirdPlaceEnabled: bonusConfig.scorersThirdPlaceEnabled,
         scorersFinalEnabled: bonusConfig.scorersFinalEnabled,
+        topGroupEnabled: bonusConfig.topGroupEnabled,
+        topRoundOf32Enabled: bonusConfig.topRoundOf32Enabled,
+        topRoundOf16Enabled: bonusConfig.topRoundOf16Enabled,
+        topQuarterFinalEnabled: bonusConfig.topQuarterFinalEnabled,
+        topSemiFinalEnabled: bonusConfig.topSemiFinalEnabled,
+        topThirdPlaceEnabled: bonusConfig.topThirdPlaceEnabled,
+        topFinalEnabled: bonusConfig.topFinalEnabled,
         x2UsesGroup: bonusConfig.x2UsesGroup,
         scorerPoint: bonusConfig.scorerPoint,
       }}

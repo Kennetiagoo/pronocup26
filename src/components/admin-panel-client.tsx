@@ -147,6 +147,24 @@ type MatchScorerDraft = {
   awayPlayerIds: number[];
 };
 
+const PLAYOFF_STAGE_OPTIONS = [
+  { stage: "ROUND_OF_32", label: "Dieciseisavos" },
+  { stage: "ROUND_OF_16", label: "Octavos" },
+  { stage: "QUARTER_FINAL", label: "Cuartos" },
+  { stage: "SEMI_FINAL", label: "Semifinales" },
+  { stage: "FINAL", label: "Final" },
+] as const;
+
+const BONUS_STAGE_OPTIONS = [
+  { stage: "GROUP", label: "Grupos", x2Key: "x2GroupEnabled", scorerKey: "scorersGroupEnabled" },
+  { stage: "ROUND_OF_32", label: "Dieciseisavos", x2Key: "x2RoundOf32Enabled", scorerKey: "scorersRoundOf32Enabled" },
+  { stage: "ROUND_OF_16", label: "Octavos", x2Key: "x2RoundOf16Enabled", scorerKey: "scorersRoundOf16Enabled" },
+  { stage: "QUARTER_FINAL", label: "Cuartos", x2Key: "x2QuarterFinalEnabled", scorerKey: "scorersQuarterFinalEnabled" },
+  { stage: "SEMI_FINAL", label: "Semifinales", x2Key: "x2SemiFinalEnabled", scorerKey: "scorersSemiFinalEnabled" },
+  { stage: "THIRD_PLACE", label: "Tercer puesto", x2Key: "x2ThirdPlaceEnabled", scorerKey: "scorersThirdPlaceEnabled" },
+  { stage: "FINAL", label: "Final", x2Key: "x2FinalEnabled", scorerKey: "scorersFinalEnabled" },
+] as const;
+
 type Props = {
   adminUser: SafeAdminUser;
   initialRule: SafeScoringRule;
@@ -209,6 +227,37 @@ function isScorersEnabledForStage(config: SafeBonusConfig, stage: string) {
   return false;
 }
 
+function isUserStageVisible(config: SafeBonusConfig, stage: string) {
+  if (stage === "GROUP") return config.topGroupEnabled;
+  if (stage === "ROUND_OF_32") return config.topRoundOf32Enabled;
+  if (stage === "ROUND_OF_16") return config.topRoundOf16Enabled;
+  if (stage === "QUARTER_FINAL") return config.topQuarterFinalEnabled;
+  if (stage === "SEMI_FINAL") return config.topSemiFinalEnabled;
+  if (stage === "THIRD_PLACE") return config.topThirdPlaceEnabled;
+  if (stage === "FINAL") return config.topFinalEnabled;
+  return false;
+}
+
+function userStageVisibilityPatch(stage: string, checked: boolean) {
+  if (stage === "GROUP") return { topGroupEnabled: checked };
+  if (stage === "ROUND_OF_32") return { topRoundOf32Enabled: checked };
+  if (stage === "ROUND_OF_16") return { topRoundOf16Enabled: checked };
+  if (stage === "QUARTER_FINAL") return { topQuarterFinalEnabled: checked };
+  if (stage === "SEMI_FINAL") return { topSemiFinalEnabled: checked };
+  if (stage === "THIRD_PLACE") return { topThirdPlaceEnabled: checked };
+  return { topFinalEnabled: checked };
+}
+
+function clearPlayoffVisibilityPatch() {
+  return {
+    topRoundOf32Enabled: false,
+    topRoundOf16Enabled: false,
+    topQuarterFinalEnabled: false,
+    topSemiFinalEnabled: false,
+    topFinalEnabled: false,
+  };
+}
+
 async function readErrorMessage(res: Response) {
   try {
     const payload = (await res.json()) as ApiError;
@@ -263,6 +312,7 @@ export default function AdminPanelClient({
   const [paymentQrFile, setPaymentQrFile] = useState<File | null>(null);
   const [currentQrUrl, setCurrentQrUrl] = useState(initialPaymentConfig?.qrBlobUrl ?? null);
   const [localQrPreviewUrl, setLocalQrPreviewUrl] = useState<string | null>(null);
+  const [playoffModalOpen, setPlayoffModalOpen] = useState(false);
   const [crop, setCrop] = useState({
     x: initialPaymentConfig?.qrCropX ?? 0,
     y: initialPaymentConfig?.qrCropY ?? 0,
@@ -312,6 +362,11 @@ export default function AdminPanelClient({
     }
     return map;
   }, [matches]);
+
+  const visiblePlayoffStages = useMemo(
+    () => PLAYOFF_STAGE_OPTIONS.filter(({ stage }) => isUserStageVisible(bonusConfig, stage)),
+    [bonusConfig],
+  );
 
   const selectedTeamLabel = selectedTeamCode
     ? `${selectedTeamCode} - ${teamCodeLabelMap.get(selectedTeamCode) ?? "Seleccion"}`
@@ -495,6 +550,7 @@ export default function AdminPanelClient({
       }
       setNotice("Configuracion de bonificaciones actualizada. Aplica para partidos futuros.");
       await refreshAdminData();
+      setPlayoffModalOpen(false);
     } finally {
       setBusy(false);
     }
@@ -661,6 +717,27 @@ export default function AdminPanelClient({
     }
   }
 
+  function updateMatchTeam(matchId: string, side: "home" | "away", teamCode: string) {
+    setMatches((items) =>
+      items.map((item) => {
+        if (item.id !== matchId) return item;
+        const teamName = teamCode ? teamCodeLabelMap.get(teamCode) ?? teamCode : "";
+        if (side === "home") {
+          return {
+            ...item,
+            homeTeamCode: teamCode || null,
+            homeTeam: teamName || item.homeTeam,
+          };
+        }
+        return {
+          ...item,
+          awayTeamCode: teamCode || null,
+          awayTeam: teamName || item.awayTeam,
+        };
+      }),
+    );
+  }
+
   async function saveMatchResult(matchId: string) {
     const current = matches.find((match) => match.id === matchId);
     if (!current) return;
@@ -707,6 +784,10 @@ export default function AdminPanelClient({
           homeScore: current.homeScore,
           awayScore: current.awayScore,
           status: current.status,
+          homeTeam: current.homeTeam,
+          awayTeam: current.awayTeam,
+          homeTeamCode: current.homeTeamCode,
+          awayTeamCode: current.awayTeamCode,
         }),
       });
       if (!res.ok) {
@@ -1162,101 +1243,58 @@ export default function AdminPanelClient({
           </div>
 
           <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4">
-            <p className="text-sm font-bold text-zinc-900">Fases habilitadas</p>
-            <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              {(
-                [
-                  ["GROUP", "Grupos"],
-                  ["ROUND_OF_32", "Dieciseisavos"],
-                  ["ROUND_OF_16", "Octavos"],
-                  ["QUARTER_FINAL", "Cuartos"],
-                  ["SEMI_FINAL", "Semifinales"],
-                  ["THIRD_PLACE", "Tercer puesto"],
-                  ["FINAL", "Final"],
-                ] as const
-              ).map(([stage, label]) => (
-                <div key={stage} className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.1em] text-zinc-700">{label}</p>
-                  <label className="mt-2 flex items-center justify-between text-xs text-zinc-700">
-                    X2
-                    <input
-                      type="checkbox"
-                      checked={
-                        stage === "GROUP"
-                          ? bonusConfig.x2GroupEnabled
-                          : stage === "ROUND_OF_32"
-                            ? bonusConfig.x2RoundOf32Enabled
-                            : stage === "ROUND_OF_16"
-                              ? bonusConfig.x2RoundOf16Enabled
-                              : stage === "QUARTER_FINAL"
-                                ? bonusConfig.x2QuarterFinalEnabled
-                                : stage === "SEMI_FINAL"
-                                  ? bonusConfig.x2SemiFinalEnabled
-                                  : stage === "THIRD_PLACE"
-                                    ? bonusConfig.x2ThirdPlaceEnabled
-                                    : bonusConfig.x2FinalEnabled
-                      }
-                      onChange={(e) =>
-                        setBonusConfig((v) => ({
-                          ...v,
-                          ...(stage === "GROUP"
-                            ? { x2GroupEnabled: e.target.checked }
-                            : stage === "ROUND_OF_32"
-                              ? { x2RoundOf32Enabled: e.target.checked }
-                              : stage === "ROUND_OF_16"
-                                ? { x2RoundOf16Enabled: e.target.checked }
-                                : stage === "QUARTER_FINAL"
-                                  ? { x2QuarterFinalEnabled: e.target.checked }
-                                  : stage === "SEMI_FINAL"
-                                    ? { x2SemiFinalEnabled: e.target.checked }
-                                    : stage === "THIRD_PLACE"
-                                      ? { x2ThirdPlaceEnabled: e.target.checked }
-                                      : { x2FinalEnabled: e.target.checked }),
-                        }))
-                      }
-                    />
-                  </label>
-                  <label className="mt-2 flex items-center justify-between text-xs text-zinc-700">
-                    Goleadores
-                    <input
-                      type="checkbox"
-                      checked={
-                        stage === "GROUP"
-                          ? bonusConfig.scorersGroupEnabled
-                          : stage === "ROUND_OF_32"
-                            ? bonusConfig.scorersRoundOf32Enabled
-                            : stage === "ROUND_OF_16"
-                              ? bonusConfig.scorersRoundOf16Enabled
-                              : stage === "QUARTER_FINAL"
-                                ? bonusConfig.scorersQuarterFinalEnabled
-                                : stage === "SEMI_FINAL"
-                                  ? bonusConfig.scorersSemiFinalEnabled
-                                  : stage === "THIRD_PLACE"
-                                    ? bonusConfig.scorersThirdPlaceEnabled
-                                    : bonusConfig.scorersFinalEnabled
-                      }
-                      onChange={(e) =>
-                        setBonusConfig((v) => ({
-                          ...v,
-                          ...(stage === "GROUP"
-                            ? { scorersGroupEnabled: e.target.checked }
-                            : stage === "ROUND_OF_32"
-                              ? { scorersRoundOf32Enabled: e.target.checked }
-                              : stage === "ROUND_OF_16"
-                                ? { scorersRoundOf16Enabled: e.target.checked }
-                                : stage === "QUARTER_FINAL"
-                                  ? { scorersQuarterFinalEnabled: e.target.checked }
-                                  : stage === "SEMI_FINAL"
-                                    ? { scorersSemiFinalEnabled: e.target.checked }
-                                    : stage === "THIRD_PLACE"
-                                      ? { scorersThirdPlaceEnabled: e.target.checked }
-                                      : { scorersFinalEnabled: e.target.checked }),
-                        }))
-                      }
-                    />
-                  </label>
-                </div>
-              ))}
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm font-bold text-zinc-900">Playoffs visibles</p>
+                <p className="mt-1 text-xs text-zinc-600">Dieciseisavos, octavos, cuartos, semis y final.</p>
+                <p className="mt-2 text-xs font-semibold uppercase tracking-[0.1em] text-zinc-700">
+                  Activas: {visiblePlayoffStages.length}/5
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPlayoffModalOpen(true)}
+                className="rounded-xl border border-cyan-300 bg-cyan-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-cyan-800 hover:bg-cyan-100"
+              >
+                Configurar playoffs
+              </button>
+            </div>
+
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-zinc-700">Bonos por fase</p>
+              <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                {BONUS_STAGE_OPTIONS.map(({ stage, label, x2Key, scorerKey }) => (
+                  <div key={stage} className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-zinc-700">{label}</p>
+                    <label className="mt-2 flex items-center justify-between text-xs text-zinc-700">
+                      X2
+                      <input
+                        type="checkbox"
+                        checked={bonusConfig[x2Key]}
+                        onChange={(e) =>
+                          setBonusConfig((v) => ({
+                            ...v,
+                            [x2Key]: e.target.checked,
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="mt-2 flex items-center justify-between text-xs text-zinc-700">
+                      Goleadores
+                      <input
+                        type="checkbox"
+                        checked={bonusConfig[scorerKey]}
+                        onChange={(e) =>
+                          setBonusConfig((v) => ({
+                            ...v,
+                            [scorerKey]: e.target.checked,
+                          }))
+                        }
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -1653,6 +1691,68 @@ export default function AdminPanelClient({
                     {match.stadium}, {match.city}
                   </p>
                   <p className="text-xs text-zinc-500 sm:text-sm">{formatKickoff(match.kickoff)}</p>
+
+                  {isEditing && match.stage !== "GROUP" ? (
+                    <div className="mt-4 grid gap-3 rounded-2xl border border-cyan-100 bg-cyan-50 p-3 md:grid-cols-2">
+                      <label className="text-xs font-semibold uppercase tracking-[0.08em] text-cyan-900">
+                        Equipo local
+                        <select
+                          value={match.homeTeamCode ?? ""}
+                          onChange={(e) => updateMatchTeam(match.id, "home", e.target.value)}
+                          className="mt-1 w-full rounded-lg border border-cyan-200 bg-white px-2 py-2 text-sm normal-case tracking-normal text-zinc-900"
+                        >
+                          <option value="">Mantener / manual</option>
+                          {teamCodeOptions.map((code) => (
+                            <option key={`home-${match.id}-${code}`} value={code}>
+                              {code} - {teamCodeLabelMap.get(code) ?? "Seleccion"}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          value={match.homeTeam}
+                          onChange={(e) =>
+                            setMatches((items) =>
+                              items.map((item) =>
+                                item.id === match.id ? { ...item, homeTeam: e.target.value } : item,
+                              ),
+                            )
+                          }
+                          className="mt-2 w-full rounded-lg border border-cyan-200 bg-white px-2 py-2 text-sm normal-case tracking-normal text-zinc-900"
+                        />
+                      </label>
+                      <label className="text-xs font-semibold uppercase tracking-[0.08em] text-cyan-900">
+                        Equipo visitante
+                        <select
+                          value={match.awayTeamCode ?? ""}
+                          onChange={(e) => updateMatchTeam(match.id, "away", e.target.value)}
+                          className="mt-1 w-full rounded-lg border border-cyan-200 bg-white px-2 py-2 text-sm normal-case tracking-normal text-zinc-900"
+                        >
+                          <option value="">Mantener / manual</option>
+                          {teamCodeOptions.map((code) => (
+                            <option key={`away-${match.id}-${code}`} value={code}>
+                              {code} - {teamCodeLabelMap.get(code) ?? "Seleccion"}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          value={match.awayTeam}
+                          onChange={(e) =>
+                            setMatches((items) =>
+                              items.map((item) =>
+                                item.id === match.id ? { ...item, awayTeam: e.target.value } : item,
+                              ),
+                            )
+                          }
+                          className="mt-2 w-full rounded-lg border border-cyan-200 bg-white px-2 py-2 text-sm normal-case tracking-normal text-zinc-900"
+                        />
+                      </label>
+                      <p className="md:col-span-2 text-xs text-cyan-900">
+                        Para cruces con terceros de grupo, asigna aqui los equipos reales cuando FIFA confirme la
+                        combinacion. Si el partido se define por penales, guarda el empate de 90 minutos y asigna
+                        manualmente el clasificado en el siguiente cruce.
+                      </p>
+                    </div>
+                  ) : null}
 
                   <div className="mt-3 flex flex-wrap items-center gap-3 text-base font-semibold text-zinc-900">
                     <span className="min-w-[210px] max-w-[280px]">
@@ -2071,6 +2171,112 @@ export default function AdminPanelClient({
           </div>
         </section>
       </div>
+
+      {playoffModalOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/70 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="playoff-visibility-title"
+          onClick={() => setPlayoffModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-3xl rounded-[1.5rem] border border-zinc-200 bg-white p-5 shadow-2xl sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="wc-eyebrow">Playoffs</p>
+                <h3 id="playoff-visibility-title" className="wc-title mt-2 text-3xl text-zinc-950 sm:text-4xl">
+                  Visibilidad
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPlayoffModalOpen(false)}
+                className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-zinc-700 hover:bg-zinc-50"
+              >
+                Cerrar
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-3">
+              {PLAYOFF_STAGE_OPTIONS.map(({ stage, label }) => {
+                const isVisible = isUserStageVisible(bonusConfig, stage);
+                return (
+                  <div
+                    key={stage}
+                    className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <p className="text-sm font-bold text-zinc-900">{label}</p>
+                      <span
+                        className={`mt-2 inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${
+                          isVisible
+                            ? "border-emerald-300 bg-emerald-100 text-emerald-800"
+                            : "border-zinc-300 bg-white text-zinc-600"
+                        }`}
+                      >
+                        {isVisible ? "Visible" : "Oculta"}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setBonusConfig((v) => ({
+                            ...v,
+                            ...userStageVisibilityPatch(stage, !isVisible),
+                          }))
+                        }
+                        className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-zinc-700 hover:bg-zinc-100"
+                      >
+                        {isVisible ? "Ocultar" : "Mostrar"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setBonusConfig((v) => ({
+                            ...v,
+                            ...clearPlayoffVisibilityPatch(),
+                            ...userStageVisibilityPatch(stage, true),
+                          }))
+                        }
+                        className="rounded-xl border border-cyan-300 bg-cyan-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-cyan-800 hover:bg-cyan-100"
+                      >
+                        Solo esta fase
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setBonusConfig((v) => ({
+                    ...v,
+                    ...clearPlayoffVisibilityPatch(),
+                  }))
+                }
+                className="rounded-xl border border-rose-300 bg-rose-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-rose-700 hover:bg-rose-100"
+              >
+                Ocultar todas
+              </button>
+              <button
+                type="button"
+                onClick={saveBonusConfig}
+                disabled={busy}
+                className="wc-button-primary px-5 py-2.5 text-sm disabled:opacity-60"
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

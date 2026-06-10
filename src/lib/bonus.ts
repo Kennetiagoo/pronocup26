@@ -112,6 +112,16 @@ export function isBonusEnabledForStage(
   return Boolean(config[globalField] && config[phaseField(kind, stage)]);
 }
 
+export function isStageVisibleForUsers(config: BonusConfig, stage: MatchStage) {
+  if (stage === "GROUP") return config.topGroupEnabled;
+  if (stage === "ROUND_OF_32") return config.topRoundOf32Enabled;
+  if (stage === "ROUND_OF_16") return config.topRoundOf16Enabled;
+  if (stage === "QUARTER_FINAL") return config.topQuarterFinalEnabled;
+  if (stage === "SEMI_FINAL") return config.topSemiFinalEnabled;
+  if (stage === "THIRD_PLACE") return config.topThirdPlaceEnabled;
+  return config.topFinalEnabled;
+}
+
 export function isFutureMatchForActivation(matchKickoff: Date, activation: Date) {
   return matchKickoff.getTime() > activation.getTime();
 }

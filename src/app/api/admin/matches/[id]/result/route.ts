@@ -37,12 +37,15 @@ export async function PUT(
     if (!match) {
       throw new ApiError(404, "NOT_FOUND", "Partido no encontrado.");
     }
-
     const updatedMatch = await prisma.match.update({
       where: { id },
       data: {
         homeScore: parsed.data.homeScore,
         awayScore: parsed.data.awayScore,
+        ...(typeof parsed.data.homeTeam === "string" ? { homeTeam: parsed.data.homeTeam } : {}),
+        ...(typeof parsed.data.awayTeam === "string" ? { awayTeam: parsed.data.awayTeam } : {}),
+        ...(typeof parsed.data.homeTeamCode !== "undefined" ? { homeTeamCode: parsed.data.homeTeamCode } : {}),
+        ...(typeof parsed.data.awayTeamCode !== "undefined" ? { awayTeamCode: parsed.data.awayTeamCode } : {}),
         status: parsed.data.status,
         updatedAt: new Date(),
       },
@@ -161,6 +164,7 @@ export async function PUT(
     const knockoutAssignments = computeKnockoutAssignments(allMatches);
     const assignmentUpdates = [] as Array<ReturnType<typeof prisma.match.update>>;
     for (const [matchNumber, assignment] of knockoutAssignments.entries()) {
+      if (matchNumber <= 88) continue;
       const current = allMatches.find((m) => m.matchNumber === matchNumber);
       if (!current) continue;
 
@@ -198,6 +202,10 @@ export async function PUT(
       metadata: {
         homeScore: parsed.data.homeScore,
         awayScore: parsed.data.awayScore,
+        homeTeam: parsed.data.homeTeam,
+        awayTeam: parsed.data.awayTeam,
+        homeTeamCode: parsed.data.homeTeamCode,
+        awayTeamCode: parsed.data.awayTeamCode,
         status: parsed.data.status,
         updatedPredictions: predictions.length,
         updatedBracketMatches: assignmentUpdates.length,

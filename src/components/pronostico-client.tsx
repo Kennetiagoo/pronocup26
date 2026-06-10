@@ -141,6 +141,13 @@ type BonusConfigClient = {
   scorersSemiFinalEnabled: boolean;
   scorersThirdPlaceEnabled: boolean;
   scorersFinalEnabled: boolean;
+  topGroupEnabled: boolean;
+  topRoundOf32Enabled: boolean;
+  topRoundOf16Enabled: boolean;
+  topQuarterFinalEnabled: boolean;
+  topSemiFinalEnabled: boolean;
+  topThirdPlaceEnabled: boolean;
+  topFinalEnabled: boolean;
   x2UsesGroup: number;
   scorerPoint: number;
 };
@@ -358,6 +365,16 @@ function isEnabledForStage(config: BonusConfigClient, kind: "x2" | "scorers", st
       : config.scorersEnabledGlobal;
 
   return globalEnabled && matrix[stage];
+}
+
+function isStageVisibleForUsers(config: BonusConfigClient, stage: MatchStage) {
+  if (stage === "GROUP") return config.topGroupEnabled;
+  if (stage === "ROUND_OF_32") return config.topRoundOf32Enabled;
+  if (stage === "ROUND_OF_16") return config.topRoundOf16Enabled;
+  if (stage === "QUARTER_FINAL") return config.topQuarterFinalEnabled;
+  if (stage === "SEMI_FINAL") return config.topSemiFinalEnabled;
+  if (stage === "THIRD_PLACE") return config.topThirdPlaceEnabled;
+  return config.topFinalEnabled;
 }
 
 function paymentBadgeClass(status: PaymentStatus) {
@@ -714,29 +731,54 @@ export default function PronosticoClient({
     },
     [nowMs, scoringRule],
   );
+  const visibleMatches = useMemo(
+    () =>
+      matches.filter((match) => {
+        if (!isStageVisibleForUsers(bonusConfig, match.stage)) return false;
+        if (match.stage === "GROUP") return true;
+        return Boolean(match.homeTeamCode && match.awayTeamCode);
+      }),
+    [bonusConfig, matches],
+  );
+  const visibleStageFilters = useMemo(
+    () =>
+      STAGE_FILTERS_ES.filter((item) => {
+        if (item.key === "ALL") return true;
+        return visibleMatches.some((match) => match.stage === item.key);
+      }),
+    [visibleMatches],
+  );
+  const visibleKnockoutMatches = useMemo(
+    () =>
+      visibleMatches
+        .filter((match) => match.stage !== "GROUP")
+        .slice()
+        .sort((a, b) => a.matchNumber - b.matchNumber),
+    [visibleMatches],
+  );
   const pickFilterOptions = useMemo(
     () => [
-      { key: "ALL" as const, label: "Todos", count: matches.length },
+      { key: "ALL" as const, label: "Todos", count: visibleMatches.length },
       {
         key: "PENDING" as const,
         label: "Pendientes",
-        count: matches.filter((match) => !hasSavedPrediction(match)).length,
+        count: visibleMatches.filter((match) => !hasSavedPrediction(match)).length,
       },
       {
         key: "SAVED" as const,
         label: "Guardados",
-        count: matches.filter((match) => hasSavedPrediction(match)).length,
+        count: visibleMatches.filter((match) => hasSavedPrediction(match)).length,
       },
       {
         key: "OPEN" as const,
         label: "Abiertos",
-        count: matches.filter((match) => !isLocked(match)).length,
+        count: visibleMatches.filter((match) => !isLocked(match)).length,
       },
     ],
-    [isLocked, matches],
+    [isLocked, visibleMatches],
   );
   const filteredMatches = useMemo(() => {
-    let scoped = matches;
+    let scoped = visibleMatches;
     if (activeStage !== "ALL") {
       scoped = scoped.filter((match) => match.stage === activeStage);
     }
@@ -755,7 +797,7 @@ export default function PronosticoClient({
       scoped = scoped.filter((match) => !isLocked(match));
     }
     return scoped;
-  }, [matches, activeStage, activeGroup, activePickFilter, isLocked]);
+  }, [visibleMatches, activeStage, activeGroup, activePickFilter, isLocked]);
 
   function pushToast(kind: "success" | "error", text: string) {
     const id = Date.now() + Math.floor(Math.random() * 1000);
@@ -1410,7 +1452,7 @@ export default function PronosticoClient({
           </div>
           <div className="wc-scrollbar-none mb-3 overflow-x-auto pb-1">
             <div className="flex w-max min-w-full gap-2 px-1 md:w-full md:min-w-0 md:flex-wrap md:justify-center">
-              {STAGE_FILTERS_ES.map((item) => (
+              {visibleStageFilters.map((item) => (
                 <button
                   key={item.key}
                   type="button"
@@ -1458,6 +1500,60 @@ export default function PronosticoClient({
               })}
             </div>
           </div>
+
+          {visibleKnockoutMatches.length > 0 ? (
+            <div className="mb-4 overflow-x-auto rounded-2xl border border-zinc-200 bg-white p-4 shadow-[0_6px_18px_rgba(0,0,0,0.07)]">
+              <div className="flex min-w-[980px] gap-4">
+                {(
+                  [
+                    ["ROUND_OF_32", "1/16"],
+                    ["ROUND_OF_16", "Octavos"],
+                    ["QUARTER_FINAL", "Cuartos"],
+                    ["SEMI_FINAL", "Semifinales"],
+                    ["FINAL", "Final"],
+                  ] as const
+                ).map(([stage, label]) => {
+                  const stageMatches = visibleKnockoutMatches.filter((match) => match.stage === stage);
+                  if (stageMatches.length === 0) return null;
+                  return (
+                    <div key={stage} className="min-w-[180px] flex-1">
+                      <p className="mb-2 text-center text-xs font-black uppercase tracking-[0.16em] text-zinc-700">
+                        {label}
+                      </p>
+                      <div className="space-y-3">
+                        {stageMatches.map((match) => (
+                          <button
+                            key={`bracket-${match.id}`}
+                            type="button"
+                            onClick={() => {
+                              setActiveStage(match.stage);
+                              setActiveGroup("ALL");
+                              window.setTimeout(() => {
+                                document.getElementById(`match-${match.id}`)?.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "center",
+                                });
+                              }, 80);
+                            }}
+                            className="w-full rounded-xl border border-zinc-300 bg-zinc-50 p-2 text-left text-xs transition hover:border-cyan-300 hover:bg-cyan-50"
+                          >
+                            <span className="font-black text-zinc-500">P{match.matchNumber}</span>
+                            <span className="mt-1 block truncate font-bold text-zinc-900">{match.homeTeam}</span>
+                            <span className="block truncate font-bold text-zinc-900">{match.awayTeam}</span>
+                            {match.status === "FINAL" && match.homeScore !== null && match.awayScore !== null ? (
+                              <span className="mt-1 inline-flex rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 font-bold text-emerald-800">
+                                {match.homeScore}-{match.awayScore}
+                              </span>
+                            ) : null}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
 
           {filteredMatches.length === 0 ? (
             <div className="rounded-2xl border border-zinc-200 bg-white p-5 text-center text-sm text-zinc-600 shadow-[0_6px_18px_rgba(0,0,0,0.07)]">
@@ -1517,6 +1613,7 @@ export default function PronosticoClient({
               const awaySlots = Math.max(0, Math.min(15, Number(form.away) || 0));
               return (
                 <article
+                  id={`match-${match.id}`}
                   key={match.id}
                   className={`overflow-hidden rounded-[1.6rem] border p-4 shadow-[0_10px_30px_rgba(0,0,0,0.14)] ${
                     savedPrediction && !editingSavedPrediction

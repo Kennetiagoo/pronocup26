@@ -87,6 +87,10 @@ export const updateMatchResultSchema = z.object({
   homeScore: z.number().int().min(0).max(30).nullable(),
   awayScore: z.number().int().min(0).max(30).nullable(),
   status: z.enum(["SCHEDULED", "FINAL"]),
+  homeTeam: z.string().trim().min(1).max(120).optional(),
+  awayTeam: z.string().trim().min(1).max(120).optional(),
+  homeTeamCode: z.string().trim().min(2).max(8).nullable().optional(),
+  awayTeamCode: z.string().trim().min(2).max(8).nullable().optional(),
 });
 
 export const updateBonusConfigSchema = z.object({
