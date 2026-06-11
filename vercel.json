@@ -1,8 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/auto-live-matches",
-      "schedule": "* * * * *"
-    }
-  ]
-}

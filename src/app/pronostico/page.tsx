@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { isUserProfileComplete } from "@/lib/auth/profile";
 import { calculatePointsFromSnapshot, calculateScorerHits, getOrCreateBonusConfig } from "@/lib/bonus";
 import { buildGroupMatchdayMap } from "@/lib/group-matchday";
+import { autoStartLiveMatches } from "@/lib/matches/auto-live";
 import { prisma } from "@/lib/prisma";
 
 export default async function PronosticoPage() {
@@ -16,6 +17,8 @@ export default async function PronosticoPage() {
     redirect("/completar-registro");
   }
   const currentUserId = user.id;
+
+  await autoStartLiveMatches();
 
   const [activePaymentConfig, scoringRule, matches, proofs, predictions, bonusConfig] = await Promise.all([
     prisma.paymentConfig.findFirst({

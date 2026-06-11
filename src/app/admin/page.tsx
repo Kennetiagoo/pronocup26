@@ -3,6 +3,7 @@
 import AdminPanelClient from "@/components/admin-panel-client";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getOrCreateBonusConfig } from "@/lib/bonus";
+import { autoStartLiveMatches } from "@/lib/matches/auto-live";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminPage() {
@@ -13,6 +14,8 @@ export default async function AdminPage() {
   if (user.role !== "ADMIN") {
     redirect("/");
   }
+
+  await autoStartLiveMatches();
 
   const [rule, matches, users, proofs, paymentConfig, bonusConfig] = await Promise.all([
     prisma.scoringRule.findUnique({ where: { id: 1 } }),

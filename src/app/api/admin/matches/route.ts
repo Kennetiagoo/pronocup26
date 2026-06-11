@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth/guards";
 import { fail, ok } from "@/lib/http";
+import { autoStartLiveMatches } from "@/lib/matches/auto-live";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -7,6 +8,7 @@ export const runtime = "nodejs";
 export async function GET() {
   try {
     await requireAdmin();
+    await autoStartLiveMatches();
     const matches = await prisma.match.findMany({
       orderBy: [{ kickoff: "asc" }, { matchNumber: "asc" }],
       select: {
