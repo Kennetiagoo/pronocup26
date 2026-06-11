@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import PronosticoClient from "@/components/pronostico-client";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { isUserProfileComplete } from "@/lib/auth/profile";
-import { getOrCreateBonusConfig } from "@/lib/bonus";
+import { calculatePointsFromSnapshot, calculateScorerHits, getOrCreateBonusConfig } from "@/lib/bonus";
 import { buildGroupMatchdayMap } from "@/lib/group-matchday";
 import { prisma } from "@/lib/prisma";
 
@@ -35,6 +35,7 @@ export default async function PronosticoPage() {
         drawOutcomeBonus: true,
         lockMinutesBeforeKickoff: true,
         allowSelfRegistration: true,
+        updatedAt: true,
       },
     }),
     prisma.match.findMany({
@@ -57,6 +58,12 @@ export default async function PronosticoPage() {
         status: true,
         isTopMatch: true,
         topMultiplier: true,
+        officialScorers: {
+          select: {
+            teamSide: true,
+            playerId: true,
+          },
+        },
       },
     }),
     prisma.paymentProof.findMany({
@@ -165,19 +172,56 @@ export default async function PronosticoPage() {
       }
     : null;
 
+  const serverNowIso = new Date().toISOString();
+  const serverNowMs = Date.parse(serverNowIso);
   const groupMatchdayMap = buildGroupMatchdayMap(matches);
   const serializedMatches = matches.map((match) => {
     const ownPrediction = predictionMap.get(match.id);
+    const ownLiveCalculated =
+      scoringRule &&
+      ownPrediction &&
+      match.status === "LIVE" &&
+      match.kickoff.getTime() <= serverNowMs &&
+      match.homeScore !== null &&
+      match.awayScore !== null
+        ? calculatePointsFromSnapshot({
+            prediction: {
+              homeScore: ownPrediction.homeScore,
+              awayScore: ownPrediction.awayScore,
+            },
+            official: {
+              homeScore: match.homeScore,
+              awayScore: match.awayScore,
+            },
+            rule: scoringRule,
+            stage: match.stage,
+            snapshot: {
+              usedX2: ownPrediction.usedX2,
+              x2Returned: ownPrediction.x2Returned,
+              topApplied: ownPrediction.topApplied,
+              appliedMultiplier: ownPrediction.appliedMultiplier,
+              scorerPointApplied: ownPrediction.scorerPointApplied,
+            },
+            scorerHitCount: calculateScorerHits(
+              ownPrediction.scorerPickIds.map((pick) => ({
+                teamSide: pick.side,
+                playerId: pick.playerId,
+              })),
+              match.officialScorers,
+            ),
+          })
+        : null;
+    const { officialScorers: _officialScorers, ...matchPayload } = match;
     return {
-      ...match,
+      ...matchPayload,
       kickoff: match.kickoff.toISOString(),
       groupMatchday: groupMatchdayMap.get(match.id) ?? null,
       ownPredictionHome: ownPrediction?.homeScore ?? null,
       ownPredictionAway: ownPrediction?.awayScore ?? null,
-      ownPredictionPoints: ownPrediction?.points ?? 0,
-      ownPredictionBasePoints: ownPrediction?.basePoints ?? 0,
-      ownPredictionBonusPoints: ownPrediction?.bonusPoints ?? 0,
-      ownPredictionScorerPoints: ownPrediction?.scorerPoints ?? 0,
+      ownPredictionPoints: ownLiveCalculated?.totalPoints ?? ownPrediction?.points ?? 0,
+      ownPredictionBasePoints: ownLiveCalculated?.basePoints ?? ownPrediction?.basePoints ?? 0,
+      ownPredictionBonusPoints: ownLiveCalculated?.bonusPoints ?? ownPrediction?.bonusPoints ?? 0,
+      ownPredictionScorerPoints: ownLiveCalculated?.scorerPoints ?? ownPrediction?.scorerPoints ?? 0,
       ownPredictionUsedX2: ownPrediction?.usedX2 ?? false,
       ownPredictionX2Returned: ownPrediction?.x2Returned ?? false,
       ownPredictionTopApplied: ownPrediction?.topApplied ?? false,
@@ -191,6 +235,20 @@ export default async function PronosticoPage() {
     ...proof,
     createdAt: proof.createdAt.toISOString(),
   }));
+  const serializedScoringRule = scoringRule
+    ? {
+        id: scoringRule.id,
+        officialModeEnabled: scoringRule.officialModeEnabled,
+        knockoutMultiplier: scoringRule.knockoutMultiplier,
+        exactScorePoints: scoringRule.exactScorePoints,
+        goalDifferencePoints: scoringRule.goalDifferencePoints,
+        outcomePoints: scoringRule.outcomePoints,
+        singleTeamGoalsPoints: scoringRule.singleTeamGoalsPoints,
+        drawOutcomeBonus: scoringRule.drawOutcomeBonus,
+        lockMinutesBeforeKickoff: scoringRule.lockMinutesBeforeKickoff,
+        allowSelfRegistration: scoringRule.allowSelfRegistration,
+      }
+    : null;
 
   const [users, allPredictionsForStandings] = await Promise.all([
     prisma.user.findMany({
@@ -210,6 +268,8 @@ export default async function PronosticoPage() {
       select: {
         matchId: true,
         userId: true,
+        homeScore: true,
+        awayScore: true,
         points: true,
         basePoints: true,
         scorerPointApplied: true,
@@ -219,6 +279,7 @@ export default async function PronosticoPage() {
         appliedMultiplier: true,
         scorerPicks: {
           select: {
+            teamSide: true,
             playerId: true,
           },
         },
@@ -230,6 +291,12 @@ export default async function PronosticoPage() {
             homeScore: true,
             awayScore: true,
             kickoff: true,
+            officialScorers: {
+              select: {
+                teamSide: true,
+                playerId: true,
+              },
+            },
           },
         },
       },
@@ -296,7 +363,17 @@ export default async function PronosticoPage() {
   };
   const visibleUsers = users.filter((u) => (u.username?.trim() ?? "").length >= 3 || u.id === currentUserId);
   const rankingStarted = matches.some(
-    (match) => match.status === "FINAL" && match.homeScore !== null && match.awayScore !== null,
+    (match) =>
+      (match.status === "FINAL" || (match.status === "LIVE" && match.kickoff.getTime() <= serverNowMs)) &&
+      match.homeScore !== null &&
+      match.awayScore !== null,
+  );
+  const hasLiveMatches = matches.some(
+    (match) =>
+      match.status === "LIVE" &&
+      match.kickoff.getTime() <= serverNowMs &&
+      match.homeScore !== null &&
+      match.awayScore !== null,
   );
 
   function compareStandingRows(a: Omit<StandingBaseRow, "position" | "sortOrder">, b: Omit<StandingBaseRow, "position" | "sortOrder">) {
@@ -358,6 +435,35 @@ export default async function PronosticoPage() {
   function buildBettorStandings(predictionRows: StandingPredictionRow[]) {
     const totalsByUser = new Map<string, StandingTotals>();
     for (const row of predictionRows) {
+      const liveCalculated =
+        scoringRule &&
+        row.Match.status === "LIVE" &&
+        row.Match.kickoff.getTime() <= serverNowMs &&
+        row.Match.homeScore !== null &&
+        row.Match.awayScore !== null
+          ? calculatePointsFromSnapshot({
+              prediction: {
+                homeScore: row.homeScore,
+                awayScore: row.awayScore,
+              },
+              official: {
+                homeScore: row.Match.homeScore,
+                awayScore: row.Match.awayScore,
+              },
+              rule: scoringRule,
+              stage: row.Match.stage,
+              snapshot: {
+                usedX2: row.usedX2,
+                x2Returned: row.x2Returned,
+                topApplied: row.topApplied,
+                appliedMultiplier: row.appliedMultiplier,
+                scorerPointApplied: row.scorerPointApplied,
+              },
+              scorerHitCount: calculateScorerHits(row.scorerPicks, row.Match.officialScorers),
+            })
+          : null;
+      const effectivePoints = liveCalculated?.totalPoints ?? row.points ?? 0;
+      const effectiveBasePoints = liveCalculated?.basePoints ?? row.basePoints ?? 0;
       const current = totalsByUser.get(row.userId) ?? {
         totalPoints: 0,
         predictionCount: 0,
@@ -369,13 +475,13 @@ export default async function PronosticoPage() {
         partialLevel4: 0,
         x2UsedCount: 0,
       };
-      current.totalPoints += row.points ?? 0;
+      current.totalPoints += effectivePoints;
       current.predictionCount += 1;
       const stage = row.Match.stage;
-      if (stage === "GROUP") current.groupPoints += row.points ?? 0;
-      else current.knockoutPoints += row.points ?? 0;
+      if (stage === "GROUP") current.groupPoints += effectivePoints;
+      else current.knockoutPoints += effectivePoints;
 
-      const basePoints = row.basePoints ?? 0;
+      const basePoints = effectiveBasePoints;
       const buckets = scoreBucketsForStage(stage);
       if (basePoints >= buckets.max) current.perfectHits += 1;
       else if (basePoints === buckets.p2) current.partialLevel2 += 1;
@@ -425,9 +531,6 @@ export default async function PronosticoPage() {
   const predictionByUserMatch = new Map(
     allPredictionsForStandings.map((row) => [`${row.userId}:${row.matchId}`, row]),
   );
-  const serverNowIso = new Date().toISOString();
-  const serverNowMs = Date.parse(serverNowIso);
-
   function isMatchLockedForPotential(match: (typeof matches)[number]) {
     if (match.status === "FINAL") return true;
     if (!scoringRule) return false;
@@ -464,7 +567,7 @@ export default async function PronosticoPage() {
     }
 
     for (const match of matches) {
-      if (match.status === "FINAL") continue;
+      if (match.status === "FINAL" || match.status === "LIVE") continue;
       const prediction = predictionByUserMatch.get(`${userId}:${match.id}`);
       const locked = isMatchLockedForPotential(match);
       if (locked && !prediction) continue;
@@ -597,10 +700,11 @@ export default async function PronosticoPage() {
       user={user}
       paymentConfig={serializedPaymentConfig}
       matches={serializedMatches}
-      scoringRule={scoringRule}
+      scoringRule={serializedScoringRule}
       proofs={serializedProofs}
       bettorStandings={bettorStandings}
       rankingStarted={rankingStarted}
+      hasLiveMatches={hasLiveMatches}
       bonusConfig={{
         activatedAt: bonusConfig.activatedAt.toISOString(),
         x2EnabledGlobal: bonusConfig.x2EnabledGlobal,

@@ -160,6 +160,7 @@ type Props = {
   proofs: ProofClient[];
   bettorStandings: BettorStanding[];
   rankingStarted: boolean;
+  hasLiveMatches: boolean;
   bonusConfig: BonusConfigClient;
   teamPlayersByCode: Record<string, Array<{ id: number; name: string; number: number | null }>>;
   serverNowIso: string;
@@ -184,6 +185,43 @@ type X2InfoModalState = {
   remainingDayBefore: number;
   remainingDayAfter: number;
   matchDateLabel: string;
+};
+
+type RevealedPredictionRow = {
+  userId: string;
+  name: string;
+  homeScore: number;
+  awayScore: number;
+  usedX2: boolean;
+  x2Returned: boolean;
+  points: number;
+  basePoints: number;
+  bonusPoints: number;
+  scorerPoints: number;
+  pointsKind: "OFFICIAL" | "PROVISIONAL";
+  scorerPicks: Array<{
+    side: "HOME" | "AWAY";
+    slotIndex: number;
+    playerId: number;
+    playerName: string;
+    playerNumber: number | null;
+  }>;
+};
+
+type RevealedPredictionsModalState = {
+  loading: boolean;
+  error: string | null;
+  match: {
+    id: string;
+    matchNumber: number;
+    status: MatchStatus;
+    homeTeam: string;
+    awayTeam: string;
+    homeScore: number | null;
+    awayScore: number | null;
+    kickoff: string;
+  } | null;
+  predictions: RevealedPredictionRow[];
 };
 
 type PickFilter = "ALL" | "PENDING" | "SAVED" | "OPEN";
@@ -539,6 +577,7 @@ export default function PronosticoClient({
   proofs,
   bettorStandings,
   rankingStarted,
+  hasLiveMatches,
   bonusConfig,
   teamPlayersByCode,
   serverNowIso,
@@ -558,6 +597,7 @@ export default function PronosticoClient({
   const [nowMs, setNowMs] = useState(() => Date.parse(serverNowIso));
   const [showRankingInfo, setShowRankingInfo] = useState(false);
   const [selectedBettor, setSelectedBettor] = useState<BettorStanding | null>(null);
+  const [revealedPredictions, setRevealedPredictions] = useState<RevealedPredictionsModalState | null>(null);
   const [editingSavedMatchById, setEditingSavedMatchById] = useState<Record<string, boolean>>({});
   const [formByMatch, setFormByMatch] = useState<
     Record<
@@ -724,7 +764,7 @@ export default function PronosticoClient({
   }, [matches]);
   const isLocked = useCallback(
     (match: MatchClient) => {
-      if (match.status === "FINAL") return true;
+      if (match.status === "FINAL" || match.status === "LIVE") return true;
       if (!scoringRule) return false;
       const deadline = new Date(match.kickoff).getTime() - scoringRule.lockMinutesBeforeKickoff * 60 * 1000;
       return nowMs >= deadline;
@@ -976,6 +1016,65 @@ export default function PronosticoClient({
     }
   }
 
+  function canRevealMatchPredictions(match: MatchClient) {
+    return isLocked(match) && nowMs >= Date.parse(match.kickoff);
+  }
+
+  async function openMatchPredictions(match: MatchClient) {
+    if (!canRevealMatchPredictions(match)) return;
+    setRevealedPredictions({
+      loading: true,
+      error: null,
+      match: {
+        id: match.id,
+        matchNumber: match.matchNumber,
+        status: match.status,
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam,
+        homeScore: match.homeScore,
+        awayScore: match.awayScore,
+        kickoff: match.kickoff,
+      },
+      predictions: [],
+    });
+    try {
+      const res = await fetch(`/api/matches/${match.id}/predictions`);
+      if (!res.ok) {
+        const msg = await readErrorMessage(res);
+        setRevealedPredictions((current) =>
+          current
+            ? {
+                ...current,
+                loading: false,
+                error: msg,
+              }
+            : current,
+        );
+        return;
+      }
+      const payload = (await res.json()) as {
+        match: RevealedPredictionsModalState["match"];
+        predictions: RevealedPredictionRow[];
+      };
+      setRevealedPredictions({
+        loading: false,
+        error: null,
+        match: payload.match,
+        predictions: payload.predictions,
+      });
+    } catch {
+      setRevealedPredictions((current) =>
+        current
+          ? {
+              ...current,
+              loading: false,
+              error: "No se pudieron cargar los pronosticos.",
+            }
+          : current,
+      );
+    }
+  }
+
   return (
     <main className="wc-page min-h-screen px-3 py-6 text-zinc-900 sm:px-4 sm:py-8 md:px-8">
       <div className="pointer-events-none fixed right-4 top-4 z-[90] flex w-[min(92vw,380px)] flex-col gap-2">
@@ -1167,6 +1266,12 @@ export default function PronosticoClient({
             <p className="mt-4 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700">
               El torneo aun no tiene resultados oficiales: todos comparten el primer lugar hasta que se publique el
               primer partido.
+            </p>
+          ) : null}
+          {hasLiveMatches ? (
+            <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">
+              Tabla provisional: incluye partidos en vivo y puede cambiar hasta que el admin marque el resultado como
+              finalizado.
             </p>
           ) : null}
           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -1540,8 +1645,17 @@ export default function PronosticoClient({
                             <span className="font-black text-zinc-500">P{match.matchNumber}</span>
                             <span className="mt-1 block truncate font-bold text-zinc-900">{match.homeTeam}</span>
                             <span className="block truncate font-bold text-zinc-900">{match.awayTeam}</span>
-                            {match.status === "FINAL" && match.homeScore !== null && match.awayScore !== null ? (
-                              <span className="mt-1 inline-flex rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 font-bold text-emerald-800">
+                            {(match.status === "FINAL" || match.status === "LIVE") &&
+                            match.homeScore !== null &&
+                            match.awayScore !== null ? (
+                              <span
+                                className={`mt-1 inline-flex rounded-full border px-2 py-0.5 font-bold ${
+                                  match.status === "LIVE"
+                                    ? "border-rose-300 bg-rose-100 text-rose-700"
+                                    : "border-emerald-300 bg-emerald-100 text-emerald-800"
+                                }`}
+                              >
+                                {match.status === "LIVE" ? "EN VIVO " : ""}
                                 {match.homeScore}-{match.awayScore}
                               </span>
                             ) : null}
@@ -1565,6 +1679,8 @@ export default function PronosticoClient({
             {filteredMatches.map((match) => {
               const locked = isLocked(match);
               const finalized = match.status === "FINAL";
+              const live = match.status === "LIVE";
+              const revealable = canRevealMatchPredictions(match);
               const savedPrediction = hasSavedPrediction(match);
               const editingSavedPrediction = Boolean(editingSavedMatchById[match.id]);
               const inputsDisabled =
@@ -1615,11 +1731,16 @@ export default function PronosticoClient({
                 <article
                   id={`match-${match.id}`}
                   key={match.id}
+                  onClick={(event) => {
+                    const target = event.target as HTMLElement;
+                    if (target.closest("button,input,select,label,a")) return;
+                    void openMatchPredictions(match);
+                  }}
                   className={`overflow-hidden rounded-[1.6rem] border p-4 shadow-[0_10px_30px_rgba(0,0,0,0.14)] ${
                     savedPrediction && !editingSavedPrediction
                       ? "border-emerald-300 bg-emerald-50/95"
                       : "border-zinc-200 bg-white"
-                  }`}
+                  } ${revealable ? "cursor-pointer transition hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(0,0,0,0.18)]" : ""}`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="wc-eyebrow text-zinc-700">Partido {match.matchNumber}</p>
@@ -1633,13 +1754,26 @@ export default function PronosticoClient({
                         className={`rounded-full border px-3 py-1 text-[10px] font-extrabold tracking-[0.15em] ${
                           finalized
                             ? "border-zinc-300 bg-zinc-100 text-zinc-700"
+                            : live
+                            ? "border-rose-400 bg-rose-600 text-white"
                             : locked
                             ? "border-rose-300 bg-rose-100 text-rose-700"
                             : "border-emerald-300 bg-emerald-100 text-emerald-700"
                         }`}
                       >
-                        {finalized ? "Finalizado" : locked ? "Bloqueado" : "Abierto"}
+                        {finalized ? "Finalizado" : live ? "En vivo" : locked ? "Bloqueado" : "Abierto"}
                       </span>
+                      {revealable ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void openMatchPredictions(match);
+                          }}
+                          className="rounded-full border border-cyan-300 bg-cyan-50 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.15em] text-cyan-800 hover:bg-cyan-100"
+                        >
+                          Ver picks
+                        </button>
+                      ) : null}
                     </div>
                   </div>
 
@@ -1849,11 +1983,23 @@ export default function PronosticoClient({
 
                   <div className="mt-3 flex items-center justify-between gap-2 text-sm text-zinc-700">
                     <span className="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 font-bold text-zinc-900">
-                      {match.ownPredictionPoints > 0 ? `${match.ownPredictionPoints} pts` : "Sin puntos"}
+                      {match.ownPredictionPoints > 0
+                        ? `${live ? "Prov. " : ""}${match.ownPredictionPoints} pts`
+                        : live
+                          ? "Prov. 0 pts"
+                          : "Sin puntos"}
                     </span>
-                    {match.status === "FINAL" && match.homeScore !== null && match.awayScore !== null ? (
-                      <span className="rounded-full border border-emerald-300 bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.1em] text-emerald-700">
-                        Oficial {match.homeScore}-{match.awayScore}
+                    {(match.status === "FINAL" || match.status === "LIVE") &&
+                    match.homeScore !== null &&
+                    match.awayScore !== null ? (
+                      <span
+                        className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.1em] ${
+                          match.status === "LIVE"
+                            ? "border-rose-300 bg-rose-100 text-rose-700"
+                            : "border-emerald-300 bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
+                        {match.status === "LIVE" ? "Provisional" : "Oficial"} {match.homeScore}-{match.awayScore}
                       </span>
                     ) : (
                       <span className="text-xs text-zinc-500">Tu pronostico</span>
@@ -1878,6 +2024,110 @@ export default function PronosticoClient({
           </div>
         </section>
       </div>
+      {revealedPredictions ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-4 py-6">
+          <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="wc-eyebrow text-zinc-700">
+                  Partido {revealedPredictions.match?.matchNumber ?? ""}
+                </p>
+                <h3 className="wc-title mt-1 text-3xl text-zinc-950">
+                  {revealedPredictions.match
+                    ? `${revealedPredictions.match.homeTeam} vs ${revealedPredictions.match.awayTeam}`
+                    : "Pronosticos"}
+                </h3>
+                {revealedPredictions.match?.homeScore !== null &&
+                revealedPredictions.match?.awayScore !== null &&
+                revealedPredictions.match ? (
+                  <p className="mt-2 text-sm font-semibold text-zinc-700">
+                    {revealedPredictions.match.status === "LIVE" ? "EN VIVO" : "FINAL"}:{" "}
+                    {revealedPredictions.match.homeScore}-{revealedPredictions.match.awayScore}
+                  </p>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={() => setRevealedPredictions(null)}
+                className="self-start rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-800"
+              >
+                Cerrar
+              </button>
+            </div>
+
+            {revealedPredictions.loading ? (
+              <p className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
+                Cargando pronosticos...
+              </p>
+            ) : null}
+            {revealedPredictions.error ? (
+              <p className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                {revealedPredictions.error}
+              </p>
+            ) : null}
+            {!revealedPredictions.loading && !revealedPredictions.error ? (
+              <div className="mt-5 overflow-x-auto rounded-xl border border-zinc-200">
+                <table className="min-w-[760px] w-full text-left text-sm text-zinc-900">
+                  <thead className="bg-zinc-900 text-white">
+                    <tr>
+                      <th className="px-3 py-2">Usuario</th>
+                      <th className="px-3 py-2">Pronostico</th>
+                      <th className="px-3 py-2">Puntos</th>
+                      <th className="px-3 py-2">X2</th>
+                      <th className="px-3 py-2">Goleadores</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {revealedPredictions.predictions.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-3 py-4 text-center text-zinc-500">
+                          No hay pronosticos guardados para este partido.
+                        </td>
+                      </tr>
+                    ) : (
+                      revealedPredictions.predictions.map((row) => (
+                        <tr key={row.userId} className="border-t border-zinc-200">
+                          <td className="px-3 py-3 font-bold">{row.name}</td>
+                          <td className="px-3 py-3">
+                            {row.homeScore}-{row.awayScore}
+                          </td>
+                          <td className="px-3 py-3">
+                            <span
+                              className={`rounded-full border px-3 py-1 text-xs font-black ${
+                                row.pointsKind === "PROVISIONAL"
+                                  ? "border-rose-300 bg-rose-100 text-rose-700"
+                                  : "border-emerald-300 bg-emerald-100 text-emerald-700"
+                              }`}
+                            >
+                              {row.points} pts {row.pointsKind === "PROVISIONAL" ? "prov." : "oficial"}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3">
+                            {row.usedX2 ? (
+                              <span className="rounded-full border border-indigo-300 bg-indigo-100 px-2 py-1 text-xs font-bold text-indigo-800">
+                                X2{row.x2Returned ? " devuelto" : ""}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-zinc-500">No</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-xs text-zinc-700">
+                            {row.scorerPicks.length === 0
+                              ? "Sin picks"
+                              : row.scorerPicks
+                                  .map((pick) => `${pick.side === "HOME" ? "L" : "V"}: ${pick.playerName}`)
+                                  .join(", ")}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
       {selectedBettor ? (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-4 py-6">
           <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">

@@ -100,11 +100,11 @@ export async function PUT(
     if (!rule) {
       throw new ApiError(500, "INTERNAL_ERROR", "No existe configuracion de puntaje.");
     }
-    if (match.status === MatchStatus.FINAL) {
+    if (match.status !== MatchStatus.SCHEDULED) {
       throw new ApiError(
         422,
         "UNPROCESSABLE",
-        "Este partido ya fue finalizado. No se pueden modificar pronosticos.",
+        "Este partido ya esta cerrado. No se pueden modificar pronosticos.",
       );
     }
 

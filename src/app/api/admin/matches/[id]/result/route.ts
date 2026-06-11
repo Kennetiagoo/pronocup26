@@ -23,12 +23,12 @@ export async function PUT(
       throw new ApiError(400, "BAD_REQUEST", parsed.error.issues[0]?.message ?? "Datos invalidos.");
     }
 
-    if (parsed.data.status === MatchStatus.FINAL) {
+    if (parsed.data.status !== MatchStatus.SCHEDULED) {
       if (parsed.data.homeScore === null || parsed.data.awayScore === null) {
         throw new ApiError(
           422,
           "UNPROCESSABLE",
-          "Para dejar un partido en FINAL debes registrar ambos marcadores.",
+          "Para dejar un partido EN VIVO o FINAL debes registrar ambos marcadores.",
         );
       }
     }
@@ -90,8 +90,7 @@ export async function PUT(
       updatedMatch.homeScore !== null &&
       updatedMatch.awayScore !== null;
 
-    await prisma.$transaction(
-      predictions.map((prediction) => {
+    const predictionUpdates = updatedMatch.status === MatchStatus.LIVE ? [] : predictions.map((prediction) => {
         if (!shouldRecalculate) {
           return prisma.prediction.update({
             where: { id: prediction.id },
@@ -141,8 +140,11 @@ export async function PUT(
             updatedAt: new Date(),
           },
         });
-      }),
-    );
+      });
+
+    if (predictionUpdates.length > 0) {
+      await prisma.$transaction(predictionUpdates);
+    }
 
     const allMatches = await prisma.match.findMany({
       orderBy: [{ matchNumber: "asc" }],
@@ -164,7 +166,7 @@ export async function PUT(
     const knockoutAssignments = computeKnockoutAssignments(allMatches);
     const assignmentUpdates = [] as Array<ReturnType<typeof prisma.match.update>>;
     for (const [matchNumber, assignment] of knockoutAssignments.entries()) {
-      if (matchNumber <= 88) continue;
+      if (matchNumber <= 88 || updatedMatch.status !== MatchStatus.FINAL) continue;
       const current = allMatches.find((m) => m.matchNumber === matchNumber);
       if (!current) continue;
 
@@ -196,7 +198,7 @@ export async function PUT(
 
     await createAuditLog({
       actorId: admin.id,
-      action: "MATCH_RESULT_UPDATED",
+      action: updatedMatch.status === MatchStatus.LIVE ? "MATCH_LIVE_SCORE_UPDATED" : "MATCH_RESULT_UPDATED",
       entityType: "Match",
       entityId: id,
       metadata: {

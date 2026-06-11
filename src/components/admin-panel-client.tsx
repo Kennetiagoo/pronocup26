@@ -238,6 +238,18 @@ function isUserStageVisible(config: SafeBonusConfig, stage: string) {
   return false;
 }
 
+function matchStatusLabel(status: MatchStatus) {
+  if (status === "LIVE") return "En vivo";
+  if (status === "FINAL") return "Finalizado";
+  return "Programado";
+}
+
+function matchStatusBadge(status: MatchStatus) {
+  if (status === "LIVE") return "border-rose-300 bg-rose-100 text-rose-700";
+  if (status === "FINAL") return "border-emerald-300 bg-emerald-100 text-emerald-800";
+  return "border-zinc-300 bg-zinc-100 text-zinc-700";
+}
+
 function userStageVisibilityPatch(stage: string, checked: boolean) {
   if (stage === "GROUP") return { topGroupEnabled: checked };
   if (stage === "ROUND_OF_32") return { topRoundOf32Enabled: checked };
@@ -738,9 +750,27 @@ export default function AdminPanelClient({
     );
   }
 
-  async function saveMatchResult(matchId: string) {
-    const current = matches.find((match) => match.id === matchId);
-    if (!current) return;
+  function updateMatchDraft(matchId: string, patch: Partial<SafeMatch>) {
+    setMatches((items) => items.map((item) => (item.id === matchId ? { ...item, ...patch } : item)));
+  }
+
+  function adjustMatchGoal(matchId: string, side: "home" | "away", delta: number) {
+    setMatches((items) =>
+      items.map((item) => {
+        if (item.id !== matchId) return item;
+        const key = side === "home" ? "homeScore" : "awayScore";
+        return {
+          ...item,
+          [key]: Math.max(0, (item[key] ?? 0) + delta),
+        };
+      }),
+    );
+  }
+
+  async function saveMatchResult(matchId: string, patch?: Partial<SafeMatch>) {
+    const found = matches.find((match) => match.id === matchId);
+    if (!found) return;
+    const current = { ...found, ...patch };
     setBusy(true);
     setNotice(null);
     setError(null);
@@ -795,8 +825,14 @@ export default function AdminPanelClient({
         return;
       }
 
-      setNotice("Resultado oficial guardado y tabla recalculada.");
-      setEditingMatchId(null);
+      if (current.status === "FINAL") {
+        setNotice("Resultado oficial guardado y tabla recalculada.");
+        setEditingMatchId(null);
+      } else if (current.status === "LIVE") {
+        setNotice("Marcador en vivo guardado. La tabla provisional se actualiza en pantalla.");
+      } else {
+        setNotice("Partido actualizado como programado.");
+      }
       await refreshAdminData();
     } finally {
       setBusy(false);
@@ -1691,6 +1727,9 @@ export default function AdminPanelClient({
                     {match.stadium}, {match.city}
                   </p>
                   <p className="text-xs text-zinc-500 sm:text-sm">{formatKickoff(match.kickoff)}</p>
+                  <span className={`mt-2 inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${matchStatusBadge(match.status)}`}>
+                    {matchStatusLabel(match.status)}
+                  </span>
 
                   {isEditing && match.stage !== "GROUP" ? (
                     <div className="mt-4 grid gap-3 rounded-2xl border border-cyan-100 bg-cyan-50 p-3 md:grid-cols-2">
@@ -1805,7 +1844,14 @@ export default function AdminPanelClient({
                         setMatches((items) =>
                           items.map((item) =>
                             item.id === match.id
-                              ? { ...item, status: e.target.value as MatchStatus }
+                              ? {
+                                  ...item,
+                                  status: e.target.value as MatchStatus,
+                                  homeScore:
+                                    e.target.value === "LIVE" && item.homeScore === null ? 0 : item.homeScore,
+                                  awayScore:
+                                    e.target.value === "LIVE" && item.awayScore === null ? 0 : item.awayScore,
+                                }
                               : item,
                           ),
                         )
@@ -1813,6 +1859,7 @@ export default function AdminPanelClient({
                       className="rounded-lg border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900"
                     >
                       <option value="SCHEDULED">Programado</option>
+                      <option value="LIVE">En vivo</option>
                       <option value="FINAL">Finalizado</option>
                     </select>
                     {!isEditing ? (
@@ -1832,8 +1879,41 @@ export default function AdminPanelClient({
                           onClick={() => saveMatchResult(match.id)}
                           className="rounded-xl border border-emerald-300 bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-800 hover:bg-emerald-200"
                         >
-                          Guardar
+                          {match.status === "LIVE" ? "Guardar marcador" : "Guardar"}
                         </button>
+                        {match.status === "SCHEDULED" ? (
+                          <button
+                            type="button"
+                            onClick={() => updateMatchDraft(match.id, { status: "LIVE", homeScore: 0, awayScore: 0 })}
+                            className="rounded-xl border border-rose-300 bg-rose-100 px-4 py-2 text-sm font-bold text-rose-700 hover:bg-rose-200"
+                          >
+                            Iniciar 0-0
+                          </button>
+                        ) : match.status === "LIVE" ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => adjustMatchGoal(match.id, "home", 1)}
+                              className="rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-bold text-rose-700 hover:bg-rose-50"
+                            >
+                              +1 Local
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => adjustMatchGoal(match.id, "away", 1)}
+                              className="rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-bold text-rose-700 hover:bg-rose-50"
+                            >
+                              +1 Visitante
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => saveMatchResult(match.id, { status: "FINAL" })}
+                              className="rounded-xl border border-zinc-900 bg-zinc-900 px-4 py-2 text-sm font-bold text-white hover:bg-zinc-800"
+                            >
+                              Finalizar
+                            </button>
+                          </>
+                        ) : null}
                         <button
                           type="button"
                           onClick={() => {

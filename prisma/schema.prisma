@@ -23,6 +23,7 @@ enum MatchStage {
 
 enum MatchStatus {
   SCHEDULED
+  LIVE
   FINAL
 }
 
