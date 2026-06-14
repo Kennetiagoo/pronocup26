@@ -656,7 +656,8 @@ export default async function PronosticoPage() {
     for (const candidate of groupX2Candidates.sort((a, b) => b.gain - a.gain)) {
       const matchdayUsed = x2ByMatchday.get(candidate.matchday) ?? 0;
       const dayUsed = x2ByKickoffDay.get(candidate.kickoffDay) ?? 0;
-      if (groupX2Left <= 0 || matchdayUsed >= 4 || dayUsed >= 1) continue;
+      const dailyLimitApplies = candidate.matchday !== 3;
+      if (groupX2Left <= 0 || matchdayUsed >= 4 || (dailyLimitApplies && dayUsed >= 1)) continue;
       potential += candidate.gain;
       groupX2Left -= 1;
       x2ByMatchday.set(candidate.matchday, matchdayUsed + 1);

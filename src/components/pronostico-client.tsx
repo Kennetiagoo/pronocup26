@@ -198,6 +198,7 @@ type X2InfoModalState = {
   matchId: string;
   matchNumber: number;
   groupMatchday: number;
+  dailyLimitApplies: boolean;
   remainingDateBefore: number;
   remainingDateAfter: number;
   remainingGroupBefore: number;
@@ -1929,10 +1930,11 @@ export default function PronosticoClient({
               const kickoffDayKey = dayKeyBogota(match.kickoff);
               const x2ByThisKickoffDay = x2ByKickoffDay.get(kickoffDayKey) ?? 0;
               const x2LeftKickoffDay = Math.max(0, 1 - x2ByThisKickoffDay);
+              const dailyX2LimitApplies = match.stage === "GROUP" && matchday !== 3;
               const x2LimitReached =
                 match.stage === "GROUP" &&
                 !form.useX2 &&
-                (x2LeftGroup <= 0 || x2LeftMatchday <= 0 || x2LeftKickoffDay <= 0);
+                (x2LeftGroup <= 0 || x2LeftMatchday <= 0 || (dailyX2LimitApplies && x2LeftKickoffDay <= 0));
               const homePlayers = match.homeTeamCode ? (teamPlayersByCode[match.homeTeamCode] ?? []) : [];
               const awayPlayers = match.awayTeamCode ? (teamPlayersByCode[match.awayTeamCode] ?? []) : [];
               const homeSlots = Math.max(0, Math.min(15, Number(form.home) || 0));
@@ -2093,6 +2095,7 @@ export default function PronosticoClient({
                               matchId: match.id,
                               matchNumber: chronologicalMatchNumber,
                               groupMatchday: matchday,
+                              dailyLimitApplies: dailyX2LimitApplies,
                               remainingDateBefore: x2LeftMatchday,
                               remainingDateAfter: Math.max(0, x2LeftMatchday - 1),
                               remainingGroupBefore: x2LeftGroup,
@@ -2106,7 +2109,8 @@ export default function PronosticoClient({
                       </label>
                       {x2LimitReached ? (
                         <p className="mt-1 text-xs text-indigo-800">
-                          Limite alcanzado: revisa total de grupos (12), fecha (4) y dia (1).
+                          Limite alcanzado: revisa total de grupos ({bonusConfig.x2UsesGroup}), fecha (4)
+                          {dailyX2LimitApplies ? " y dia (1)." : "."}
                         </p>
                       ) : null}
                     </div>
@@ -2530,9 +2534,13 @@ export default function PronosticoClient({
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
                     Dia del partido
                   </p>
-                  <p className="text-base font-bold text-zinc-900">
-                    {x2InfoModal.remainingDayBefore} {"->"} {x2InfoModal.remainingDayAfter}
-                  </p>
+                  {x2InfoModal.dailyLimitApplies ? (
+                    <p className="text-base font-bold text-zinc-900">
+                      {x2InfoModal.remainingDayBefore} {"->"} {x2InfoModal.remainingDayAfter}
+                    </p>
+                  ) : (
+                    <p className="text-base font-bold text-emerald-800">Libre</p>
+                  )}
                   <p className="mt-1 text-[11px] text-zinc-500">{x2InfoModal.matchDateLabel}</p>
                 </div>
               </div>
@@ -2540,15 +2548,20 @@ export default function PronosticoClient({
                 <p>Si confirmas este X2, se descuentan esos cupos.</p>
                 <p>Si el partido te da 0 puntos base, el X2 se te devuelve automaticamente.</p>
               </div>
-              {x2InfoModal.remainingDayAfter === 0 ? (
+              {x2InfoModal.dailyLimitApplies && x2InfoModal.remainingDayAfter === 0 ? (
                 <p className="font-semibold text-amber-700">
                   Ojo: despues de este, no podras activar otro X2 en partidos de ese mismo dia.
+                </p>
+              ) : !x2InfoModal.dailyLimitApplies ? (
+                <p className="font-semibold text-emerald-700">
+                  Fecha 3 permite varios X2 el mismo dia por partidos simultaneos, sin pasar de 4 en la fecha.
                 </p>
               ) : null}
               <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-900">
                 <p className="font-semibold">Reglas rapidas</p>
-                <p>Maximo 12 en fase de grupos, 4 por fecha y 1 por dia.</p>
-                <p>Ejemplo: si ya usaste 1 en esa fecha de partido, no puedes activar otro para otro partido del mismo dia.</p>
+                <p>Maximo {bonusConfig.x2UsesGroup} en fase de grupos y 4 por fecha.</p>
+                <p>Fechas 1 y 2: maximo 1 por dia.</p>
+                <p>Fecha 3: se permiten varios X2 el mismo dia por simultaneidad, hasta 4 en la fecha.</p>
                 <p>Ejemplo: si usas 4 en Fecha {x2InfoModal.groupMatchday}, debes esperar la siguiente fecha.</p>
               </div>
             </div>

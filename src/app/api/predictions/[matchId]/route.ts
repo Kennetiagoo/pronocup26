@@ -164,6 +164,7 @@ export async function PUT(
       const totalLimit = Math.max(0, bonusConfig.x2UsesGroup || 12);
       const perMatchdayLimit = 4;
       const perDayLimit = 1;
+      const dailyLimitApplies = currentMatchday !== 3;
 
       if (x2ActiveUsages >= totalLimit) {
         throw new ApiError(
@@ -179,11 +180,11 @@ export async function PUT(
           `Ya alcanzaste el maximo de ${perMatchdayLimit} usos X2 en la fecha ${currentMatchday}.`,
         );
       }
-      if (x2UsagesCurrentKickoffDay >= perDayLimit) {
+      if (dailyLimitApplies && x2UsagesCurrentKickoffDay >= perDayLimit) {
         throw new ApiError(
           422,
           "UNPROCESSABLE",
-          "Ya usaste tu X2 permitido para este dia. Maximo 1 por dia.",
+          "Ya usaste tu X2 permitido para este dia. Maximo 1 por dia en fechas 1 y 2.",
         );
       }
     }
