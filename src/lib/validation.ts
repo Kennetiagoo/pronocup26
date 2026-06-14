@@ -144,6 +144,10 @@ export const updateBonusConfigSchema = z.object({
   scorerPoint: z.number().int().min(0).max(10),
 });
 
+export const updateAppUiConfigSchema = z.object({
+  groupStandingsVisible: z.boolean(),
+});
+
 export const updateTopMatchSchema = z.object({
   isTopMatch: z.boolean(),
   topMultiplier: z.number().min(1).max(5).optional(),

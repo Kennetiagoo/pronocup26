@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { getOrCreateBonusConfig } from "@/lib/bonus";
 import { autoStartLiveMatches } from "@/lib/matches/auto-live";
 import { prisma } from "@/lib/prisma";
+import { getOrCreateAppUiConfig } from "@/lib/ui-config";
 
 export default async function AdminPage() {
   const user = await getCurrentUser();
@@ -17,7 +18,7 @@ export default async function AdminPage() {
 
   await autoStartLiveMatches();
 
-  const [rule, matches, users, proofs, paymentConfig, bonusConfig] = await Promise.all([
+  const [rule, matches, users, proofs, paymentConfig, bonusConfig, uiConfig] = await Promise.all([
     prisma.scoringRule.findUnique({ where: { id: 1 } }),
     prisma.match.findMany({
       orderBy: [{ kickoff: "asc" }, { matchNumber: "asc" }],
@@ -85,6 +86,7 @@ export default async function AdminPage() {
       orderBy: { updatedAt: "desc" },
     }),
     getOrCreateBonusConfig(),
+    getOrCreateAppUiConfig(),
   ]);
 
   if (!rule) {
@@ -170,6 +172,9 @@ export default async function AdminPage() {
         x2UsesGroup: bonusConfig.x2UsesGroup,
         topMultiplier: bonusConfig.topMultiplier,
         scorerPoint: bonusConfig.scorerPoint,
+      }}
+      initialUiConfig={{
+        groupStandingsVisible: uiConfig.groupStandingsVisible,
       }}
     />
   );

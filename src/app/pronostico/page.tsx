@@ -7,6 +7,7 @@ import { calculatePointsFromSnapshot, calculateScorerHits, getOrCreateBonusConfi
 import { buildGroupMatchdayMap } from "@/lib/group-matchday";
 import { autoStartLiveMatches } from "@/lib/matches/auto-live";
 import { prisma } from "@/lib/prisma";
+import { getOrCreateAppUiConfig } from "@/lib/ui-config";
 
 export default async function PronosticoPage() {
   const user = await getCurrentUser();
@@ -20,7 +21,7 @@ export default async function PronosticoPage() {
 
   await autoStartLiveMatches();
 
-  const [activePaymentConfig, scoringRule, matches, proofs, predictions, bonusConfig] = await Promise.all([
+  const [activePaymentConfig, scoringRule, matches, proofs, predictions, bonusConfig, uiConfig] = await Promise.all([
     prisma.paymentConfig.findFirst({
       where: { isActive: true },
       orderBy: { updatedAt: "desc" },
@@ -105,6 +106,7 @@ export default async function PronosticoPage() {
       },
     }),
     getOrCreateBonusConfig(),
+    getOrCreateAppUiConfig(),
   ]);
 
   const predictionMap = new Map(
@@ -214,7 +216,8 @@ export default async function PronosticoPage() {
             ),
           })
         : null;
-    const { officialScorers: _officialScorers, ...matchPayload } = match;
+    const { officialScorers, ...matchPayload } = match;
+    void officialScorers;
     return {
       ...matchPayload,
       kickoff: match.kickoff.toISOString(),
@@ -290,6 +293,9 @@ export default async function PronosticoPage() {
           select: {
             stage: true,
             matchNumber: true,
+            groupName: true,
+            homeTeam: true,
+            awayTeam: true,
             status: true,
             homeScore: true,
             awayScore: true,
@@ -331,6 +337,21 @@ export default async function PronosticoPage() {
     partialLevel3: number;
     partialLevel4: number;
     x2UsedCount: number;
+    x2Usages: Array<{
+      matchId: string;
+      matchNumber: number;
+      stage: string;
+      groupName: string | null;
+      homeTeam: string;
+      awayTeam: string;
+      homeScore: number | null;
+      awayScore: number | null;
+      points: number;
+      basePoints: number;
+      returned: boolean;
+      applied: boolean;
+      consumesGroupQuota: boolean;
+    }>;
   };
   type StandingBaseRow = {
     userId: string;
@@ -348,6 +369,7 @@ export default async function PronosticoPage() {
     partialLevel4: number;
     x2UsedCount: number;
     x2LeftCount: number;
+    x2Usages: StandingTotals["x2Usages"];
     registeredAt: string;
     sortOrder: number;
     position: number;
@@ -435,11 +457,17 @@ export default async function PronosticoPage() {
     });
   }
 
-  function buildBettorStandings(predictionRows: StandingPredictionRow[]) {
+  function buildBettorStandings(
+    predictionRows: StandingPredictionRow[],
+    options?: { includeLiveMatches?: boolean; started?: boolean },
+  ) {
+    const includeLiveMatches = options?.includeLiveMatches ?? true;
+    const standingsStarted = options?.started ?? rankingStarted;
     const totalsByUser = new Map<string, StandingTotals>();
     for (const row of predictionRows) {
       const liveCalculated =
         scoringRule &&
+        includeLiveMatches &&
         row.Match.status === "LIVE" &&
         row.Match.kickoff.getTime() <= serverNowMs &&
         row.Match.homeScore !== null &&
@@ -477,6 +505,7 @@ export default async function PronosticoPage() {
         partialLevel3: 0,
         partialLevel4: 0,
         x2UsedCount: 0,
+        x2Usages: [],
       };
       current.totalPoints += effectivePoints;
       current.predictionCount += 1;
@@ -490,7 +519,30 @@ export default async function PronosticoPage() {
       else if (basePoints === buckets.p2) current.partialLevel2 += 1;
       else if (basePoints === buckets.p3) current.partialLevel3 += 1;
       else if (basePoints === buckets.p4) current.partialLevel4 += 1;
-      if (row.Match.stage === "GROUP" && row.usedX2 && !row.x2Returned) current.x2UsedCount += 1;
+      const isFinalWithScore =
+        row.Match.status === "FINAL" &&
+        row.Match.homeScore !== null &&
+        row.Match.awayScore !== null;
+      if (isFinalWithScore && row.usedX2) {
+        const applied = !row.x2Returned && effectiveBasePoints > 0;
+        const consumesGroupQuota = row.Match.stage === "GROUP" && applied;
+        if (consumesGroupQuota) current.x2UsedCount += 1;
+        current.x2Usages.push({
+          matchId: row.matchId,
+          matchNumber: row.Match.matchNumber,
+          stage: row.Match.stage,
+          groupName: row.Match.groupName,
+          homeTeam: row.Match.homeTeam,
+          awayTeam: row.Match.awayTeam,
+          homeScore: row.Match.homeScore,
+          awayScore: row.Match.awayScore,
+          points: effectivePoints,
+          basePoints: effectiveBasePoints,
+          returned: row.x2Returned,
+          applied,
+          consumesGroupQuota,
+        });
+      }
 
       totalsByUser.set(row.userId, current);
     }
@@ -512,9 +564,10 @@ export default async function PronosticoPage() {
         partialLevel4: totalsByUser.get(u.id)?.partialLevel4 ?? 0,
         x2UsedCount: totalsByUser.get(u.id)?.x2UsedCount ?? 0,
         x2LeftCount: Math.max(0, bonusConfig.x2UsesGroup - (totalsByUser.get(u.id)?.x2UsedCount ?? 0)),
+        x2Usages: (totalsByUser.get(u.id)?.x2Usages ?? []).sort((a, b) => a.matchNumber - b.matchNumber),
         registeredAt: u.createdAt.toISOString(),
       }));
-    return assignSharedPositions(rows, rankingStarted);
+    return assignSharedPositions(rows, standingsStarted);
   }
 
   const finalizedMatchesForRanking = matches
@@ -525,11 +578,17 @@ export default async function PronosticoPage() {
       if (kickoffDiff !== 0) return kickoffDiff;
       return a.matchNumber - b.matchNumber;
     });
-  const latestFinalMatch = finalizedMatchesForRanking.at(-1) ?? null;
-  const previousBettorStandings = latestFinalMatch
-    ? buildBettorStandings(allPredictionsForStandings.filter((row) => row.matchId !== latestFinalMatch.id))
-    : [];
-  const previousPositionByUser = new Map(previousBettorStandings.map((row) => [row.userId, row.position]));
+  const finalizedPredictionRowsForMovement = allPredictionsForStandings.filter(
+    (row) =>
+      row.Match.status === "FINAL" &&
+      row.Match.homeScore !== null &&
+      row.Match.awayScore !== null,
+  );
+  const cutoffBettorStandings = buildBettorStandings(finalizedPredictionRowsForMovement, {
+    includeLiveMatches: false,
+    started: finalizedMatchesForRanking.length > 0,
+  });
+  const cutoffPositionByUser = new Map(cutoffBettorStandings.map((row) => [row.userId, row.position]));
   const lastFiveFinalMatches = finalizedMatchesForRanking.slice(-5);
   const predictionByUserMatch = new Map(
     allPredictionsForStandings.map((row) => [`${row.userId}:${row.matchId}`, row]),
@@ -662,7 +721,7 @@ export default async function PronosticoPage() {
 
   const baseBettorStandings = buildBettorStandings(allPredictionsForStandings);
   const bettorStandings = baseBettorStandings.map((row) => {
-    const previousPosition = previousPositionByUser.get(row.userId) ?? row.position;
+    const previousPosition = cutoffPositionByUser.get(row.userId) ?? row.position;
     const movement: "UP" | "DOWN" | "SAME" =
       previousPosition > row.position ? "UP" : previousPosition < row.position ? "DOWN" : "SAME";
     const remainingPotentialPoints = calculateRemainingPotential(row.userId, row);
@@ -735,6 +794,9 @@ export default async function PronosticoPage() {
         topFinalEnabled: bonusConfig.topFinalEnabled,
         x2UsesGroup: bonusConfig.x2UsesGroup,
         scorerPoint: bonusConfig.scorerPoint,
+      }}
+      uiConfig={{
+        groupStandingsVisible: uiConfig.groupStandingsVisible,
       }}
       teamPlayersByCode={teamPlayersByCode}
       serverNowIso={serverNowIso}

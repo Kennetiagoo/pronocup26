@@ -99,6 +99,21 @@ type BettorStanding = {
   partialLevel4: number;
   x2UsedCount: number;
   x2LeftCount: number;
+  x2Usages: Array<{
+    matchId: string;
+    matchNumber: number;
+    stage: string;
+    groupName: string | null;
+    homeTeam: string;
+    awayTeam: string;
+    homeScore: number | null;
+    awayScore: number | null;
+    points: number;
+    basePoints: number;
+    returned: boolean;
+    applied: boolean;
+    consumesGroupQuota: boolean;
+  }>;
   registeredAt: string;
   previousPosition: number;
   movement: "UP" | "DOWN" | "SAME";
@@ -152,6 +167,10 @@ type BonusConfigClient = {
   scorerPoint: number;
 };
 
+type AppUiConfigClient = {
+  groupStandingsVisible: boolean;
+};
+
 type Props = {
   user: UserSession;
   paymentConfig: PaymentConfigClient;
@@ -162,6 +181,7 @@ type Props = {
   rankingStarted: boolean;
   hasLiveMatches: boolean;
   bonusConfig: BonusConfigClient;
+  uiConfig: AppUiConfigClient;
   teamPlayersByCode: Record<string, Array<{ id: number; name: string; number: number | null }>>;
   serverNowIso: string;
 };
@@ -519,18 +539,18 @@ function movementPresentation(row: BettorStanding) {
   if (row.movement === "UP") {
     return {
       label: row.movementDelta > 0 ? `Subio ${row.movementDelta}` : "Subio",
-      className: "border-zinc-300 bg-white text-zinc-800",
+      className: "border-emerald-300 bg-emerald-50 text-emerald-800",
     };
   }
   if (row.movement === "DOWN") {
     return {
       label: row.movementDelta > 0 ? `Bajo ${row.movementDelta}` : "Bajo",
-      className: "border-zinc-300 bg-white text-zinc-800",
+      className: "border-rose-300 bg-rose-50 text-rose-800",
     };
   }
   return {
     label: "Igual",
-    className: "border-zinc-300 bg-white text-zinc-700",
+    className: "border-zinc-300 bg-zinc-100 text-zinc-700",
   };
 }
 
@@ -585,6 +605,7 @@ export default function PronosticoClient({
   rankingStarted,
   hasLiveMatches,
   bonusConfig,
+  uiConfig,
   teamPlayersByCode,
   serverNowIso,
 }: Props) {
@@ -712,7 +733,10 @@ export default function PronosticoClient({
     return () => window.clearInterval(timer);
   }, []);
 
-  const standings = useMemo(() => buildStandings(matches), [matches]);
+  const standings = useMemo(
+    () => (uiConfig.groupStandingsVisible ? buildStandings(matches) : []),
+    [matches, uiConfig.groupStandingsVisible],
+  );
   const groupMatchdayByMatch = useMemo(() => {
     const map = new Map<string, number>();
     const grouped = new Map<string, MatchClient[]>();
@@ -872,6 +896,10 @@ export default function PronosticoClient({
   );
   const pendingMatchCount = useMemo(
     () => visibleMatches.filter((match) => !hasSavedPrediction(match)).length,
+    [visibleMatches],
+  );
+  const savedMatchCount = useMemo(
+    () => visibleMatches.filter((match) => hasSavedPrediction(match)).length,
     [visibleMatches],
   );
   const liveMatchCount = useMemo(
@@ -1202,48 +1230,60 @@ export default function PronosticoClient({
           </div>
         </section>
 
-        <nav className="wc-mobile-sticky wc-card-soft rounded-2xl p-2" aria-label="Accesos rapidos">
+        <nav className="wc-mobile-sticky wc-card-soft rounded-2xl p-2" aria-label="Accesos rapidos de pronostico">
           <div className="wc-scrollbar-none flex gap-2 overflow-x-auto">
             <button
               type="button"
               onClick={() => showOpenMatches(nextActionMatch ?? undefined)}
-              className="shrink-0 rounded-xl border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-cyan-900"
+              className="shrink-0 rounded-xl border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-cyan-900 hover:bg-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              aria-label={nextActionMatch ? `Ir al partido ${nextActionMatch.matchNumber}` : "Ver partidos abiertos"}
             >
-              Proximo
+              Proximo {nextActionMatch ? `P${nextActionMatch.matchNumber}` : "OK"}
             </button>
             <button
               type="button"
               onClick={() => showPickFilter("PENDING")}
-              className="shrink-0 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-amber-900"
+              className="shrink-0 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-amber-900 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              aria-label={`Ver ${pendingMatchCount} pronosticos pendientes`}
             >
               Pendientes {pendingMatchCount}
             </button>
             <button
               type="button"
               onClick={() => (firstLiveMatch ? focusMatch(firstLiveMatch, "ALL") : showPickFilter("ALL"))}
-              className="shrink-0 rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-rose-800"
+              className="shrink-0 rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-rose-800 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              aria-label={`Ver partidos en vivo: ${liveMatchCount}`}
             >
               En vivo {liveMatchCount}
             </button>
             <button
               type="button"
-              onClick={() => scrollToSection("ranking")}
-              className="shrink-0 rounded-xl border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-blue-900"
+              onClick={() => scrollToSection("mis-picks")}
+              className="shrink-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-zinc-800 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500"
             >
-              Ranking
+              Mis picks {savedMatchCount}/{visibleMatches.length}
             </button>
             <button
               type="button"
-              onClick={() => scrollToSection("tabla-grupos")}
-              className="shrink-0 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-emerald-900"
+              onClick={() => scrollToSection("ranking")}
+              className="shrink-0 rounded-xl border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-blue-900 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              Tabla
+              Ranking {bettorStandings.length}
             </button>
+            {uiConfig.groupStandingsVisible ? (
+              <button
+                type="button"
+                onClick={() => scrollToSection("tabla-grupos")}
+                className="shrink-0 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-emerald-900 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                Paises {standings.length}
+              </button>
+            ) : null}
             {shouldShowPaymentInfo ? (
               <button
                 type="button"
                 onClick={() => scrollToSection("pago")}
-                className="shrink-0 rounded-xl border border-violet-300 bg-violet-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-violet-900"
+                className="shrink-0 rounded-xl border border-violet-300 bg-violet-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-violet-900 hover:bg-violet-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
               >
                 Pago
               </button>
@@ -1251,7 +1291,7 @@ export default function PronosticoClient({
             {user.role === "ADMIN" ? (
               <Link
                 href="/admin"
-                className="shrink-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-zinc-800"
+                className="shrink-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-zinc-800 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500"
               >
                 Admin
               </Link>
@@ -1461,19 +1501,20 @@ export default function PronosticoClient({
           </div>
           <div className="mt-4 overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
             <table className="w-full min-w-[1260px] table-fixed text-left text-sm text-zinc-900">
+              <caption className="sr-only">Ranking de apostadores por puntaje acumulado</caption>
               <thead className="bg-zinc-50 text-zinc-700">
                 <tr className="border-b border-zinc-200">
-                  <th className="w-16 px-3 py-2">#</th>
-                  <th className="px-3 py-2">Apostador</th>
-                  <th className="w-28 px-3 py-2">Mov.</th>
-                  <th className="w-32 px-3 py-2">Ultimos 5</th>
-                  <th className="w-24 px-3 py-2">Grupo</th>
-                  <th className="w-24 px-3 py-2">KO</th>
-                  <th className="w-24 px-3 py-2">Plenos</th>
-                  <th className="w-28 px-3 py-2">Puntos</th>
-                  <th className="w-28 px-3 py-2">X2</th>
-                  <th className="w-40 px-3 py-2">Premio</th>
-                  <th className="w-28 px-3 py-2">Picks</th>
+                  <th scope="col" className="w-16 px-3 py-2">#</th>
+                  <th scope="col" className="px-3 py-2">Apostador</th>
+                  <th scope="col" className="w-28 px-3 py-2">Mov.</th>
+                  <th scope="col" className="w-32 px-3 py-2">Ultimos 5</th>
+                  <th scope="col" className="w-24 px-3 py-2">Grupo</th>
+                  <th scope="col" className="w-24 px-3 py-2">KO</th>
+                  <th scope="col" className="w-24 px-3 py-2">Plenos</th>
+                  <th scope="col" className="w-28 px-3 py-2">Puntos</th>
+                  <th scope="col" className="w-32 px-3 py-2">X2 grupos</th>
+                  <th scope="col" className="w-40 px-3 py-2">Premio</th>
+                  <th scope="col" className="w-28 px-3 py-2">Picks</th>
                 </tr>
               </thead>
               <tbody>
@@ -1514,7 +1555,7 @@ export default function PronosticoClient({
                             {row.position}
                           </span>
                         </td>
-                        <td className="px-3 py-2">
+                        <th scope="row" className="px-3 py-2 text-left">
                           <p className="font-semibold text-zinc-900">
                             {(row.username || `${row.nombres} ${row.apellidos}`).toUpperCase()}
                           </p>
@@ -1530,14 +1571,14 @@ export default function PronosticoClient({
                               Tu
                             </span>
                           ) : null}
-                        </td>
+                        </th>
                         <td className="px-3 py-2">
                           <span
                             className={`inline-flex rounded-full border px-2 py-1 text-[11px] font-black uppercase tracking-[0.06em] ${movement.className}`}
                           >
                             {movement.label}
                           </span>
-                          <p className="mt-1 text-[10px] text-zinc-500">Antes #{row.previousPosition}</p>
+                          <p className="mt-1 text-[10px] text-zinc-500">Corte #{row.previousPosition}</p>
                         </td>
                         <td className="px-3 py-2">
                           <div className="flex gap-1">
@@ -1570,8 +1611,9 @@ export default function PronosticoClient({
                         <td className="px-3 py-2 font-bold text-zinc-900">{row.totalPoints}</td>
                         <td className="px-3 py-2 text-zinc-700">
                           <span className="font-bold text-zinc-900">{row.x2UsedCount}</span>
-                          <span className="text-[11px] text-zinc-500"> usados</span>
+                          <span className="text-[11px] text-zinc-500"> consumidos</span>
                           <span className="ml-1 text-[11px] text-zinc-500">/ {row.x2LeftCount} libres</span>
+                          <p className="mt-0.5 text-[10px] text-zinc-500">solo finalizados</p>
                         </td>
                         <td className="px-3 py-2 font-bold text-zinc-900">
                           {prizeTier ? formatMoneyCOP(prizeTier.amount) : "-"}
@@ -1628,72 +1670,75 @@ export default function PronosticoClient({
           </section>
         ) : null}
 
-        <section id="tabla-grupos" className="wc-card-soft rounded-[1.8rem] p-5">
-          <p className="wc-eyebrow text-center md:text-left">Tabla de posiciones</p>
-          <h2 className="wc-title mt-1 text-center text-4xl text-zinc-950 sm:text-5xl md:text-left md:text-6xl">Fase de grupos</h2>
-          <p className="mt-1 text-center text-zinc-700 md:text-left">Se actualiza cuando el admin publica resultados.</p>
-          {standings.length === 0 ? (
-            <p className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 text-zinc-700">Aun no hay datos de posiciones.</p>
-          ) : (
-            <div className="mt-5 grid gap-4 xl:grid-cols-3">
-              {standings.map((group) => (
-                <div key={group.groupName} className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-                  <div
-                    className={`px-4 py-3 ${
-                      (() => {
-                        const key = resolveGroupKey(group.groupName);
-                        return key
-                          ? `${GROUP_COLOR_STYLES[key].tableHeader} ${GROUP_COLOR_STYLES[key].tableHeaderText}`
-                          : "bg-zinc-700 text-white";
-                      })()
-                    }`}
-                  >
-                    <h3 className="wc-title text-3xl sm:text-4xl">Grupo {group.groupName}</h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[540px] table-fixed bg-white text-left text-sm text-zinc-900 sm:min-w-[640px]">
-                      <thead className="text-zinc-700">
-                        <tr className="border-b border-zinc-200">
-                          <th className="px-3 py-2">#</th>
-                          <th className="w-[42%] px-3 py-2">Equipo</th>
-                          <th className="px-2 py-2">PJ</th>
-                          <th className="px-2 py-2">G</th>
-                          <th className="px-2 py-2">E</th>
-                          <th className="px-2 py-2">P</th>
-                          <th className="px-2 py-2">GF</th>
-                          <th className="hidden px-2 py-2 sm:table-cell">GC</th>
-                          <th className="hidden px-2 py-2 sm:table-cell">DG</th>
-                          <th className="px-2 py-2">Pts</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {group.rows.map((row, idx) => (
-                          <tr key={row.team} className="border-b border-zinc-100">
-                            <td className="px-3 py-2 font-bold text-zinc-900">{idx + 1}</td>
-                            <td className="px-3 py-2 font-semibold">
-                              {(() => {
-                                const team = getTeamPresentation(row.team, row.teamCode);
-                                return <TeamBadge team={team} compact />;
-                              })()}
-                            </td>
-                            <td className="px-2 py-2">{row.pj}</td>
-                            <td className="px-2 py-2">{row.g}</td>
-                            <td className="px-2 py-2">{row.e}</td>
-                            <td className="px-2 py-2">{row.p}</td>
-                            <td className="px-2 py-2">{row.gf}</td>
-                            <td className="hidden px-2 py-2 sm:table-cell">{row.gc}</td>
-                            <td className="hidden px-2 py-2 sm:table-cell">{row.dg}</td>
-                            <td className="px-2 py-2 font-bold text-zinc-900">{row.pts}</td>
+        {uiConfig.groupStandingsVisible ? (
+          <section id="tabla-grupos" className="wc-card-soft rounded-[1.8rem] p-5">
+            <p className="wc-eyebrow text-center md:text-left">Tabla de posiciones</p>
+            <h2 className="wc-title mt-1 text-center text-4xl text-zinc-950 sm:text-5xl md:text-left md:text-6xl">Fase de grupos</h2>
+            <p className="mt-1 text-center text-zinc-700 md:text-left">Se actualiza cuando el admin publica resultados.</p>
+            {standings.length === 0 ? (
+              <p className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 text-zinc-700">Aun no hay datos de posiciones.</p>
+            ) : (
+              <div className="mt-5 grid gap-4 xl:grid-cols-3">
+                {standings.map((group) => (
+                  <div key={group.groupName} className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+                    <div
+                      className={`px-4 py-3 ${
+                        (() => {
+                          const key = resolveGroupKey(group.groupName);
+                          return key
+                            ? `${GROUP_COLOR_STYLES[key].tableHeader} ${GROUP_COLOR_STYLES[key].tableHeaderText}`
+                            : "bg-zinc-700 text-white";
+                        })()
+                      }`}
+                    >
+                      <h3 className="wc-title text-3xl sm:text-4xl">Grupo {group.groupName}</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[540px] table-fixed bg-white text-left text-sm text-zinc-900 sm:min-w-[640px]">
+                        <caption className="sr-only">Posiciones del grupo {group.groupName}</caption>
+                        <thead className="text-zinc-700">
+                          <tr className="border-b border-zinc-200">
+                            <th scope="col" className="px-3 py-2">#</th>
+                            <th scope="col" className="w-[42%] px-3 py-2">Equipo</th>
+                            <th scope="col" className="px-2 py-2">PJ</th>
+                            <th scope="col" className="px-2 py-2">G</th>
+                            <th scope="col" className="px-2 py-2">E</th>
+                            <th scope="col" className="px-2 py-2">P</th>
+                            <th scope="col" className="px-2 py-2">GF</th>
+                            <th scope="col" className="hidden px-2 py-2 sm:table-cell">GC</th>
+                            <th scope="col" className="hidden px-2 py-2 sm:table-cell">DG</th>
+                            <th scope="col" className="px-2 py-2">Pts</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {group.rows.map((row, idx) => (
+                            <tr key={row.team} className="border-b border-zinc-100">
+                              <td className="px-3 py-2 font-bold text-zinc-900">{idx + 1}</td>
+                              <th scope="row" className="px-3 py-2 font-semibold">
+                                {(() => {
+                                  const team = getTeamPresentation(row.team, row.teamCode);
+                                  return <TeamBadge team={team} compact />;
+                                })()}
+                              </th>
+                              <td className="px-2 py-2">{row.pj}</td>
+                              <td className="px-2 py-2">{row.g}</td>
+                              <td className="px-2 py-2">{row.e}</td>
+                              <td className="px-2 py-2">{row.p}</td>
+                              <td className="px-2 py-2">{row.gf}</td>
+                              <td className="hidden px-2 py-2 sm:table-cell">{row.gc}</td>
+                              <td className="hidden px-2 py-2 sm:table-cell">{row.dg}</td>
+                              <td className="px-2 py-2 font-bold text-zinc-900">{row.pts}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+                ))}
+              </div>
+            )}
+          </section>
+        ) : null}
 
         <section id="mis-picks">
           <div className="wc-filter-sticky mb-3 flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white/95 p-3 shadow-[0_6px_18px_rgba(0,0,0,0.07)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
@@ -2319,10 +2364,11 @@ export default function PronosticoClient({
 
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-                <p className="text-xs font-bold uppercase tracking-[0.1em] text-zinc-500">X2</p>
+                <p className="text-xs font-bold uppercase tracking-[0.1em] text-zinc-500">X2 grupos</p>
                 <p className="mt-1 text-xl font-black text-zinc-950">
-                  {selectedBettor.x2UsedCount} usados / {selectedBettor.x2LeftCount} libres
+                  {selectedBettor.x2UsedCount} consumidos / {selectedBettor.x2LeftCount} libres
                 </p>
+                <p className="mt-1 text-[11px] font-semibold text-zinc-500">Solo finalizados no devueltos.</p>
               </div>
               <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-zinc-500">Picks</p>
@@ -2350,6 +2396,72 @@ export default function PronosticoClient({
                 </div>
               </div>
             </div>
+
+            <section className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="wc-eyebrow text-zinc-700">X2 finalizados</p>
+                  <h4 className="mt-1 text-lg font-black text-zinc-950">
+                    {selectedBettor.x2Usages.length} {pluralize(selectedBettor.x2Usages.length, "partido", "partidos")} con X2
+                  </h4>
+                </div>
+                <span className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-zinc-700">
+                  Grupos: {selectedBettor.x2UsedCount}/{bonusConfig.x2UsesGroup}
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-zinc-700">
+                No incluye pronosticos abiertos. Un X2 devuelto aparece aqui para auditoria, pero no resta cupo.
+              </p>
+              {selectedBettor.x2Usages.length === 0 ? (
+                <p className="mt-3 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-600">
+                  Este apostador no tiene X2 en partidos finalizados.
+                </p>
+              ) : (
+                <div className="mt-3 grid gap-2">
+                  {selectedBettor.x2Usages.map((usage) => (
+                    <div
+                      key={usage.matchId}
+                      className={`rounded-xl border bg-white p-3 ${
+                        usage.applied
+                          ? "border-emerald-200"
+                          : usage.returned
+                            ? "border-amber-200"
+                            : "border-zinc-200"
+                      }`}
+                    >
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="text-sm font-black text-zinc-950">
+                            P{usage.matchNumber} · {usage.homeTeam} {usage.homeScore ?? "-"} - {usage.awayScore ?? "-"} {usage.awayTeam}
+                          </p>
+                          <p className="mt-1 text-xs font-semibold text-zinc-600">
+                            {STAGE_LABELS_ES[usage.stage as MatchStage] ?? usage.stage}
+                            {usage.groupName ? ` · Grupo ${usage.groupName}` : ""} · Base {usage.basePoints} pts · Total{" "}
+                            {usage.points} pts
+                          </p>
+                        </div>
+                        <span
+                          className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] ${
+                            usage.applied
+                              ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                              : "border-amber-300 bg-amber-50 text-amber-800"
+                          }`}
+                        >
+                          {usage.applied ? "Aplicado" : "Devuelto"}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs text-zinc-600">
+                        {usage.consumesGroupQuota
+                          ? "Consume un cupo X2 de grupos."
+                          : usage.stage === "GROUP"
+                            ? "No consume cupo de grupos porque fue devuelto."
+                            : "No afecta el cupo X2 de grupos."}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
 
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               {selectedBettor.podiumPaths.map((path) => {

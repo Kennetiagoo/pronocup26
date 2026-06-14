@@ -130,6 +130,10 @@ type SafeBonusConfig = {
   scorerPoint: number;
 };
 
+type SafeUiConfig = {
+  groupStandingsVisible: boolean;
+};
+
 type TeamPlayerRow = {
   id?: number;
   name: string;
@@ -173,6 +177,7 @@ type Props = {
   initialProofs: SafeProof[];
   initialPaymentConfig: SafePaymentConfig | null;
   initialBonusConfig: SafeBonusConfig;
+  initialUiConfig: SafeUiConfig;
 };
 
 type ApiError = { error?: { message?: string } };
@@ -306,6 +311,7 @@ export default function AdminPanelClient({
   initialProofs,
   initialPaymentConfig,
   initialBonusConfig,
+  initialUiConfig,
 }: Props) {
   const [rule, setRule] = useState(initialRule);
   const [matches, setMatches] = useState(initialMatches);
@@ -338,6 +344,7 @@ export default function AdminPanelClient({
     height: initialPaymentConfig?.qrHeight ?? 320,
   });
   const [bonusConfig, setBonusConfig] = useState(initialBonusConfig);
+  const [uiConfig, setUiConfig] = useState(initialUiConfig);
   const [selectedTeamCode, setSelectedTeamCode] = useState<string>("");
   const [teamPlayers, setTeamPlayers] = useState<TeamPlayerRow[]>([]);
   const [teamPlayersBusy, setTeamPlayersBusy] = useState(false);
@@ -531,12 +538,13 @@ export default function AdminPanelClient({
   }
 
   async function refreshAdminData() {
-    const [usersRes, matchesRes, ruleRes, proofsRes, bonusRes] = await Promise.all([
+    const [usersRes, matchesRes, ruleRes, proofsRes, bonusRes, uiConfigRes] = await Promise.all([
       fetch("/api/admin/users"),
       fetch("/api/admin/matches"),
       fetch("/api/admin/scoring-rule"),
       fetch("/api/admin/payment-proofs"),
       fetch("/api/admin/bonus-config"),
+      fetch("/api/admin/ui-config"),
     ]);
 
     if (usersRes.ok) {
@@ -570,6 +578,10 @@ export default function AdminPanelClient({
         ...payload.config,
         activatedAt: new Date(payload.config.activatedAt).toISOString(),
       });
+    }
+    if (uiConfigRes.ok) {
+      const payload = (await uiConfigRes.json()) as { config: SafeUiConfig };
+      setUiConfig(payload.config);
     }
   }
 
@@ -626,6 +638,28 @@ export default function AdminPanelClient({
       setNotice("Configuracion de bonificaciones actualizada. Aplica para partidos futuros.");
       await refreshAdminData();
       setPlayoffModalOpen(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveUiConfig() {
+    setBusy(true);
+    setNotice(null);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/ui-config", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(uiConfig),
+      });
+      if (!res.ok) {
+        setError(await readErrorMessage(res));
+        return;
+      }
+      const payload = (await res.json()) as { config: SafeUiConfig };
+      setUiConfig(payload.config);
+      setNotice("Configuracion de vista actualizada.");
     } finally {
       setBusy(false);
     }
@@ -1081,6 +1115,7 @@ export default function AdminPanelClient({
               ["admin-usuarios", "Usuarios"],
               ["admin-resultados", "Resultados"],
               ["admin-bonos", "Bonos"],
+              ["admin-vista", "Vista"],
               ["admin-plantillas", "Plantillas"],
               ["admin-pagos", "Pagos"],
               ["admin-comprobantes", "Comprobantes"],
@@ -1103,7 +1138,7 @@ export default function AdminPanelClient({
         ) : null}
         {error ? <p className="rounded-xl border border-rose-300 bg-rose-100 p-3 text-rose-700">{error}</p> : null}
 
-        <section className="grid gap-3 sm:grid-cols-3">
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <button
             type="button"
             onClick={() => {
@@ -1136,6 +1171,17 @@ export default function AdminPanelClient({
             </p>
             <p className="text-sm font-semibold">
               {nextUnresolvedMatch ? matchStatusLabel(nextUnresolvedMatch.status) : "sin pendientes"}
+            </p>
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToSection("admin-vista")}
+            className="rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-left text-emerald-900 shadow-[0_8px_20px_rgba(0,0,0,0.08)] hover:bg-emerald-100"
+          >
+            <p className="text-xs font-black uppercase tracking-[0.12em]">Tabla paises</p>
+            <p className="mt-1 text-3xl font-black">{uiConfig.groupStandingsVisible ? "ON" : "OFF"}</p>
+            <p className="text-sm font-semibold">
+              {uiConfig.groupStandingsVisible ? "visible para usuarios" : "oculta en pronostico"}
             </p>
           </button>
         </section>
@@ -1320,6 +1366,69 @@ export default function AdminPanelClient({
             className="wc-button-primary mt-5 px-5 py-3 text-sm disabled:opacity-60"
           >
             Guardar configuracion
+          </button>
+        </section>
+
+        <section id="admin-vista" className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="wc-eyebrow">Vista del usuario</p>
+              <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Navegacion y modulos</h2>
+              <p className="mt-2 max-w-3xl text-sm text-zinc-700">
+                Estos cambios ajustan lo que ven los usuarios en la pantalla de pronosticos sin modificar puntajes,
+                resultados ni predicciones guardadas.
+              </p>
+            </div>
+            <Link
+              href="/pronostico"
+              className="rounded-xl border border-cyan-300 bg-cyan-50 px-4 py-2 text-center text-xs font-semibold uppercase tracking-[0.08em] text-cyan-800 hover:bg-cyan-100"
+            >
+              Ver pronostico
+            </Link>
+          </div>
+
+          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+            <label className="flex min-h-28 items-start justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-4 text-zinc-900">
+              <span>
+                <span className="block text-sm font-black uppercase tracking-[0.1em]">Tabla de posiciones de paises</span>
+                <span className="mt-2 block text-sm text-zinc-700">
+                  Muestra u oculta la seccion de fase de grupos y su acceso directo. El ranking de apostadores sigue
+                  visible y se calcula igual.
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={uiConfig.groupStandingsVisible}
+                onChange={(e) => setUiConfig((v) => ({ ...v, groupStandingsVisible: e.target.checked }))}
+                className="mt-1 h-5 w-5 shrink-0"
+                aria-label="Mostrar tabla de posiciones de paises"
+              />
+            </label>
+
+            <div
+              className={`rounded-2xl border p-4 ${
+                uiConfig.groupStandingsVisible
+                  ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                  : "border-zinc-300 bg-zinc-50 text-zinc-800"
+              }`}
+            >
+              <p className="text-xs font-black uppercase tracking-[0.12em]">Estado actual</p>
+              <p className="mt-2 text-3xl font-black">{uiConfig.groupStandingsVisible ? "Visible" : "Oculta"}</p>
+              <p className="mt-2 text-sm font-semibold">
+                {uiConfig.groupStandingsVisible
+                  ? "Los usuarios pueden consultar posiciones por grupo."
+                  : "Los usuarios no veran la tabla de paises ni su acceso rapido."}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={saveUiConfig}
+            disabled={busy}
+            className="wc-button-primary mt-5 px-5 py-3 text-sm disabled:opacity-60"
+          >
+            Guardar vista
           </button>
         </section>
 
