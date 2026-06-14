@@ -7,6 +7,7 @@ import { calculatePointsFromSnapshot, calculateScorerHits, getOrCreateBonusConfi
 import { buildGroupMatchdayMap } from "@/lib/group-matchday";
 import { autoStartLiveMatches } from "@/lib/matches/auto-live";
 import { prisma } from "@/lib/prisma";
+import { calculatePredictionPoints } from "@/lib/scoring";
 import { getOrCreateAppUiConfig } from "@/lib/ui-config";
 
 export default async function PronosticoPage() {
@@ -18,6 +19,7 @@ export default async function PronosticoPage() {
     redirect("/completar-registro");
   }
   const currentUserId = user.id;
+  const isCurrentUserAdmin = user.role === "ADMIN";
 
   await autoStartLiveMatches();
 
@@ -386,6 +388,24 @@ export default async function PronosticoPage() {
     canReach: boolean;
     verdict: "IN_ZONE" | "CAN_REACH" | "CANNOT_REACH";
   };
+  type NextMatchPath = {
+    matchNumber: number;
+    homeTeam: string;
+    awayTeam: string;
+    kickoff: string;
+    locked: boolean;
+    hasOwnPrediction: boolean;
+    currentCutPosition: number;
+    bestPosition: number;
+    positionGain: number;
+    scoreLine: string | null;
+    ownPoints: number;
+    ownBasePoints: number;
+    ownUsesX2: boolean;
+    actions: string[];
+    rivalConditions: string[];
+    note: string | null;
+  };
   const visibleUsers = users.filter((u) => (u.username?.trim() ?? "").length >= 3 || u.id === currentUserId);
   const rankingStarted = matches.some(
     (match) =>
@@ -720,6 +740,257 @@ export default async function PronosticoPage() {
     });
   }
 
+  const nextRankingMatch =
+    matches
+      .filter((match) => {
+        if (match.status === "FINAL") return false;
+        if (match.stage === "GROUP") return true;
+        return Boolean(match.homeTeamCode && match.awayTeamCode);
+      })
+      .slice()
+      .sort((a, b) => {
+        const kickoffDiff = a.kickoff.getTime() - b.kickoff.getTime();
+        if (kickoffDiff !== 0) return kickoffDiff;
+        return a.matchNumber - b.matchNumber;
+      })[0] ?? null;
+
+  function isScenarioLocked(match: (typeof matches)[number]) {
+    if (match.status === "LIVE") return true;
+    if (!scoringRule) return false;
+    return serverNowMs >= match.kickoff.getTime() - scoringRule.lockMinutesBeforeKickoff * 60 * 1000;
+  }
+
+  function scenarioImpact(
+    prediction: StandingPredictionRow,
+    match: (typeof matches)[number],
+    official: { homeScore: number; awayScore: number },
+  ) {
+    if (!scoringRule) return { points: 0, basePoints: 0 };
+    const basePoints = calculatePredictionPoints(
+      { homeScore: prediction.homeScore, awayScore: prediction.awayScore },
+      official,
+      scoringRule,
+      match.stage,
+    );
+    const multiplier = Math.max(1, prediction.appliedMultiplier || (prediction.usedX2 ? 2 : 1));
+    return {
+      basePoints,
+      points: Math.round(basePoints * multiplier),
+    };
+  }
+
+  function buildScenarioScoreCandidates(matchId: string, ownPrediction: StandingPredictionRow) {
+    const matchPredictions = allPredictionsForStandings.filter((prediction) => prediction.matchId === matchId);
+    const maxPredictedGoals = Math.max(
+      ownPrediction.homeScore,
+      ownPrediction.awayScore,
+      ...matchPredictions.flatMap((prediction) => [prediction.homeScore, prediction.awayScore]),
+      6,
+    );
+    const maxGoals = Math.min(12, Math.max(6, maxPredictedGoals + 2));
+    const scoreKeys = new Set<string>();
+    for (let home = 0; home <= maxGoals; home += 1) {
+      for (let away = 0; away <= maxGoals; away += 1) {
+        scoreKeys.add(`${home}:${away}`);
+      }
+    }
+    for (const prediction of matchPredictions) {
+      scoreKeys.add(`${prediction.homeScore}:${prediction.awayScore}`);
+    }
+    scoreKeys.add(`${ownPrediction.homeScore}:${ownPrediction.awayScore}`);
+    return Array.from(scoreKeys).map((key) => {
+      const [homeScore, awayScore] = key.split(":").map(Number);
+      return { homeScore, awayScore };
+    });
+  }
+
+  function projectRowsAfterScenario(
+    baseRows: StandingBaseRow[],
+    match: (typeof matches)[number],
+    official: { homeScore: number; awayScore: number },
+  ) {
+    const buckets = scoreBucketsForStage(match.stage);
+    const projectedRows = baseRows.map((baseRow) => {
+      const prediction = predictionByUserMatch.get(`${baseRow.userId}:${match.id}`);
+      if (!prediction) return baseRow;
+      const impact = scenarioImpact(prediction, match, official);
+      const x2ConsumesGroupQuota = match.stage === "GROUP" && prediction.usedX2 && impact.basePoints > 0;
+      return {
+        ...baseRow,
+        totalPoints: baseRow.totalPoints + impact.points,
+        predictionCount: baseRow.predictionCount + 1,
+        groupPoints: baseRow.groupPoints + (match.stage === "GROUP" ? impact.points : 0),
+        knockoutPoints: baseRow.knockoutPoints + (match.stage === "GROUP" ? 0 : impact.points),
+        perfectHits: baseRow.perfectHits + (impact.basePoints >= buckets.max ? 1 : 0),
+        partialLevel2: baseRow.partialLevel2 + (impact.basePoints === buckets.p2 ? 1 : 0),
+        partialLevel3: baseRow.partialLevel3 + (impact.basePoints === buckets.p3 ? 1 : 0),
+        partialLevel4: baseRow.partialLevel4 + (impact.basePoints === buckets.p4 ? 1 : 0),
+        x2UsedCount: baseRow.x2UsedCount + (x2ConsumesGroupQuota ? 1 : 0),
+        x2LeftCount: Math.max(0, baseRow.x2LeftCount - (x2ConsumesGroupQuota ? 1 : 0)),
+      };
+    });
+    return assignSharedPositions(projectedRows, true);
+  }
+
+  function buildNextMatchPath(row: StandingBaseRow): NextMatchPath | null {
+    if (!nextRankingMatch) return null;
+    const cutRow = cutoffBettorStandings.find((standingRow) => standingRow.userId === row.userId) ?? row;
+    const locked = isScenarioLocked(nextRankingMatch);
+    const canRevealScenarioDetails = locked || row.userId === currentUserId || isCurrentUserAdmin;
+    const ownPrediction = predictionByUserMatch.get(`${row.userId}:${nextRankingMatch.id}`);
+    const currentCutPosition = cutRow.position;
+
+    if (!ownPrediction) {
+      return {
+        matchNumber: nextRankingMatch.matchNumber,
+        homeTeam: nextRankingMatch.homeTeam,
+        awayTeam: nextRankingMatch.awayTeam,
+        kickoff: nextRankingMatch.kickoff.toISOString(),
+        locked,
+        hasOwnPrediction: false,
+        currentCutPosition,
+        bestPosition: currentCutPosition,
+        positionGain: 0,
+        scoreLine: null,
+        ownPoints: 0,
+        ownBasePoints: 0,
+        ownUsesX2: false,
+        actions:
+          locked || row.userId === currentUserId || isCurrentUserAdmin
+            ? ["Guardar un pronostico para este partido antes del cierre."]
+            : ["No se muestra si este apostador tiene o no pick mientras el partido siga abierto."],
+        rivalConditions: locked
+          ? ["Sin pick propio no hay salto calculable para el siguiente partido."]
+          : [
+              "Mientras el partido este abierto, los rivales cercanos todavia pueden editar marcador o activar X2.",
+              "Al bloqueo se calculara el escenario con picks finales sin exponerlos antes de tiempo.",
+            ],
+        note:
+          locked || row.userId === currentUserId || isCurrentUserAdmin
+            ? "No tiene pick guardado para el siguiente partido."
+            : "Detalle limitado para no revelar picks abiertos de otros usuarios.",
+      };
+    }
+
+    let best:
+      | {
+          official: { homeScore: number; awayScore: number };
+          projectedRows: StandingBaseRow[];
+          selectedRow: StandingBaseRow;
+          ownImpact: { points: number; basePoints: number };
+        }
+      | null = null;
+
+    for (const official of buildScenarioScoreCandidates(nextRankingMatch.id, ownPrediction)) {
+      const projectedRows = projectRowsAfterScenario(cutoffBettorStandings, nextRankingMatch, official);
+      const selectedRow = projectedRows.find((standingRow) => standingRow.userId === row.userId);
+      if (!selectedRow) continue;
+      const ownImpact = scenarioImpact(ownPrediction, nextRankingMatch, official);
+      if (
+        !best ||
+        selectedRow.position < best.selectedRow.position ||
+        (selectedRow.position === best.selectedRow.position && ownImpact.points > best.ownImpact.points)
+      ) {
+        best = { official, projectedRows, selectedRow, ownImpact };
+      }
+    }
+
+    if (!best) return null;
+
+    const scoreLine = `${best.official.homeScore}-${best.official.awayScore}`;
+    const actions = canRevealScenarioDetails
+      ? [
+          `Necesita que ${nextRankingMatch.homeTeam} vs ${nextRankingMatch.awayTeam} termine ${scoreLine}.`,
+          `Con ese marcador suma ${best.ownImpact.points} pts (${best.ownImpact.basePoints} base${ownPrediction.usedX2 ? " con X2" : ""}).`,
+        ]
+      : [
+          "El partido sigue abierto: no se muestran marcadores guardados de otros apostadores.",
+          "Para mejorar necesita un acierto alto en el siguiente partido y cuidar el uso de X2 si tiene cupo.",
+        ];
+    if (canRevealScenarioDetails && ownPrediction.usedX2) {
+      actions.push("Su X2 debe sumar puntos base; si queda en 0 base, se devuelve y no empuja el salto.");
+    } else if (canRevealScenarioDetails && !locked && nextRankingMatch.stage === "GROUP" && x2EnabledForPotential(nextRankingMatch)) {
+      actions.push("Si aun esta abierto y tiene cupo, activar X2 puede subir el techo del escenario.");
+    }
+
+    const projectedByUser = new Map(best.projectedRows.map((projectedRow) => [projectedRow.userId, projectedRow]));
+    const selectedProjected = best.selectedRow;
+    const maxBase = scoreBucketsForStage(nextRankingMatch.stage).max;
+    const relevantRivals = cutoffBettorStandings
+      .filter((standingRow) => standingRow.userId !== row.userId)
+      .map((standingRow) => ({
+        cut: standingRow,
+        projected: projectedByUser.get(standingRow.userId) ?? standingRow,
+        prediction: predictionByUserMatch.get(`${standingRow.userId}:${nextRankingMatch.id}`),
+      }))
+      .filter(({ cut, projected }) => {
+        if (projected.position <= selectedProjected.position) return true;
+        if (cut.position <= currentCutPosition) return true;
+        if (projected.totalPoints >= selectedProjected.totalPoints - 5) return true;
+        return false;
+      })
+      .sort((a, b) => {
+        if (a.projected.position !== b.projected.position) return a.projected.position - b.projected.position;
+        if (b.projected.totalPoints !== a.projected.totalPoints) return b.projected.totalPoints - a.projected.totalPoints;
+        return a.cut.sortOrder - b.cut.sortOrder;
+      })
+      .slice(0, 8);
+
+    const rivalConditions = canRevealScenarioDetails
+      ? relevantRivals.map(({ cut, projected, prediction }) => {
+          const name = displayName(cut);
+          const relation =
+            projected.position < selectedProjected.position
+              ? `queda por encima (#${projected.position})`
+              : projected.position === selectedProjected.position
+                ? `comparte la posicion #${projected.position}`
+                : `queda detras (#${projected.position})`;
+          if (!prediction) {
+            return `${name} no tiene pick en este partido; se queda en ${projected.totalPoints} pts y ${relation}.`;
+          }
+          const impact = scenarioImpact(prediction, nextRankingMatch, best.official);
+          const pickText = `puso ${prediction.homeScore}-${prediction.awayScore}`;
+          const x2Text = prediction.usedX2
+            ? impact.basePoints > 0
+              ? " con X2 aplicado"
+              : " con X2 devuelto"
+            : "";
+          const hitText =
+            impact.basePoints >= maxBase
+              ? "tambien hace pleno"
+              : impact.points > 0
+                ? "suma parcial"
+                : "no suma";
+          return `${name} ${pickText}: ${hitText}${x2Text}, agrega ${impact.points} pts, llega a ${projected.totalPoints} pts y ${relation}.`;
+        })
+      : [
+          "No se revelan picks de otros usuarios mientras el partido siga abierto.",
+          "Para subir, los rivales cercanos no deberian combinar acierto alto con X2.",
+          "Al bloqueo se recalculan nombres, marcadores y X2 con datos finales de esa fecha.",
+        ];
+
+    return {
+      matchNumber: nextRankingMatch.matchNumber,
+      homeTeam: nextRankingMatch.homeTeam,
+      awayTeam: nextRankingMatch.awayTeam,
+      kickoff: nextRankingMatch.kickoff.toISOString(),
+      locked,
+      hasOwnPrediction: true,
+      currentCutPosition,
+      bestPosition: best.selectedRow.position,
+      positionGain: Math.max(0, currentCutPosition - best.selectedRow.position),
+      scoreLine: canRevealScenarioDetails ? scoreLine : null,
+      ownPoints: canRevealScenarioDetails ? best.ownImpact.points : 0,
+      ownBasePoints: canRevealScenarioDetails ? best.ownImpact.basePoints : 0,
+      ownUsesX2: ownPrediction.usedX2,
+      actions,
+      rivalConditions,
+      note: canRevealScenarioDetails
+        ? "Calculado evaluando todos los marcadores candidatos contra todos los picks disponibles. No incluye puntos de goleadores, porque dependen de anotadores oficiales."
+        : "Detalle limitado para no revelar picks abiertos de otros usuarios; el calculo preciso se muestra al bloqueo.",
+    };
+  }
+
   const baseBettorStandings = buildBettorStandings(allPredictionsForStandings);
   const bettorStandings = baseBettorStandings.map((row) => {
     const previousPosition = cutoffPositionByUser.get(row.userId) ?? row.position;
@@ -733,6 +1004,7 @@ export default async function PronosticoPage() {
       movementDelta: Math.abs(previousPosition - row.position),
       remainingPotentialPoints,
       podiumPaths: buildPodiumPaths(row, baseBettorStandings, remainingPotentialPoints),
+      nextMatchPath: buildNextMatchPath(row),
       lastFive: lastFiveFinalMatches.map((match) => {
         const prediction = predictionByUserMatch.get(`${row.userId}:${match.id}`);
         if (!prediction) {

@@ -131,6 +131,24 @@ type BettorStanding = {
     canReach: boolean;
     verdict: "IN_ZONE" | "CAN_REACH" | "CANNOT_REACH";
   }>;
+  nextMatchPath: {
+    matchNumber: number;
+    homeTeam: string;
+    awayTeam: string;
+    kickoff: string;
+    locked: boolean;
+    hasOwnPrediction: boolean;
+    currentCutPosition: number;
+    bestPosition: number;
+    positionGain: number;
+    scoreLine: string | null;
+    ownPoints: number;
+    ownBasePoints: number;
+    ownUsesX2: boolean;
+    actions: string[];
+    rivalConditions: string[];
+    note: string | null;
+  } | null;
   lastFive: Array<{
     matchNumber: number;
     status: "MISS" | "POINTS" | "MAX" | "ZERO";
@@ -2400,6 +2418,73 @@ export default function PronosticoClient({
                 </div>
               </div>
             </div>
+
+            {selectedBettor.nextMatchPath ? (
+              <section className="mt-4 rounded-2xl border border-cyan-200 bg-cyan-50 p-4 text-cyan-950">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <p className="wc-eyebrow text-cyan-900">Siguiente partido</p>
+                    <h4 className="mt-1 text-xl font-black">
+                      P{selectedBettor.nextMatchPath.matchNumber}: {selectedBettor.nextMatchPath.homeTeam} vs{" "}
+                      {selectedBettor.nextMatchPath.awayTeam}
+                    </h4>
+                    <p className="mt-1 text-sm font-semibold text-cyan-900">
+                      Corte #{selectedBettor.nextMatchPath.currentCutPosition} · mejor posible #
+                      {selectedBettor.nextMatchPath.bestPosition}
+                      {selectedBettor.nextMatchPath.positionGain > 0
+                        ? ` · sube ${selectedBettor.nextMatchPath.positionGain}`
+                        : " · sin salto de posicion"}
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.08em] ${
+                      selectedBettor.nextMatchPath.locked
+                        ? "border-emerald-300 bg-emerald-100 text-emerald-800"
+                        : "border-amber-300 bg-amber-100 text-amber-800"
+                    }`}
+                  >
+                    {selectedBettor.nextMatchPath.locked ? "Picks bloqueados" : "Picks abiertos"}
+                  </span>
+                </div>
+
+                <div className="mt-4 grid gap-3 lg:grid-cols-[0.9fr_1.1fr]">
+                  <div className="rounded-xl border border-cyan-200 bg-white p-3">
+                    <p className="text-xs font-black uppercase tracking-[0.1em] text-cyan-800">Que necesita</p>
+                    {selectedBettor.nextMatchPath.scoreLine ? (
+                      <p className="mt-2 text-3xl font-black text-cyan-950">
+                        {selectedBettor.nextMatchPath.scoreLine}
+                      </p>
+                    ) : null}
+                    <ul className="mt-3 space-y-2 text-sm font-semibold text-cyan-950">
+                      {selectedBettor.nextMatchPath.actions.map((action) => (
+                        <li key={action} className="rounded-lg border border-cyan-100 bg-cyan-50 px-3 py-2">
+                          {action}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="rounded-xl border border-cyan-200 bg-white p-3">
+                    <p className="text-xs font-black uppercase tracking-[0.1em] text-cyan-800">
+                      Condiciones de rivales
+                    </p>
+                    <ul className="mt-3 space-y-2 text-sm text-zinc-800">
+                      {selectedBettor.nextMatchPath.rivalConditions.map((condition) => (
+                        <li key={condition} className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
+                          {condition}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {selectedBettor.nextMatchPath.note ? (
+                  <p className="mt-3 rounded-xl border border-cyan-200 bg-white px-3 py-2 text-xs font-semibold text-cyan-900">
+                    {selectedBettor.nextMatchPath.note}
+                  </p>
+                ) : null}
+              </section>
+            ) : null}
 
             <section className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
