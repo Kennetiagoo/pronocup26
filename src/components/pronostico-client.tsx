@@ -788,6 +788,10 @@ export default function PronosticoClient({
         .sort(compareMatchesByKickoff),
     [bonusConfig, matches],
   );
+  const chronologicalMatchNumberById = useMemo(
+    () => new Map(visibleMatches.map((match, index) => [match.id, index + 1])),
+    [visibleMatches],
+  );
   const visibleStageFilters = useMemo(
     () =>
       STAGE_FILTERS_ES.filter((item) => {
@@ -801,7 +805,7 @@ export default function PronosticoClient({
       visibleMatches
         .filter((match) => match.stage !== "GROUP")
         .slice()
-        .sort((a, b) => a.matchNumber - b.matchNumber),
+        .sort(compareMatchesByKickoff),
     [visibleMatches],
   );
   const pickFilterOptions = useMemo(
@@ -899,6 +903,13 @@ export default function PronosticoClient({
     setActiveStage(match.stage);
     setActiveGroup(match.stage === "GROUP" ? (resolveGroupKey(match.groupName) ?? "ALL") : "ALL");
     scrollToSection(`match-${match.id}`);
+  }
+
+  function showOpenMatches(match?: MatchClient) {
+    setActivePickFilter("OPEN");
+    setActiveStage("ALL");
+    setActiveGroup("ALL");
+    scrollToSection(match ? `match-${match.id}` : "mis-picks");
   }
 
   function showPickFilter(filter: PickFilter) {
@@ -1083,12 +1094,13 @@ export default function PronosticoClient({
 
   async function openMatchPredictions(match: MatchClient) {
     if (!canRevealMatchPredictions(match)) return;
+    const chronologicalMatchNumber = chronologicalMatchNumberById.get(match.id) ?? match.matchNumber;
     setRevealedPredictions({
       loading: true,
       error: null,
       match: {
         id: match.id,
-        matchNumber: match.matchNumber,
+        matchNumber: chronologicalMatchNumber,
         status: match.status,
         homeTeam: match.homeTeam,
         awayTeam: match.awayTeam,
@@ -1120,7 +1132,12 @@ export default function PronosticoClient({
       setRevealedPredictions({
         loading: false,
         error: null,
-        match: payload.match,
+        match: payload.match
+          ? {
+              ...payload.match,
+              matchNumber: chronologicalMatchNumberById.get(payload.match.id) ?? payload.match.matchNumber,
+            }
+          : payload.match,
         predictions: payload.predictions,
       });
     } catch {
@@ -1189,7 +1206,7 @@ export default function PronosticoClient({
           <div className="wc-scrollbar-none flex gap-2 overflow-x-auto">
             <button
               type="button"
-              onClick={() => (nextActionMatch ? focusMatch(nextActionMatch, "ALL") : scrollToSection("mis-picks"))}
+              onClick={() => showOpenMatches(nextActionMatch ?? undefined)}
               className="shrink-0 rounded-xl border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-cyan-900"
             >
               Proximo
@@ -1285,7 +1302,8 @@ export default function PronosticoClient({
               <p className="wc-eyebrow text-cyan-900">Siguiente accion</p>
               {nextActionMatch ? (
                 <h2 className="mt-1 text-lg font-black text-cyan-950 sm:text-xl">
-                  Partido {nextActionMatch.matchNumber}: {nextActionMatch.homeTeam} vs {nextActionMatch.awayTeam}
+                  Partido {chronologicalMatchNumberById.get(nextActionMatch.id) ?? nextActionMatch.matchNumber}:{" "}
+                  {nextActionMatch.homeTeam} vs {nextActionMatch.awayTeam}
                 </h2>
               ) : (
                 <h2 className="mt-1 text-lg font-black text-cyan-950 sm:text-xl">
@@ -1298,7 +1316,7 @@ export default function PronosticoClient({
             </div>
             <button
               type="button"
-              onClick={() => (nextActionMatch ? focusMatch(nextActionMatch, "ALL") : showPickFilter("PENDING"))}
+              onClick={() => showOpenMatches(nextActionMatch ?? undefined)}
               className="rounded-xl border border-cyan-400 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-cyan-900 shadow-sm hover:bg-cyan-100"
             >
               Ir ahora
@@ -1775,23 +1793,20 @@ export default function PronosticoClient({
                         {label}
                       </p>
                       <div className="space-y-3">
-                        {stageMatches.map((match) => (
+                        {stageMatches.map((match) => {
+                          const chronologicalMatchNumber = chronologicalMatchNumberById.get(match.id) ?? match.matchNumber;
+                          return (
                           <button
                             key={`bracket-${match.id}`}
                             type="button"
                             onClick={() => {
                               setActiveStage(match.stage);
                               setActiveGroup("ALL");
-                              window.setTimeout(() => {
-                                document.getElementById(`match-${match.id}`)?.scrollIntoView({
-                                  behavior: "smooth",
-                                  block: "center",
-                                });
-                              }, 80);
+                              scrollToSection(`match-${match.id}`);
                             }}
                             className="w-full rounded-xl border border-zinc-300 bg-zinc-50 p-2 text-left text-xs transition hover:border-cyan-300 hover:bg-cyan-50"
                           >
-                            <span className="font-black text-zinc-500">P{match.matchNumber}</span>
+                            <span className="font-black text-zinc-500">P{chronologicalMatchNumber}</span>
                             <span className="mt-1 block truncate font-bold text-zinc-900">{match.homeTeam}</span>
                             <span className="block truncate font-bold text-zinc-900">{match.awayTeam}</span>
                             {(match.status === "FINAL" || match.status === "LIVE") &&
@@ -1809,7 +1824,8 @@ export default function PronosticoClient({
                               </span>
                             ) : null}
                           </button>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -1876,6 +1892,7 @@ export default function PronosticoClient({
               const awayPlayers = match.awayTeamCode ? (teamPlayersByCode[match.awayTeamCode] ?? []) : [];
               const homeSlots = Math.max(0, Math.min(15, Number(form.home) || 0));
               const awaySlots = Math.max(0, Math.min(15, Number(form.away) || 0));
+              const chronologicalMatchNumber = chronologicalMatchNumberById.get(match.id) ?? match.matchNumber;
               return (
                 <article
                   id={`match-${match.id}`}
@@ -1892,7 +1909,7 @@ export default function PronosticoClient({
                   } ${revealable ? "cursor-pointer transition hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(0,0,0,0.18)]" : ""}`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="wc-eyebrow text-zinc-700">Partido {match.matchNumber}</p>
+                    <p className="wc-eyebrow text-zinc-700">Partido {chronologicalMatchNumber}</p>
                     <div className="flex flex-wrap justify-end gap-2">
                       {savedPrediction ? (
                         <span className="rounded-full border border-emerald-300 bg-white px-3 py-1 text-[10px] font-extrabold tracking-[0.15em] text-emerald-700">
@@ -2029,7 +2046,7 @@ export default function PronosticoClient({
                             }
                             setX2InfoModal({
                               matchId: match.id,
-                              matchNumber: match.matchNumber,
+                              matchNumber: chronologicalMatchNumber,
                               groupMatchday: matchday,
                               remainingDateBefore: x2LeftMatchday,
                               remainingDateAfter: Math.max(0, x2LeftMatchday - 1),
