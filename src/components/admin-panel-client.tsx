@@ -176,6 +176,8 @@ type Props = {
 };
 
 type ApiError = { error?: { message?: string } };
+type AdminUserStatusFilter = "ALL" | PaymentStatus;
+type AdminMatchStatusFilter = "ALL" | MatchStatus;
 
 function statusLabel(status: PaymentStatus) {
   return paymentStatusLabelEs(status);
@@ -310,6 +312,9 @@ export default function AdminPanelClient({
   const [users, setUsers] = useState(initialUsers);
   const [proofs, setProofs] = useState(initialProofs);
   const [filterStage, setFilterStage] = useState("ALL");
+  const [matchStatusFilter, setMatchStatusFilter] = useState<AdminMatchStatusFilter>("ALL");
+  const [userStatusFilter, setUserStatusFilter] = useState<AdminUserStatusFilter>("ALL");
+  const [userSearch, setUserSearch] = useState("");
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -453,9 +458,29 @@ export default function AdminPanelClient({
   }, [selectedTeamCode]);
 
   const filteredMatches = useMemo(() => {
-    if (filterStage === "ALL") return matches;
-    return matches.filter((match) => match.stage === filterStage);
-  }, [matches, filterStage]);
+    return matches.filter((match) => {
+      if (filterStage !== "ALL" && match.stage !== filterStage) return false;
+      if (matchStatusFilter !== "ALL" && match.status !== matchStatusFilter) return false;
+      return true;
+    });
+  }, [matches, filterStage, matchStatusFilter]);
+  const filteredUsers = useMemo(() => {
+    const query = userSearch.trim().toLocaleLowerCase("es");
+    return users.filter((user) => {
+      if (userStatusFilter !== "ALL" && user.paymentStatus !== userStatusFilter) return false;
+      if (!query) return true;
+      const searchable = [
+        user.nombres,
+        user.apellidos,
+        user.username ?? "",
+        user.email,
+        user.countryCode,
+      ]
+        .join(" ")
+        .toLocaleLowerCase("es");
+      return searchable.includes(query);
+    });
+  }, [userSearch, userStatusFilter, users]);
   const userStatusSummary = useMemo(
     () =>
       ({
@@ -466,6 +491,44 @@ export default function AdminPanelClient({
       }) satisfies Record<PaymentStatus, number>,
     [users],
   );
+  const matchStatusSummary = useMemo(
+    () =>
+      ({
+        SCHEDULED: matches.filter((match) => match.status === "SCHEDULED").length,
+        LIVE: matches.filter((match) => match.status === "LIVE").length,
+        FINAL: matches.filter((match) => match.status === "FINAL").length,
+      }) satisfies Record<MatchStatus, number>,
+    [matches],
+  );
+  const reviewProofCount = proofs.filter((proof) => proof.status === "EN_REVISION").length;
+  const liveMatches = useMemo(
+    () => matches.filter((match) => match.status === "LIVE").sort((a, b) => a.matchNumber - b.matchNumber),
+    [matches],
+  );
+  const nextUnresolvedMatch = useMemo(
+    () =>
+      matches
+        .filter((match) => match.status !== "FINAL")
+        .slice()
+        .sort((a, b) => {
+          const kickoffDiff = Date.parse(a.kickoff) - Date.parse(b.kickoff);
+          if (kickoffDiff !== 0) return kickoffDiff;
+          return a.matchNumber - b.matchNumber;
+        })[0] ?? null,
+    [matches],
+  );
+
+  function scrollToSection(id: string) {
+    window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+  }
+
+  function showAdminMatches(status: AdminMatchStatusFilter = "ALL") {
+    setFilterStage("ALL");
+    setMatchStatusFilter(status);
+    scrollToSection("admin-resultados");
+  }
 
   async function refreshAdminData() {
     const [usersRes, matchesRes, ruleRes, proofsRes, bonusRes] = await Promise.all([
@@ -1012,12 +1075,72 @@ export default function AdminPanelClient({
           </div>
         </section>
 
+        <nav className="wc-mobile-sticky wc-card-soft rounded-2xl p-2" aria-label="Accesos admin">
+          <div className="wc-scrollbar-none flex gap-2 overflow-x-auto">
+            {[
+              ["admin-usuarios", "Usuarios"],
+              ["admin-resultados", "Resultados"],
+              ["admin-bonos", "Bonos"],
+              ["admin-plantillas", "Plantillas"],
+              ["admin-pagos", "Pagos"],
+              ["admin-comprobantes", "Comprobantes"],
+              ["admin-config", "Config"],
+            ].map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => scrollToSection(id)}
+                className="shrink-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-zinc-800 hover:bg-zinc-50"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </nav>
+
         {notice ? (
           <p className="rounded-xl border border-emerald-300 bg-emerald-100 p-3 text-emerald-700">{notice}</p>
         ) : null}
         {error ? <p className="rounded-xl border border-rose-300 bg-rose-100 p-3 text-rose-700">{error}</p> : null}
 
-        <section className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
+        <section className="grid gap-3 sm:grid-cols-3">
+          <button
+            type="button"
+            onClick={() => {
+              setUserStatusFilter("EN_REVISION");
+              scrollToSection("admin-comprobantes");
+            }}
+            className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-left text-amber-900 shadow-[0_8px_20px_rgba(0,0,0,0.08)] hover:bg-amber-100"
+          >
+            <p className="text-xs font-black uppercase tracking-[0.12em]">Comprobantes</p>
+            <p className="mt-1 text-3xl font-black">{reviewProofCount}</p>
+            <p className="text-sm font-semibold">en revision</p>
+          </button>
+          <button
+            type="button"
+            onClick={() => showAdminMatches("LIVE")}
+            className="rounded-2xl border border-rose-300 bg-rose-50 p-4 text-left text-rose-900 shadow-[0_8px_20px_rgba(0,0,0,0.08)] hover:bg-rose-100"
+          >
+            <p className="text-xs font-black uppercase tracking-[0.12em]">Partidos live</p>
+            <p className="mt-1 text-3xl font-black">{liveMatches.length}</p>
+            <p className="text-sm font-semibold">activos ahora</p>
+          </button>
+          <button
+            type="button"
+            onClick={() => showAdminMatches(nextUnresolvedMatch?.status ?? "ALL")}
+            className="rounded-2xl border border-cyan-300 bg-cyan-50 p-4 text-left text-cyan-900 shadow-[0_8px_20px_rgba(0,0,0,0.08)] hover:bg-cyan-100"
+          >
+            <p className="text-xs font-black uppercase tracking-[0.12em]">Proximo pendiente</p>
+            <p className="mt-1 text-3xl font-black">
+              {nextUnresolvedMatch ? `P${nextUnresolvedMatch.matchNumber}` : "OK"}
+            </p>
+            <p className="text-sm font-semibold">
+              {nextUnresolvedMatch ? matchStatusLabel(nextUnresolvedMatch.status) : "sin pendientes"}
+            </p>
+          </button>
+        </section>
+
+        <section id="admin-config" className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
           <p className="wc-eyebrow">Puntaje</p>
           <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Configuracion</h2>
           <p className="mt-2 text-sm text-zinc-700 sm:text-base">
@@ -1200,7 +1323,7 @@ export default function AdminPanelClient({
           </button>
         </section>
 
-        <section className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
+        <section id="admin-bonos" className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
           <p className="wc-eyebrow">Bonificaciones</p>
           <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Modulos</h2>
           <p className="mt-2 text-sm text-zinc-700">
@@ -1344,7 +1467,7 @@ export default function AdminPanelClient({
           </button>
         </section>
 
-        <section className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
+        <section id="admin-plantillas" className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="wc-eyebrow">Plantillas</p>
@@ -1528,11 +1651,11 @@ export default function AdminPanelClient({
           </div>
         </section>
 
-        <section className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
-          <div className="flex items-center justify-between">
+        <section id="admin-usuarios" className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="wc-title text-4xl text-zinc-950 sm:text-5xl">Gestion de Usuarios</h2>
             <span className="rounded-full border border-zinc-300 bg-zinc-100 px-4 py-1 text-xs font-bold uppercase tracking-[0.12em] text-zinc-700">
-              {users.length} USUARIOS
+              {filteredUsers.length} / {users.length} USUARIOS
             </span>
           </div>
           <p className="mt-2 text-sm text-zinc-700 sm:text-base">
@@ -1548,19 +1671,48 @@ export default function AdminPanelClient({
                 ["RECHAZADO", "Rechazados"],
               ] as const
             ).map(([status, label]) => (
-              <div key={status} className={`rounded-2xl border p-4 ${statusBadge(status)}`}>
+              <button
+                key={status}
+                type="button"
+                onClick={() => setUserStatusFilter((current) => (current === status ? "ALL" : status))}
+                className={`rounded-2xl border p-4 text-left transition hover:brightness-95 ${
+                  userStatusFilter === status ? "ring-2 ring-zinc-900/20" : ""
+                } ${statusBadge(status)}`}
+              >
                 <p className="text-xs font-bold uppercase tracking-[0.12em]">{label}</p>
                 <p className="mt-1 text-3xl font-black">{userStatusSummary[status]}</p>
-              </div>
+              </button>
             ))}
           </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
+            <label className="text-sm font-semibold text-zinc-700">
+              Buscar usuario
+              <input
+                type="search"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="wc-input mt-1 text-base"
+                placeholder="Nombre, usuario o email"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                setUserSearch("");
+                setUserStatusFilter("ALL");
+              }}
+              className="self-end rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-[0.1em] text-zinc-700 hover:bg-zinc-50"
+            >
+              Limpiar filtros
+            </button>
+          </div>
           <div className="mt-4 space-y-3">
-            {users.length === 0 ? (
+            {filteredUsers.length === 0 ? (
               <p className="rounded-2xl border border-zinc-200 bg-white p-5 text-sm text-zinc-600">
-                No hay usuarios registrados para mostrar.
+                No hay usuarios para los filtros seleccionados.
               </p>
             ) : (
-              users.map((u) => {
+              filteredUsers.map((u) => {
                 const latestProof = u.paymentProofs?.[0] ?? null;
                 const isAdminUser = u.role === "ADMIN";
                 return (
@@ -1689,9 +1841,37 @@ export default function AdminPanelClient({
           </div>
         </section>
 
-        <section className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
-          <h2 className="wc-title text-4xl text-zinc-950 sm:text-5xl">Resultados Oficiales</h2>
-          <div className="mt-4 flex flex-wrap gap-2">
+        <section id="admin-resultados" className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="wc-title text-4xl text-zinc-950 sm:text-5xl">Resultados Oficiales</h2>
+            <span className="rounded-full border border-zinc-300 bg-zinc-100 px-4 py-1 text-xs font-bold uppercase tracking-[0.12em] text-zinc-700">
+              {filteredMatches.length} / {matches.length} partidos
+            </span>
+          </div>
+          <div className="wc-scrollbar-none mt-4 flex gap-2 overflow-x-auto pb-1">
+            {(
+              [
+                ["ALL", "Todos", matches.length],
+                ["SCHEDULED", "Programados", matchStatusSummary.SCHEDULED],
+                ["LIVE", "En vivo", matchStatusSummary.LIVE],
+                ["FINAL", "Finalizados", matchStatusSummary.FINAL],
+              ] as const
+            ).map(([status, label, count]) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setMatchStatusFilter(status)}
+                className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition sm:text-sm ${
+                  matchStatusFilter === status
+                    ? "border-zinc-900 bg-zinc-900 text-white"
+                    : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100"
+                }`}
+              >
+                {label} ({count})
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
             {STAGE_FILTERS_ES.map((option) => (
               <button
                 key={option.key}
@@ -1709,6 +1889,11 @@ export default function AdminPanelClient({
           </div>
 
           <div className="mt-5 max-h-[780px] space-y-3 overflow-auto pr-1">
+            {filteredMatches.length === 0 ? (
+              <p className="rounded-2xl border border-zinc-200 bg-white p-5 text-sm text-zinc-600">
+                No hay partidos para los filtros seleccionados.
+              </p>
+            ) : null}
             {filteredMatches.map((match) => {
               const isEditing = editingMatchId === match.id;
               const scorersEnabled = isScorersEnabledForStage(bonusConfig, match.stage);
@@ -2042,7 +2227,7 @@ export default function AdminPanelClient({
           </div>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-2">
+        <section id="admin-pagos" className="grid gap-6 xl:grid-cols-2">
           <div className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
@@ -2195,7 +2380,7 @@ export default function AdminPanelClient({
             </div>
           </div>
 
-          <div className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
+          <div id="admin-comprobantes" className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
             <h2 className="wc-title text-3xl text-zinc-950 sm:text-4xl">
               Pagos - Comprobantes ({proofs.filter((p) => p.status === "EN_REVISION").length} en revision)
             </h2>

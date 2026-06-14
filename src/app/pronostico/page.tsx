@@ -42,7 +42,7 @@ export default async function PronosticoPage() {
       },
     }),
     prisma.match.findMany({
-      orderBy: [{ matchNumber: "asc" }],
+      orderBy: [{ kickoff: "asc" }, { matchNumber: "asc" }],
       select: {
         id: true,
         matchNumber: true,

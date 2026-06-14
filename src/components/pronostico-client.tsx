@@ -569,6 +569,12 @@ async function readErrorMessage(res: Response) {
   }
 }
 
+function compareMatchesByKickoff(a: Pick<MatchClient, "kickoff" | "matchNumber">, b: Pick<MatchClient, "kickoff" | "matchNumber">) {
+  const kickoffDiff = Date.parse(a.kickoff) - Date.parse(b.kickoff);
+  if (kickoffDiff !== 0) return kickoffDiff;
+  return a.matchNumber - b.matchNumber;
+}
+
 export default function PronosticoClient({
   user,
   paymentConfig,
@@ -773,11 +779,13 @@ export default function PronosticoClient({
   );
   const visibleMatches = useMemo(
     () =>
-      matches.filter((match) => {
-        if (!isStageVisibleForUsers(bonusConfig, match.stage)) return false;
-        if (match.stage === "GROUP") return true;
-        return Boolean(match.homeTeamCode && match.awayTeamCode);
-      }),
+      matches
+        .filter((match) => {
+          if (!isStageVisibleForUsers(bonusConfig, match.stage)) return false;
+          if (match.stage === "GROUP") return true;
+          return Boolean(match.homeTeamCode && match.awayTeamCode);
+        })
+        .sort(compareMatchesByKickoff),
     [bonusConfig, matches],
   );
   const visibleStageFilters = useMemo(
@@ -838,6 +846,39 @@ export default function PronosticoClient({
     }
     return scoped;
   }, [visibleMatches, activeStage, activeGroup, activePickFilter, isLocked]);
+  const scheduledVisibleMatches = useMemo(
+    () =>
+      visibleMatches
+        .filter((match) => match.status === "SCHEDULED")
+        .slice()
+        .sort(compareMatchesByKickoff),
+    [visibleMatches],
+  );
+  const nextOpenMatch = useMemo(
+    () => scheduledVisibleMatches.find((match) => !isLocked(match)) ?? null,
+    [isLocked, scheduledVisibleMatches],
+  );
+  const firstLiveMatch = useMemo(
+    () =>
+      visibleMatches
+        .filter((match) => match.status === "LIVE")
+        .slice()
+        .sort(compareMatchesByKickoff)[0] ?? null,
+    [visibleMatches],
+  );
+  const pendingMatchCount = useMemo(
+    () => visibleMatches.filter((match) => !hasSavedPrediction(match)).length,
+    [visibleMatches],
+  );
+  const liveMatchCount = useMemo(
+    () => visibleMatches.filter((match) => match.status === "LIVE").length,
+    [visibleMatches],
+  );
+  const openMatchCount = useMemo(
+    () => visibleMatches.filter((match) => !isLocked(match)).length,
+    [isLocked, visibleMatches],
+  );
+  const nextActionMatch = nextOpenMatch;
 
   function pushToast(kind: "success" | "error", text: string) {
     const id = Date.now() + Math.floor(Math.random() * 1000);
@@ -845,6 +886,26 @@ export default function PronosticoClient({
     window.setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, 3600);
+  }
+
+  function scrollToSection(id: string) {
+    window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+  }
+
+  function focusMatch(match: MatchClient, pickFilter: PickFilter = "ALL") {
+    setActivePickFilter(pickFilter);
+    setActiveStage(match.stage);
+    setActiveGroup(match.stage === "GROUP" ? (resolveGroupKey(match.groupName) ?? "ALL") : "ALL");
+    scrollToSection(`match-${match.id}`);
+  }
+
+  function showPickFilter(filter: PickFilter) {
+    setActivePickFilter(filter);
+    setActiveStage("ALL");
+    setActiveGroup("ALL");
+    scrollToSection("mis-picks");
   }
 
   async function onLogout() {
@@ -1124,6 +1185,63 @@ export default function PronosticoClient({
           </div>
         </section>
 
+        <nav className="wc-mobile-sticky wc-card-soft rounded-2xl p-2" aria-label="Accesos rapidos">
+          <div className="wc-scrollbar-none flex gap-2 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => (nextActionMatch ? focusMatch(nextActionMatch, "ALL") : scrollToSection("mis-picks"))}
+              className="shrink-0 rounded-xl border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-cyan-900"
+            >
+              Proximo
+            </button>
+            <button
+              type="button"
+              onClick={() => showPickFilter("PENDING")}
+              className="shrink-0 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-amber-900"
+            >
+              Pendientes {pendingMatchCount}
+            </button>
+            <button
+              type="button"
+              onClick={() => (firstLiveMatch ? focusMatch(firstLiveMatch, "ALL") : showPickFilter("ALL"))}
+              className="shrink-0 rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-rose-800"
+            >
+              En vivo {liveMatchCount}
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection("ranking")}
+              className="shrink-0 rounded-xl border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-blue-900"
+            >
+              Ranking
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection("tabla-grupos")}
+              className="shrink-0 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-emerald-900"
+            >
+              Tabla
+            </button>
+            {shouldShowPaymentInfo ? (
+              <button
+                type="button"
+                onClick={() => scrollToSection("pago")}
+                className="shrink-0 rounded-xl border border-violet-300 bg-violet-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-violet-900"
+              >
+                Pago
+              </button>
+            ) : null}
+            {user.role === "ADMIN" ? (
+              <Link
+                href="/admin"
+                className="shrink-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-zinc-800"
+              >
+                Admin
+              </Link>
+            ) : null}
+          </div>
+        </nav>
+
         {message ? (
           <p className="rounded-xl border border-emerald-300 bg-emerald-100 px-4 py-3 text-emerald-700">{message}</p>
         ) : null}
@@ -1161,8 +1279,35 @@ export default function PronosticoClient({
           ) : null}
         </section>
 
+        <section className="rounded-[1.5rem] border border-cyan-200 bg-cyan-50/95 p-4 text-cyan-950 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="wc-eyebrow text-cyan-900">Siguiente accion</p>
+              {nextActionMatch ? (
+                <h2 className="mt-1 text-lg font-black text-cyan-950 sm:text-xl">
+                  Partido {nextActionMatch.matchNumber}: {nextActionMatch.homeTeam} vs {nextActionMatch.awayTeam}
+                </h2>
+              ) : (
+                <h2 className="mt-1 text-lg font-black text-cyan-950 sm:text-xl">
+                  No hay partidos abiertos ahora.
+                </h2>
+              )}
+              <p className="mt-1 text-sm font-semibold text-cyan-900">
+                {openMatchCount} abiertos - {pendingMatchCount} sin pick - {liveMatchCount} en vivo
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => (nextActionMatch ? focusMatch(nextActionMatch, "ALL") : showPickFilter("PENDING"))}
+              className="rounded-xl border border-cyan-400 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-cyan-900 shadow-sm hover:bg-cyan-100"
+            >
+              Ir ahora
+            </button>
+          </div>
+        </section>
+
         {shouldShowPaymentInfo ? (
-          <section className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
+          <section id="pago" className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
             <div className="wc-card-soft rounded-[1.7rem] p-5">
               <p className="wc-eyebrow">Pago</p>
               <h2 className="wc-title mt-2 text-5xl text-zinc-950">Bre-B / Nequi</h2>
@@ -1212,7 +1357,7 @@ export default function PronosticoClient({
           </section>
         ) : null}
 
-        <section className="wc-card-soft rounded-[1.8rem] p-5">
+        <section id="ranking" className="wc-card-soft rounded-[1.8rem] p-5">
           <div className="flex flex-col items-center justify-between gap-3 sm:flex-row sm:items-center">
             <div className="text-center sm:text-left">
               <p className="wc-eyebrow">Ranking</p>
@@ -1465,7 +1610,7 @@ export default function PronosticoClient({
           </section>
         ) : null}
 
-        <section className="wc-card-soft rounded-[1.8rem] p-5">
+        <section id="tabla-grupos" className="wc-card-soft rounded-[1.8rem] p-5">
           <p className="wc-eyebrow text-center md:text-left">Tabla de posiciones</p>
           <h2 className="wc-title mt-1 text-center text-4xl text-zinc-950 sm:text-5xl md:text-left md:text-6xl">Fase de grupos</h2>
           <p className="mt-1 text-center text-zinc-700 md:text-left">Se actualiza cuando el admin publica resultados.</p>
@@ -1532,18 +1677,20 @@ export default function PronosticoClient({
           )}
         </section>
 
-        <section>
-          <div className="mb-3 flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-3 shadow-[0_6px_18px_rgba(0,0,0,0.07)] sm:flex-row sm:items-center sm:justify-between">
+        <section id="mis-picks">
+          <div className="wc-filter-sticky mb-3 flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white/95 p-3 shadow-[0_6px_18px_rgba(0,0,0,0.07)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="wc-eyebrow">Mis picks</p>
-              <p className="text-sm text-zinc-600">Filtra la lista para avanzar mas rapido.</p>
+              <p className="text-sm text-zinc-600">
+                {filteredMatches.length} visibles de {visibleMatches.length}. Filtra la lista para avanzar mas rapido.
+              </p>
             </div>
             <div className="wc-scrollbar-none flex gap-2 overflow-x-auto pb-1 sm:pb-0">
               {pickFilterOptions.map((option) => (
                 <button
                   key={option.key}
                   type="button"
-                  onClick={() => setActivePickFilter(option.key)}
+                  onClick={() => showPickFilter(option.key)}
                   className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition ${
                     activePickFilter === option.key
                       ? "border-blue-300 bg-blue-100 text-blue-900 shadow-[0_4px_12px_rgba(37,99,235,0.16)]"
@@ -1564,6 +1711,7 @@ export default function PronosticoClient({
                   onClick={() => {
                     setActiveStage(item.key);
                     if (item.key !== "GROUP") setActiveGroup("ALL");
+                    scrollToSection("mis-picks");
                   }}
                   className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition sm:px-5 sm:text-sm ${
                     activeStage === item.key
@@ -1588,6 +1736,7 @@ export default function PronosticoClient({
                     onClick={() => {
                       setActiveGroup(group);
                       if (group !== "ALL") setActiveStage("GROUP");
+                      scrollToSection("mis-picks");
                     }}
                     className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition sm:px-5 sm:text-sm ${
                       group === "ALL"
