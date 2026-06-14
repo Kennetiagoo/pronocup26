@@ -233,18 +233,23 @@ button:hover:not(:disabled),
 }
 
 .wc-mobile-sticky {
-  position: sticky;
-  top: max(0.75rem, env(safe-area-inset-top));
-  z-index: 40;
+  display: none;
 }
 
 .wc-filter-sticky {
   position: sticky;
-  top: calc(max(0.75rem, env(safe-area-inset-top)) + 3.4rem);
+  top: max(0.75rem, env(safe-area-inset-top));
   z-index: 35;
 }
 
 @media (min-width: 768px) {
+  .wc-mobile-sticky {
+    display: block;
+    position: sticky;
+    top: max(0.75rem, env(safe-area-inset-top));
+    z-index: 40;
+  }
+
   .wc-filter-sticky {
     top: calc(max(0.75rem, env(safe-area-inset-top)) + 3.8rem);
   }
