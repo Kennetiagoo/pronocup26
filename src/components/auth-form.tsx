@@ -255,6 +255,11 @@ export default function AuthForm({ paymentConfig, oauthError }: Props) {
                   onChange={(e) => setLogin((v) => ({ ...v, password: e.target.value }))}
                 />
               </label>
+              <div className="text-right text-xs font-semibold uppercase tracking-[0.1em] text-zinc-600">
+                <Link href="/olvide-password" className="hover:text-zinc-950">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
               <button type="submit" disabled={busy} className="wc-button-primary w-full px-4 py-2.5 text-sm disabled:opacity-60">
                 Entrar
               </button>

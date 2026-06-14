@@ -45,9 +45,12 @@ const hasBonusDelegate =
   typeof (cached as unknown as { bonusConfig?: unknown }).bonusConfig !== "undefined";
 const hasOfficialModeField = hasModelField(cached, "ScoringRule", "officialModeEnabled");
 const hasKnockoutMultiplierField = hasModelField(cached, "ScoringRule", "knockoutMultiplier");
+const hasPasswordResetDelegate =
+  typeof cached !== "undefined" &&
+  typeof (cached as unknown as { passwordResetToken?: unknown }).passwordResetToken !== "undefined";
 
 export const prisma =
-  hasBonusDelegate && hasOfficialModeField && hasKnockoutMultiplierField
+  hasBonusDelegate && hasOfficialModeField && hasKnockoutMultiplierField && hasPasswordResetDelegate
     ? cached
     : createPrismaClient();
 

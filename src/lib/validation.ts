@@ -2,6 +2,15 @@
 
 const usernamePattern = /^[a-zA-Z0-9_]{3,24}$/;
 
+const passwordSchema = z
+  .string()
+  .min(10)
+  .max(128)
+  .regex(/[A-Z]/, "Debe incluir al menos una mayúscula.")
+  .regex(/[a-z]/, "Debe incluir al menos una minúscula.")
+  .regex(/[0-9]/, "Debe incluir al menos un número.")
+  .regex(/[^A-Za-z0-9]/, "Debe incluir al menos un símbolo.");
+
 export const registerSchema = z
   .object({
     nombres: z.string().trim().min(2).max(80),
@@ -14,14 +23,7 @@ export const registerSchema = z
         "El usuario debe tener 3-24 caracteres (letras, números y guion bajo).",
       ),
     email: z.string().trim().email(),
-    password: z
-      .string()
-      .min(10)
-      .max(128)
-      .regex(/[A-Z]/, "Debe incluir al menos una mayúscula.")
-      .regex(/[a-z]/, "Debe incluir al menos una minúscula.")
-      .regex(/[0-9]/, "Debe incluir al menos un número.")
-      .regex(/[^A-Za-z0-9]/, "Debe incluir al menos un símbolo."),
+    password: passwordSchema,
     passwordConfirm: z.string(),
   })
   .refine((data) => data.password === data.passwordConfirm, {
@@ -33,6 +35,21 @@ export const loginSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(1),
 });
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email(),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().trim().min(20).max(512),
+    password: passwordSchema,
+    passwordConfirm: z.string(),
+  })
+  .refine((data) => data.password === data.passwordConfirm, {
+    message: "Las contraseñas no coinciden.",
+    path: ["passwordConfirm"],
+  });
 
 export const completeProfileSchema = z.object({
   nombres: z.string().trim().min(2).max(80),
