@@ -9,7 +9,7 @@ export default function PronosticoLoading() {
         </section>
         <section className="wc-card-soft rounded-2xl p-3">
           <div className="flex gap-2 overflow-hidden">
-            {["Proximo", "Pendientes", "Ranking", "Tabla"].map((item) => (
+            {["Próximo", "Pendientes", "Ranking", "Tabla"].map((item) => (
               <div key={item} className="h-10 min-w-28 rounded-xl bg-zinc-100" />
             ))}
           </div>

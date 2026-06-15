@@ -615,7 +615,6 @@ export default async function PronosticoPage() {
     started: finalizedMatchesForRanking.length > 0,
   });
   const latestFinalizedMatch = finalizedMatchesForRanking.at(-1) ?? null;
-  const previousFinalizedMatch = finalizedMatchesForRanking.at(-2) ?? null;
   const movementReferencePredictionRows =
     hasLiveMatches || !latestFinalizedMatch
       ? finalizedPredictionRowsForMovement
@@ -627,12 +626,10 @@ export default async function PronosticoPage() {
   const movementPositionByUser = new Map(movementReferenceStandings.map((row) => [row.userId, row.position]));
   const movementReferenceLabel = hasLiveMatches
     ? latestFinalizedMatch
-      ? `Ultimo final P${latestFinalizedMatch.matchNumber}`
-      : "Antes del live"
+      ? `P${latestFinalizedMatch.matchNumber}`
+      : "Live"
     : latestFinalizedMatch
-      ? previousFinalizedMatch
-        ? `Antes de P${latestFinalizedMatch.matchNumber}`
-        : "Antes del primer final"
+      ? `P${latestFinalizedMatch.matchNumber}`
       : "Inicio";
   const lastFiveFinalMatches = finalizedMatchesForRanking.slice(-5);
   const predictionByUserMatch = new Map(
@@ -929,13 +926,13 @@ export default async function PronosticoPage() {
         ownUsesX2: false,
         actions: [
           "El partido sigue abierto: no se calculan escenarios con picks guardados.",
-          "Cuando se bloqueen los picks, se mostrara el mejor escenario sin exponer datos antes de tiempo.",
+          "Cuando se bloqueen los picks, se mostrará el mejor escenario sin exponer datos antes de tiempo.",
         ],
         rivalConditions: [
-          "Mientras el partido este abierto, los rivales cercanos todavia pueden editar marcador o activar X2.",
-          "El calculo preciso se habilita al bloqueo del partido.",
+          "Mientras el partido esté abierto, los rivales cercanos todavía pueden editar marcador o activar X2.",
+          "El cálculo preciso se habilita al bloqueo del partido.",
         ],
-        note: "Detalle limitado para no revelar picks abiertos de ningun usuario.",
+        note: "Detalle limitado para no revelar picks abiertos de ningún usuario.",
       };
     }
 
@@ -1018,7 +1015,7 @@ export default async function PronosticoPage() {
     ];
     if (recommendedDiffersFromPick) {
       actions.push(
-        `El escenario optimo no coincide con su pick (${ownScoreLine}) porque tambien se proyectan los puntos y posiciones de los rivales.`,
+        `El escenario óptimo no coincide con su pick (${ownScoreLine}) porque también se proyectan los puntos y posiciones de los rivales.`,
       );
     }
     if (ownPrediction.usedX2) {
@@ -1054,8 +1051,8 @@ export default async function PronosticoPage() {
         projected.position < selectedProjected.position
           ? `queda por encima (#${projected.position})`
           : projected.position === selectedProjected.position
-            ? `comparte la posicion #${projected.position}`
-            : `queda detras (#${projected.position})`;
+            ? `comparte la posición #${projected.position}`
+            : `queda detrás (#${projected.position})`;
       if (!prediction) {
         return `${name} no tiene pick en este partido; se queda en ${projected.totalPoints} pts y ${relation}.`;
       }
@@ -1068,7 +1065,7 @@ export default async function PronosticoPage() {
         : "";
       const hitText =
         impact.basePoints >= maxBase
-          ? "tambien hace pleno"
+          ? "también hace pleno"
           : impact.points > 0
             ? "suma parcial"
             : "no suma";

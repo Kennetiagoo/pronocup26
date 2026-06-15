@@ -4,18 +4,18 @@ const rules = [
   {
     title: "Puntaje base",
     items: [
-      "El puntaje oficial visible en la app depende de la configuracion activa del admin.",
+      "El puntaje oficial visible en la app depende de la configuración activa del admin.",
       "Resultado correcto significa acertar si gana el local, gana el visitante o empatan.",
-      "Goles por equipo significa acertar la cantidad exacta de goles de una seleccion, aunque no aciertes todo el marcador.",
+      "Goles por equipo significa acertar la cantidad exacta de goles de una selección, aunque no aciertes todo el marcador.",
       "Ejemplo: pronosticas 2-1 y el resultado oficial es 2-0. Acertaste los goles del local, pero no el marcador completo.",
     ],
   },
   {
     title: "Eliminatorias",
     items: [
-      "El puntaje se calcula sobre los 90 minutos mas reposicion.",
-      "No cuentan prorroga ni penales para el marcador del pronostico.",
-      "Si un partido termina 1-1 en 90 minutos y luego se define 2-1 en prorroga, el resultado valido para la app es 1-1.",
+      "El puntaje se calcula sobre los 90 minutos más reposición.",
+      "No cuentan prórroga ni penales para el marcador del pronóstico.",
+      "Si un partido termina 1-1 en 90 minutos y luego se define 2-1 en prórroga, el resultado válido para la app es 1-1.",
       "El admin puede aplicar multiplicador de eliminatorias desde el panel. Si el multiplicador es x2, el puntaje base de esa fase se duplica.",
     ],
   },
@@ -23,40 +23,40 @@ const rules = [
     title: "Bonificador X2",
     items: [
       "X2 duplica solamente el puntaje base del partido. Los puntos de goleadores se suman aparte y no se duplican con X2.",
-      "Debes activar X2 antes de guardar el pronostico del partido. Si no lo activas antes del cierre, no se puede aplicar despues.",
-      "En grupos hay limites: maximo 12 X2 en toda la fase de grupos, maximo 4 por fecha y maximo 1 por dia de partidos.",
-      "Si usas X2 y ese partido te da 0 puntos base, el X2 se devuelve automaticamente y vuelve a quedar disponible.",
-      "Ejemplo: sin X2 haces 5 puntos base. Con X2 haces 10 puntos base. Si ademas aciertas goleadores, esos puntos se agregan despues.",
-      "Ejemplo: si ya usaste 1 X2 en una fecha de partido, no puedes activar otro X2 en otro partido de ese mismo dia.",
+      "Debes activar X2 antes de guardar el pronóstico del partido. Si no lo activas antes del cierre, no se puede aplicar después.",
+      "En grupos hay límites: máximo 12 X2 en toda la fase de grupos, máximo 4 por fecha y máximo 1 por día de partidos.",
+      "Si usas X2 y ese partido te da 0 puntos base, el X2 se devuelve automáticamente y vuelve a quedar disponible.",
+      "Ejemplo: sin X2 haces 5 puntos base. Con X2 haces 10 puntos base. Si además aciertas goleadores, esos puntos se agregan después.",
+      "Ejemplo: si ya usaste 1 X2 en una fecha de partido, no puedes activar otro X2 en otro partido de ese mismo día.",
     ],
   },
   {
     title: "Goleadores",
     items: [
-      "Los goleadores solo aparecen cuando el modulo esta activo para esa fase y cuando escribes goles en tu marcador.",
-      "Debes elegir un jugador por cada gol pronosticado. Si pronosticas 2 goles para una seleccion, aparecen 2 espacios de goleador para esa seleccion.",
+      "Los goleadores solo aparecen cuando el módulo está activo para esa fase y cuando escribes goles en tu marcador.",
+      "Debes elegir un jugador por cada gol pronosticado. Si pronosticas 2 goles para una selección, aparecen 2 espacios de goleador para esa selección.",
       "Cada espacio acertado suma los puntos extra configurados por el admin. Por defecto, cada goleador acertado suma 1 punto.",
       "El orden de los goleadores importa por espacio de gol cargado por el admin. Si el admin carga dos goleadores, se comparan contra tus espacios guardados.",
-      "Si pronosticas goles y dejas goleadores vacios, puedes guardar, pero renuncias a esos puntos extra.",
-      "Si el resultado oficial de una seleccion es 0 goles, no hay espacios de goleador para esa seleccion.",
+      "Si pronosticas goles y dejas goleadores vacíos, puedes guardar, pero renuncias a esos puntos extra.",
+      "Si el resultado oficial de una selección es 0 goles, no hay espacios de goleador para esa selección.",
       "Los goleadores no cambian el resultado del partido. Solo son puntos extra sobre el marcador guardado.",
     ],
   },
   {
     title: "Cierre y pagos",
     items: [
-      "Cada partido se bloquea minutos antes del inicio, segun configuracion admin.",
-      "Solo usuarios con pago aprobado pueden guardar pronosticos.",
+      "Cada partido se bloquea minutos antes del inicio, según configuración admin.",
+      "Solo usuarios con pago aprobado pueden guardar pronósticos.",
       "Si tu comprobante es rechazado, puedes volver a subir uno nuevo.",
-      "Cuando el partido esta bloqueado, ya no se puede cambiar marcador, X2 ni goleadores.",
+      "Cuando el partido está bloqueado, ya no se puede cambiar marcador, X2 ni goleadores.",
     ],
   },
   {
     title: "Premios",
     items: [
-      "Cada apostador aprobado aporta 50.000 COP a la bolsa del juego, salvo que el admin cambie el valor de inscripcion.",
-      "La bolsa se reparte asi: primer lugar 70%, segundo lugar 20% y tercer lugar 10%.",
-      "Los valores se recalculan automaticamente segun la cantidad de apostadores que aparecen en el ranking.",
+      "Cada apostador aprobado aporta 50.000 COP a la bolsa del juego, salvo que el admin cambie el valor de inscripción.",
+      "La bolsa se reparte así: primer lugar 70%, segundo lugar 20% y tercer lugar 10%.",
+      "Los valores se recalculan automáticamente según la cantidad de apostadores que aparecen en el ranking.",
       "Ejemplo con 10 apostadores: bolsa de 500.000 COP, primer lugar 350.000 COP, segundo 100.000 COP y tercero 50.000 COP.",
     ],
   },
@@ -88,7 +88,7 @@ export default function RulesPage() {
           </nav>
           <div className="mt-8">
             <p className="wc-eyebrow">Reglamento</p>
-            <h1 className="wc-title mt-2 text-5xl text-zinc-950 sm:text-7xl">Como se juega</h1>
+            <h1 className="wc-title mt-2 text-5xl text-zinc-950 sm:text-7xl">Cómo se juega</h1>
             <p className="mt-3 max-w-3xl text-base text-zinc-700">
               Lee esto antes de participar: el pago habilita tus picks, cada partido tiene hora de cierre y los
               bonificadores solo cuentan si los guardas antes del bloqueo.
@@ -116,12 +116,12 @@ export default function RulesPage() {
           <h2 className="mt-2 text-2xl font-extrabold text-zinc-950">Orden de la tabla</h2>
           <p className="mt-2 text-sm text-zinc-700">
             La tabla ordena primero por puntos totales. Si hay empate, queda mejor ubicado quien haya usado menos X2
-            activos en fase de grupos; si el empate sigue, queda mejor ubicado quien tenga mas X2 disponibles sin usar.
+            activos en fase de grupos; si el empate sigue, queda mejor ubicado quien tenga más X2 disponibles sin usar.
             Luego se aplican plenos, aciertos parciales, cantidad de picks y fecha de registro. Si todo sigue igual, se
-            usa el usuario visible en orden alfabetico.
+            usa el usuario visible en orden alfabético.
           </p>
           <p className="mt-2 text-sm text-zinc-700">
-            El admin puede aparecer en la tabla si tambien participa como apostador. En ese caso compite bajo las mismas
+            El admin puede aparecer en la tabla si también participa como apostador. En ese caso compite bajo las mismas
             reglas de puntaje, cierre, X2 y goleadores.
           </p>
         </section>

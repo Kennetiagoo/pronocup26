@@ -24,14 +24,14 @@ export async function PUT(
       throw new ApiError(
         403,
         "FORBIDDEN",
-        "Debes completar tu registro antes de guardar pronosticos.",
+        "Debes completar tu registro antes de guardar pronósticos.",
       );
     }
     if (user.role !== UserRole.ADMIN && user.paymentStatus !== PaymentStatus.APROBADO) {
       throw new ApiError(
         403,
         "FORBIDDEN",
-        "Tu pago aun no esta aprobado. No puedes guardar pronosticos.",
+        "Tu pago aún no está aprobado. No puedes guardar pronósticos.",
       );
     }
 
@@ -69,30 +69,30 @@ export async function PUT(
       throw new ApiError(404, "NOT_FOUND", "Partido no encontrado.");
     }
     if (!rule) {
-      throw new ApiError(500, "INTERNAL_ERROR", "No existe configuracion de puntaje.");
+      throw new ApiError(500, "INTERNAL_ERROR", "No existe configuración de puntaje.");
     }
     if (match.status !== MatchStatus.SCHEDULED) {
       throw new ApiError(
         422,
         "UNPROCESSABLE",
-        "Este partido ya esta cerrado. No se pueden modificar goleadores.",
+        "Este partido ya está cerrado. No se pueden modificar goleadores.",
       );
     }
 
     const lockAt = match.kickoff.getTime() - rule.lockMinutesBeforeKickoff * 60 * 1000;
     if (Date.now() >= lockAt) {
-      throw new ApiError(422, "UNPROCESSABLE", "Este partido ya esta bloqueado para pronosticos.");
+      throw new ApiError(422, "UNPROCESSABLE", "Este partido ya está bloqueado para pronósticos.");
     }
 
     const enabled =
       isFutureMatchForActivation(match.kickoff, bonusConfig.activatedAt) &&
       isBonusEnabledForStage(bonusConfig, "scorers", match.stage);
     if (!enabled) {
-      throw new ApiError(422, "UNPROCESSABLE", "Bonificacion de goleadores no disponible para este partido.");
+      throw new ApiError(422, "UNPROCESSABLE", "Bonificación de goleadores no disponible para este partido.");
     }
 
     if (!match.homeTeamCode || !match.awayTeamCode) {
-      throw new ApiError(422, "UNPROCESSABLE", "Este partido no tiene codigos de seleccion configurados.");
+      throw new ApiError(422, "UNPROCESSABLE", "Este partido no tiene códigos de selección configurados.");
     }
 
     const allowedPlayerIds = await prisma.teamPlayer.findMany({

@@ -53,7 +53,7 @@ export async function PUT(
 
     const rule = await prisma.scoringRule.findUnique({ where: { id: 1 } });
     if (!rule) {
-      throw new ApiError(500, "INTERNAL_ERROR", "No existe configuracion de puntaje.");
+      throw new ApiError(500, "INTERNAL_ERROR", "No existe configuración de puntaje.");
     }
 
     const [predictions, officialScorers] = await Promise.all([

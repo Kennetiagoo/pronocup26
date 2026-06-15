@@ -90,7 +90,7 @@ export async function PUT(
       throw new ApiError(404, "NOT_FOUND", "Partido no encontrado.");
     }
     if (!match.homeTeamCode || !match.awayTeamCode) {
-      throw new ApiError(422, "UNPROCESSABLE", "Este partido no tiene codigos de seleccion configurados.");
+      throw new ApiError(422, "UNPROCESSABLE", "Este partido no tiene códigos de selección configurados.");
     }
 
     const bonusConfig = await getOrCreateBonusConfig();
@@ -98,7 +98,7 @@ export async function PUT(
       throw new ApiError(
         422,
         "UNPROCESSABLE",
-        "La bonificacion de goleadores esta desactivada para esta fase.",
+        "La bonificación de goleadores está desactivada para esta fase.",
       );
     }
 

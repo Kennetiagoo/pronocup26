@@ -24,7 +24,7 @@ type PredictionPayload = {
 
 function parseScore(value: unknown, label: string) {
   if (typeof value !== "number" || !Number.isInteger(value)) {
-    throw new ApiError(400, "BAD_REQUEST", `${label} debe ser un numero entero.`);
+    throw new ApiError(400, "BAD_REQUEST", `${label} debe ser un número entero.`);
   }
   if (value < 0 || value > 30) {
     throw new ApiError(422, "UNPROCESSABLE", `${label} debe estar entre 0 y 30.`);
@@ -67,14 +67,14 @@ export async function PUT(
       throw new ApiError(
         403,
         "FORBIDDEN",
-        "Debes completar tu registro antes de guardar pronosticos.",
+        "Debes completar tu registro antes de guardar pronósticos.",
       );
     }
     if (user.role !== UserRole.ADMIN && user.paymentStatus !== PaymentStatus.APROBADO) {
       throw new ApiError(
         403,
         "FORBIDDEN",
-        "Tu pago aun no esta aprobado. No puedes guardar pronosticos.",
+        "Tu pago aún no está aprobado. No puedes guardar pronósticos.",
       );
     }
 
@@ -98,19 +98,19 @@ export async function PUT(
       throw new ApiError(404, "NOT_FOUND", "Partido no encontrado.");
     }
     if (!rule) {
-      throw new ApiError(500, "INTERNAL_ERROR", "No existe configuracion de puntaje.");
+      throw new ApiError(500, "INTERNAL_ERROR", "No existe configuración de puntaje.");
     }
     if (match.status !== MatchStatus.SCHEDULED) {
       throw new ApiError(
         422,
         "UNPROCESSABLE",
-        "Este partido ya esta cerrado. No se pueden modificar pronosticos.",
+        "Este partido ya está cerrado. No se pueden modificar pronósticos.",
       );
     }
 
     const lockAt = match.kickoff.getTime() - rule.lockMinutesBeforeKickoff * 60 * 1000;
     if (Date.now() >= lockAt) {
-      throw new ApiError(422, "UNPROCESSABLE", "Este partido ya esta bloqueado para pronosticos.");
+      throw new ApiError(422, "UNPROCESSABLE", "Este partido ya está bloqueado para pronósticos.");
     }
 
     const stage = match.stage;
@@ -121,7 +121,7 @@ export async function PUT(
       isFutureForCurrentConfig && isBonusEnabledForStage(bonusConfig, "scorers", stage);
 
     if (requestedUseX2 && !x2EnabledForMatch) {
-      throw new ApiError(422, "UNPROCESSABLE", "X2 no esta disponible para este partido.");
+      throw new ApiError(422, "UNPROCESSABLE", "X2 no está disponible para este partido.");
     }
 
     if (requestedUseX2 && stage === "GROUP") {
@@ -177,14 +177,14 @@ export async function PUT(
         throw new ApiError(
           422,
           "UNPROCESSABLE",
-          `Ya alcanzaste el maximo de ${perMatchdayLimit} usos X2 en la fecha ${currentMatchday}.`,
+          `Ya alcanzaste el máximo de ${perMatchdayLimit} usos X2 en la fecha ${currentMatchday}.`,
         );
       }
       if (dailyLimitApplies && x2UsagesCurrentKickoffDay >= perDayLimit) {
         throw new ApiError(
           422,
           "UNPROCESSABLE",
-          "Ya usaste tu X2 permitido para este dia. Maximo 1 por dia en fechas 1 y 2.",
+          "Ya usaste tu X2 permitido para este día. Máximo 1 por día en fechas 1 y 2.",
         );
       }
     }

@@ -467,7 +467,7 @@ function paymentBadgeClass(status: PaymentStatus) {
 
 function paymentLabel(status: PaymentStatus) {
   if (status === "APROBADO") return "Aprobado";
-  if (status === "EN_REVISION") return "En revision";
+  if (status === "EN_REVISION") return "En revisión";
   if (status === "RECHAZADO") return "Rechazado";
   return "Sin comprobante";
 }
@@ -587,7 +587,7 @@ function streakPresentation(status: BettorStanding["lastFive"][number]["status"]
 function podiumPathPresentation(path: BettorStanding["podiumPaths"][number]) {
   if (path.verdict === "IN_ZONE") {
     return {
-      label: "Ya esta en zona",
+      label: "Ya está en zona",
       className: "border-emerald-300 bg-emerald-50 text-emerald-900",
     };
   }
@@ -649,6 +649,7 @@ export default function PronosticoClient({
   const [selectedBettor, setSelectedBettor] = useState<BettorStanding | null>(null);
   const [revealedPredictions, setRevealedPredictions] = useState<RevealedPredictionsModalState | null>(null);
   const [editingSavedMatchById, setEditingSavedMatchById] = useState<Record<string, boolean>>({});
+  const [quickMenuOpen, setQuickMenuOpen] = useState(false);
   const [formByMatch, setFormByMatch] = useState<
     Record<
       string,
@@ -698,7 +699,7 @@ export default function PronosticoClient({
                 key: "exact-score",
                 label: "Marcador exacto",
                 value: scoringRule.exactScorePoints,
-                help: "Pleno clasico",
+                help: "Pleno clásico",
                 className: "border-emerald-200 bg-emerald-50 text-emerald-800",
               },
             ]),
@@ -731,13 +732,6 @@ export default function PronosticoClient({
           value: scoringRule.goalDifferencePoints,
           help: "Diferencia exacta",
           className: "border-amber-200 bg-amber-50 text-amber-800",
-        },
-        {
-          key: "draw-bonus",
-          label: "Bonus empate",
-          value: scoringRule.drawOutcomeBonus,
-          help: "Si el empate coincide",
-          className: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800",
         },
         {
           key: "lock",
@@ -1023,7 +1017,7 @@ export default function PronosticoClient({
         pushToast("error", msg);
         return;
       }
-      setMessage("Comprobante enviado. Queda en revision.");
+      setMessage("Comprobante enviado. Queda en revisión.");
       pushToast("success", "Comprobante enviado correctamente.");
       setProofFile(null);
       router.refresh();
@@ -1162,7 +1156,7 @@ export default function PronosticoClient({
       );
       setEditingSavedMatchById((current) => ({ ...current, [matchId]: false }));
       setMessage("Pronostico guardado.");
-      pushToast("success", "Pronostico guardado correctamente.");
+      pushToast("success", "Pronóstico guardado correctamente.");
     } finally {
       setBusySaveId(null);
     }
@@ -1226,7 +1220,7 @@ export default function PronosticoClient({
           ? {
               ...current,
               loading: false,
-              error: "No se pudieron cargar los pronosticos.",
+              error: "No se pudieron cargar los pronósticos.",
             }
           : current,
       );
@@ -1249,106 +1243,180 @@ export default function PronosticoClient({
           </div>
         ))}
       </div>
-      <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-6">
-        <section className="wc-card rounded-[2rem] p-4 sm:p-7">
+      <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-5">
+        <section className="wc-card rounded-[2rem] p-4 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0 text-center lg:text-left">
               <p className="wc-eyebrow">Mundial 2026</p>
-              <h1 className="wc-title text-3xl text-zinc-950 sm:text-5xl lg:text-7xl">Concejo de Mufas</h1>
-              <p className="mx-auto mt-1 max-w-2xl text-sm text-zinc-700 sm:text-base lg:mx-0">
+              <h1 className="wc-title text-3xl text-zinc-950 sm:text-5xl lg:text-6xl">Concejo de Mufas</h1>
+              <p className="mx-auto mt-2 max-w-2xl text-sm text-zinc-700 sm:text-base lg:mx-0">
                 Pronostica todos los partidos y sube en la tabla.
               </p>
             </div>
-            <div className="mx-auto grid w-full max-w-xl gap-2 sm:grid-cols-2 lg:mx-0 lg:flex lg:w-auto lg:flex-wrap lg:justify-end lg:gap-3">
+            <div className="mx-auto grid w-full max-w-md gap-2 sm:grid-cols-2 lg:mx-0 lg:flex lg:w-auto lg:flex-wrap lg:justify-end lg:gap-2">
               {user.role === "ADMIN" ? (
                 <Link
                   href="/admin"
-                  className="rounded-2xl border border-cyan-300 bg-cyan-50 px-4 py-2.5 text-center text-[0.74rem] font-semibold uppercase tracking-[0.16em] text-cyan-900 shadow-[0_4px_12px_rgba(8,145,178,0.16)]"
+                  className="rounded-2xl border border-cyan-300 bg-cyan-50 px-4 py-2.5 text-center text-sm font-semibold text-cyan-900 shadow-[0_4px_12px_rgba(8,145,178,0.16)]"
                 >
                   Panel Admin
                 </Link>
               ) : null}
-              <span className="rounded-2xl border border-violet-300 bg-violet-50 px-4 py-2.5 text-center text-[0.74rem] font-semibold uppercase tracking-[0.14em] text-violet-900 shadow-[0_4px_12px_rgba(109,40,217,0.14)]">
+              <span className="rounded-2xl border border-violet-300 bg-violet-50 px-4 py-2.5 text-center text-sm font-semibold text-violet-900 shadow-[0_4px_12px_rgba(109,40,217,0.14)]">
                 {user.nombres} {user.apellidos}
               </span>
               <button
                 type="button"
                 onClick={onLogout}
-                className="rounded-2xl border border-rose-300 bg-rose-50 px-4 py-2.5 text-center text-[0.74rem] font-semibold uppercase tracking-[0.16em] text-rose-800 shadow-[0_4px_12px_rgba(225,29,72,0.14)] transition hover:bg-rose-100 sm:col-span-2 lg:col-auto"
+                className="rounded-2xl border border-rose-300 bg-rose-50 px-4 py-2.5 text-center text-sm font-semibold text-rose-800 shadow-[0_4px_12px_rgba(225,29,72,0.14)] transition hover:bg-rose-100 sm:col-span-2 lg:col-auto"
               >
-                Cerrar sesion
+                Cerrar sesión
               </button>
             </div>
           </div>
         </section>
 
-        <nav className="wc-mobile-sticky wc-card-soft rounded-2xl p-2" aria-label="Accesos rapidos de pronostico">
-          <div className="wc-scrollbar-none flex gap-2 overflow-x-auto">
+        <nav className="wc-mobile-sticky wc-card-soft rounded-2xl p-2" aria-label="Accesos rápidos de pronóstico">
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => showOpenMatches(nextActionMatch ?? undefined)}
-              className="shrink-0 rounded-xl border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-cyan-900 hover:bg-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              aria-label={nextActionMatch ? `Ir al partido ${nextActionMatch.matchNumber}` : "Ver partidos abiertos"}
+              onClick={() => setQuickMenuOpen((open) => !open)}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-zinc-300 bg-white text-zinc-900 shadow-sm"
+              aria-expanded={quickMenuOpen}
+              aria-controls="quick-menu-panel"
+              aria-label="Abrir menú de navegación"
             >
-              Proximo {nextActionMatch ? `P${nextActionMatch.matchNumber}` : "OK"}
+              <span className="flex w-4 flex-col gap-1" aria-hidden="true">
+                <span className="h-0.5 rounded-full bg-current" />
+                <span className="h-0.5 rounded-full bg-current" />
+                <span className="h-0.5 rounded-full bg-current" />
+              </span>
             </button>
             <button
               type="button"
-              onClick={() => showPickFilter("PENDING")}
-              className="shrink-0 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-amber-900 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
-              aria-label={`Ver ${pendingMatchCount} pronosticos pendientes`}
+              onClick={() => {
+                showOpenMatches(nextActionMatch ?? undefined);
+                setQuickMenuOpen(false);
+              }}
+              className="min-w-0 flex-1 rounded-2xl border border-cyan-300 bg-cyan-50 px-3 py-2 text-left text-sm font-bold text-cyan-950"
             >
-              Pendientes {pendingMatchCount}
+              {nextActionMatch ? `P${nextActionMatch.matchNumber}` : "Listo"} - {pendingMatchCount} pendientes
             </button>
             <button
               type="button"
-              onClick={() => (firstLiveMatch ? focusMatch(firstLiveMatch, "ALL") : showPickFilter("ALL"))}
-              className="shrink-0 rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-rose-800 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
-              aria-label={`Ver partidos en vivo: ${liveMatchCount}`}
+              onClick={() => {
+                scrollToSection("ranking");
+                setQuickMenuOpen(false);
+              }}
+              className="rounded-2xl border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-bold text-blue-950"
             >
-              En vivo {liveMatchCount}
+              #{bettorStandings.find((row) => row.userId === user.id)?.position ?? "-"}
             </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection("mis-picks")}
-              className="shrink-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-zinc-800 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500"
-            >
-              Mis picks {savedMatchCount}/{visibleMatches.length}
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection("ranking")}
-              className="shrink-0 rounded-xl border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-blue-900 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Ranking {bettorStandings.length}
-            </button>
-            {uiConfig.groupStandingsVisible ? (
-              <button
-                type="button"
-                onClick={() => scrollToSection("tabla-grupos")}
-                className="shrink-0 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-emerald-900 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                Paises {standings.length}
-              </button>
-            ) : null}
-            {shouldShowPaymentInfo ? (
-              <button
-                type="button"
-                onClick={() => scrollToSection("pago")}
-                className="shrink-0 rounded-xl border border-violet-300 bg-violet-50 px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-violet-900 hover:bg-violet-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
-              >
-                Pago
-              </button>
-            ) : null}
-            {user.role === "ADMIN" ? (
-              <Link
-                href="/admin"
-                className="shrink-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-zinc-800 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500"
-              >
-                Admin
-              </Link>
-            ) : null}
           </div>
+
+          {quickMenuOpen ? (
+            <div id="quick-menu-panel" className="mt-2 grid gap-2 rounded-[1.25rem] border border-zinc-200 bg-white/90 p-2 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
+              <button
+                type="button"
+                onClick={() => {
+                  showOpenMatches(nextActionMatch ?? undefined);
+                  setQuickMenuOpen(false);
+                }}
+                className="rounded-2xl border border-cyan-200 bg-cyan-50 px-3 py-3 text-left text-sm font-bold text-cyan-950"
+              >
+                Próximo partido
+                <span className="block text-xs font-semibold text-zinc-500">
+                  {nextActionMatch ? `P${nextActionMatch.matchNumber}` : "Sin abiertos"}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  showPickFilter("PENDING");
+                  setQuickMenuOpen(false);
+                }}
+                className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3 text-left text-sm font-bold text-amber-950"
+              >
+                Pendientes
+                <span className="block text-xs font-semibold text-zinc-500">{pendingMatchCount} picks</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (firstLiveMatch) {
+                    focusMatch(firstLiveMatch, "ALL");
+                  } else {
+                    showPickFilter("ALL");
+                  }
+                  setQuickMenuOpen(false);
+                }}
+                className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-3 text-left text-sm font-bold text-rose-950"
+              >
+                En vivo
+                <span className="block text-xs font-semibold text-zinc-500">{liveMatchCount} partidos</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  scrollToSection("mis-picks");
+                  setQuickMenuOpen(false);
+                }}
+                className="rounded-2xl border border-zinc-200 bg-white px-3 py-3 text-left text-sm font-bold text-zinc-950"
+              >
+                Mis picks
+                <span className="block text-xs font-semibold text-zinc-500">
+                  {savedMatchCount}/{visibleMatches.length}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  scrollToSection("ranking");
+                  setQuickMenuOpen(false);
+                }}
+                className="rounded-2xl border border-blue-200 bg-blue-50 px-3 py-3 text-left text-sm font-bold text-blue-950"
+              >
+                Ranking
+                <span className="block text-xs font-semibold text-zinc-500">{bettorStandings.length} jugadores</span>
+              </button>
+              {uiConfig.groupStandingsVisible ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    scrollToSection("tabla-grupos");
+                    setQuickMenuOpen(false);
+                  }}
+                  className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-left text-sm font-bold text-emerald-950"
+                >
+                  Países
+                  <span className="block text-xs font-semibold text-zinc-500">{standings.length} tablas</span>
+                </button>
+              ) : null}
+              {shouldShowPaymentInfo ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    scrollToSection("pago");
+                    setQuickMenuOpen(false);
+                  }}
+                  className="rounded-2xl border border-violet-200 bg-violet-50 px-3 py-3 text-left text-sm font-bold text-violet-950"
+                >
+                  Pago
+                  <span className="block text-xs font-semibold text-zinc-500">{paymentLabel(user.paymentStatus)}</span>
+                </button>
+              ) : null}
+              {user.role === "ADMIN" ? (
+                <Link
+                  href="/admin"
+                  onClick={() => setQuickMenuOpen(false)}
+                  className="rounded-2xl border border-zinc-200 bg-white px-3 py-3 text-left text-sm font-bold text-zinc-950"
+                >
+                  Admin
+                  <span className="block text-xs font-semibold text-zinc-500">Panel</span>
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
         </nav>
 
         {message ? (
@@ -1383,7 +1451,7 @@ export default function PronosticoClient({
           ) : null}
           {shouldShowPaymentInfo && !canSubmitPredictions ? (
             <p className="mt-3 rounded-xl bg-amber-100 p-3 text-sm text-amber-700">
-              Aun no puedes guardar pronosticos. Sube comprobante y espera aprobacion del admin.
+              Aún no puedes guardar pronósticos. Sube comprobante y espera aprobación del admin.
             </p>
           ) : null}
         </section>
@@ -1391,7 +1459,7 @@ export default function PronosticoClient({
         <section className="rounded-[1.5rem] border border-cyan-200 bg-cyan-50/95 p-4 text-cyan-950 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="wc-eyebrow text-cyan-900">Siguiente accion</p>
+              <p className="wc-eyebrow text-cyan-900">Siguiente acción</p>
               {nextActionMatch ? (
                 <h2 className="mt-1 text-lg font-black text-cyan-950 sm:text-xl">
                   Partido {chronologicalMatchNumberById.get(nextActionMatch.id) ?? nextActionMatch.matchNumber}:{" "}
@@ -1425,7 +1493,7 @@ export default function PronosticoClient({
                 {paymentConfig?.amount ?? "50000.00"} {paymentConfig?.currency ?? "COP"}
               </p>
               <p className="mt-2 text-sm text-zinc-700">
-                {paymentConfig?.instructions ?? "Realiza el pago y sube tu comprobante para validacion."}
+                {paymentConfig?.instructions ?? "Realiza el pago y sube tu comprobante para validación."}
               </p>
               {paymentConfig?.qrBlobUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -1435,17 +1503,17 @@ export default function PronosticoClient({
                   className="mt-4 h-56 w-56 rounded-xl border border-zinc-300 bg-white object-contain"
                 />
               ) : (
-                <p className="mt-4 text-sm text-amber-700">El QR no ha sido publicado todavia.</p>
+                <p className="mt-4 text-sm text-amber-700">El QR no ha sido publicado todavía.</p>
               )}
             </div>
 
             <form onSubmit={onUploadProof} className="wc-card-soft rounded-[1.7rem] p-5">
-              <p className="wc-eyebrow">Validacion</p>
+              <p className="wc-eyebrow">Validación</p>
               <h2 className="wc-title mt-2 text-5xl text-zinc-950">Subir comprobante</h2>
-              <p className="mt-2 text-sm text-zinc-700">Permitidos: JPG, PNG, PDF. Maximo 8 MB.</p>
+              <p className="mt-2 text-sm text-zinc-700">Permitidos: JPG, PNG, PDF. Máximo 8 MB.</p>
               {latestProof ? (
                 <p className="mt-2 text-xs text-zinc-600">
-                  Ultimo envio: {formatUtcDate(latestProof.createdAt)} - {" "}
+                  Último envío: {formatUtcDate(latestProof.createdAt)} - {" "}
                   <a href={latestProof.blobUrl} target="_blank" rel="noreferrer" className="text-blue-700 underline">
                     Ver comprobante
                   </a>
@@ -1454,7 +1522,7 @@ export default function PronosticoClient({
               <FileUploadField
                 id="pronostico-proof-file"
                 label="Adjuntar comprobante"
-                hint="Permitidos: JPG, PNG, PDF. Maximo 8 MB."
+                hint="Permitidos: JPG, PNG, PDF. Máximo 8 MB."
                 accept=".jpg,.jpeg,.png,.pdf"
                 file={proofFile}
                 onChange={setProofFile}
@@ -1479,7 +1547,7 @@ export default function PronosticoClient({
                 onClick={() => setShowRankingInfo((value) => !value)}
                 className="rounded-full border border-indigo-300 bg-indigo-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-indigo-800 hover:bg-indigo-100"
               >
-                {showRankingInfo ? "Ocultar detalle" : "Como se ordena"}
+                {showRankingInfo ? "Ocultar detalle" : "Cómo se ordena"}
               </button>
               <span className="rounded-full border border-zinc-300 bg-zinc-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-zinc-700">
                 {bettorStandings.length} {pluralize(bettorStandings.length, "jugador", "jugadores")}
@@ -1492,16 +1560,16 @@ export default function PronosticoClient({
                 <p className="font-black uppercase tracking-[0.08em]">Orden de desempate</p>
                 <p className="mt-2">
                   Antes del primer resultado todos comparten el #1. Luego la tabla ordena por puntos totales, menos X2
-                  activos, mas X2 libres, plenos, parciales, picks guardados y fecha de registro. Si todo empata, se
-                  comparte posicion con ranking deportivo.
+                  activos, más X2 libres, plenos, parciales, picks guardados y fecha de registro. Si todo empata, se
+                  comparte posición con ranking deportivo.
                 </p>
               </div>
               <div>
-                <p className="font-black uppercase tracking-[0.08em]">Racha ultimos 5</p>
+                <p className="font-black uppercase tracking-[0.08em]">Racha últimos 5</p>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs font-bold">
                   {[
                     ["MAX", "Pleno"],
-                    ["POINTS", "Sumo puntos"],
+                    ["POINTS", "Sumó puntos"],
                     ["ZERO", "Pick sin puntos"],
                     ["MISS", "Sin pick"],
                   ].map(([status, label]) => {
@@ -1519,7 +1587,7 @@ export default function PronosticoClient({
           ) : null}
           {!rankingStarted ? (
             <p className="mt-4 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700">
-              El torneo aun no tiene resultados oficiales: todos comparten el primer lugar hasta que se publique el
+              El torneo aún no tiene resultados oficiales: todos comparten el primer lugar hasta que se publique el
               primer partido.
             </p>
           ) : null}
@@ -1552,28 +1620,39 @@ export default function PronosticoClient({
             ))}
           </div>
           <div className="mt-4 overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
-            <table className="w-full min-w-[1260px] table-fixed text-left text-sm text-zinc-900">
+            <table className="w-full min-w-[1080px] table-fixed text-sm text-zinc-900">
               <caption className="sr-only">Ranking de apostadores por puntaje acumulado</caption>
+              <colgroup>
+                <col className="w-[5%]" />
+                <col className="w-[18%]" />
+                <col className="w-[7%]" />
+                <col className="w-[10%]" />
+                <col className="w-[13%]" />
+                <col className="w-[7%]" />
+                <col className="w-[6%]" />
+                <col className="w-[10%]" />
+                <col className="w-[17%]" />
+                <col className="w-[7%]" />
+              </colgroup>
               <thead className="bg-zinc-50 text-zinc-700">
                 <tr className="border-b border-zinc-200">
-                  <th scope="col" className="w-16 px-3 py-2">#</th>
-                  <th scope="col" className="px-3 py-2">Apostador</th>
-                  <th scope="col" className="w-28 px-3 py-2">Mov.</th>
-                  <th scope="col" className="w-32 px-3 py-2">Ultimos 5</th>
-                  <th scope="col" className="w-24 px-3 py-2">Grupo</th>
-                  <th scope="col" className="w-24 px-3 py-2">KO</th>
-                  <th scope="col" className="w-24 px-3 py-2">Plenos</th>
-                  <th scope="col" className="w-28 px-3 py-2">Puntos</th>
-                  <th scope="col" className="w-32 px-3 py-2">X2 grupos</th>
-                  <th scope="col" className="w-40 px-3 py-2">Premio</th>
-                  <th scope="col" className="w-28 px-3 py-2">Picks</th>
+                  <th scope="col" className="px-3 py-2 text-center">#</th>
+                  <th scope="col" className="px-3 py-2 text-left">Apostador</th>
+                  <th scope="col" className="px-3 py-2 text-center">Puntos</th>
+                  <th scope="col" className="px-3 py-2 text-center">Mov.</th>
+                  <th scope="col" className="px-3 py-2 text-center">Últimos 5</th>
+                  <th scope="col" className="px-3 py-2 text-center">Grupo</th>
+                  <th scope="col" className="px-3 py-2 text-center">KO</th>
+                  <th scope="col" className="px-3 py-2 text-center">Plenos</th>
+                  <th scope="col" className="px-3 py-2 text-center">X2 grupos</th>
+                  <th scope="col" className="px-3 py-2 text-center">Picks</th>
                 </tr>
               </thead>
               <tbody>
                 {bettorStandings.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="px-3 py-4 text-zinc-600">
-                      Aun no hay apostadores con perfil completo.
+                    <td colSpan={10} className="px-3 py-4 text-zinc-600">
+                      Aún no hay apostadores con perfil completo.
                     </td>
                   </tr>
                 ) : (
@@ -1598,9 +1677,9 @@ export default function PronosticoClient({
                           prizeTier?.rowClass ?? "bg-white"
                         }`}
                       >
-                        <td className="px-3 py-2">
+                        <td className="px-3 py-2 text-center">
                           <span
-                            className={`inline-flex min-w-9 justify-center rounded-full border px-2 py-1 text-xs font-black ${
+                            className={`inline-flex min-w-9 items-center justify-center rounded-full border px-2 py-1 text-xs font-black ${
                               medal?.className ?? prizeTier?.badgeClass ?? "border-zinc-300 bg-zinc-100 text-zinc-800"
                             }`}
                           >
@@ -1624,18 +1703,19 @@ export default function PronosticoClient({
                             </span>
                           ) : null}
                         </th>
-                        <td className="px-3 py-2">
+                        <td className="px-3 py-2 text-center font-bold text-zinc-900">{row.totalPoints}</td>
+                        <td className="px-3 py-2 text-center">
                           <span
-                            className={`inline-flex rounded-full border px-2 py-1 text-[11px] font-black uppercase tracking-[0.06em] ${movement.className}`}
+                            className={`inline-flex items-center justify-center rounded-full border px-2 py-1 text-[11px] font-black uppercase tracking-[0.06em] ${movement.className}`}
                           >
                             {movement.label}
                           </span>
-                          <p className="mt-1 max-w-24 text-[10px] leading-tight text-zinc-500">
-                            {row.movementReferenceLabel}: #{row.previousPosition}
+                          <p className="mx-auto mt-1 max-w-24 text-[10px] leading-tight text-zinc-500">
+                            #{row.previousPosition} - {row.movementReferenceLabel}
                           </p>
                         </td>
                         <td className="px-3 py-2">
-                          <div className="flex gap-1">
+                          <div className="flex justify-center gap-1">
                             {row.lastFive.length === 0 ? (
                               <span className="text-[11px] text-zinc-500">Sin resultados</span>
                             ) : (
@@ -1654,25 +1734,21 @@ export default function PronosticoClient({
                             )}
                           </div>
                         </td>
-                        <td className="px-3 py-2 text-zinc-700">{row.groupPoints}</td>
-                        <td className="px-3 py-2 text-zinc-700">{row.knockoutPoints}</td>
-                        <td className="px-3 py-2 text-zinc-700">
+                        <td className="px-3 py-2 text-center text-zinc-700">{row.groupPoints}</td>
+                        <td className="px-3 py-2 text-center text-zinc-700">{row.knockoutPoints}</td>
+                        <td className="px-3 py-2 text-center text-zinc-700">
                           {row.perfectHits}
                           <span className="ml-1 text-[11px] text-zinc-500">
                             ({row.partialLevel2}/{row.partialLevel3}/{row.partialLevel4})
                           </span>
                         </td>
-                        <td className="px-3 py-2 font-bold text-zinc-900">{row.totalPoints}</td>
-                        <td className="px-3 py-2 text-zinc-700">
+                        <td className="px-3 py-2 text-center text-zinc-700">
                           <span className="font-bold text-zinc-900">{row.x2UsedCount}</span>
                           <span className="text-[11px] text-zinc-500"> consumidos</span>
                           <span className="ml-1 text-[11px] text-zinc-500">/ {row.x2LeftCount} libres</span>
                           <p className="mt-0.5 text-[10px] text-zinc-500">solo finalizados</p>
                         </td>
-                        <td className="px-3 py-2 font-bold text-zinc-900">
-                          {prizeTier ? formatMoneyCOP(prizeTier.amount) : "-"}
-                        </td>
-                        <td className="px-3 py-2 text-zinc-700">{row.predictionCount}</td>
+                        <td className="px-3 py-2 text-center text-zinc-700">{row.predictionCount}</td>
                       </tr>
                     );
                   })
@@ -1719,7 +1795,7 @@ export default function PronosticoClient({
 
         {scoringRule?.officialModeEnabled ? (
           <section className="rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">
-            Modo oficial activo: solo 90 min + reposicion. En eliminatorias el puntaje base usa x
+            Modo oficial activo: solo 90 min + reposición. En eliminatorias el puntaje base usa x
             {scoringRule.knockoutMultiplier}.
           </section>
         ) : null}
@@ -1730,7 +1806,7 @@ export default function PronosticoClient({
             <h2 className="wc-title mt-1 text-center text-4xl text-zinc-950 sm:text-5xl md:text-left md:text-6xl">Fase de grupos</h2>
             <p className="mt-1 text-center text-zinc-700 md:text-left">Se actualiza cuando el admin publica resultados.</p>
             {standings.length === 0 ? (
-              <p className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 text-zinc-700">Aun no hay datos de posiciones.</p>
+              <p className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 text-zinc-700">Aún no hay datos de posiciones.</p>
             ) : (
               <div className="mt-5 grid gap-4 xl:grid-cols-3">
                 {standings.map((group) => (
@@ -1799,7 +1875,7 @@ export default function PronosticoClient({
             <div>
               <p className="wc-eyebrow">Mis picks</p>
               <p className="text-sm text-zinc-600">
-                {filteredMatches.length} visibles de {visibleMatches.length}. Filtra la lista para avanzar mas rapido.
+                {filteredMatches.length} visibles de {visibleMatches.length}. Filtra la lista para avanzar más rápido.
               </p>
             </div>
             <div className="wc-scrollbar-none flex gap-2 overflow-x-auto pb-1 sm:pb-0">
@@ -1960,7 +2036,7 @@ export default function PronosticoClient({
                         ? "Guardado"
                         : "Bloqueado"
                       : savedPrediction && !editingSavedPrediction
-                        ? "Editar pronostico"
+                        ? "Editar pronóstico"
                         : savedPrediction
                           ? "Guardar cambios"
                           : "Guardar";
@@ -2010,14 +2086,14 @@ export default function PronosticoClient({
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="wc-eyebrow text-zinc-700">Partido {chronologicalMatchNumber}</p>
-                    <div className="flex flex-wrap justify-end gap-2">
+                    <div className="flex flex-wrap justify-end gap-1.5">
                       {savedPrediction ? (
-                        <span className="rounded-full border border-emerald-300 bg-white px-3 py-1 text-[10px] font-extrabold tracking-[0.15em] text-emerald-700">
+                        <span className="inline-flex items-center justify-center rounded-full border border-emerald-300 bg-white px-2.5 py-1 text-center text-[10px] font-extrabold leading-none tracking-[0.08em] text-emerald-700">
                           Guardado
                         </span>
                       ) : null}
                       <span
-                        className={`rounded-full border px-3 py-1 text-[10px] font-extrabold tracking-[0.15em] ${
+                        className={`inline-flex items-center justify-center rounded-full border px-2.5 py-1 text-center text-[10px] font-extrabold leading-none tracking-[0.08em] ${
                           finalized
                             ? "border-zinc-300 bg-zinc-100 text-zinc-700"
                             : live
@@ -2035,7 +2111,7 @@ export default function PronosticoClient({
                           onClick={() => {
                             void openMatchPredictions(match);
                           }}
-                          className="rounded-full border border-cyan-300 bg-cyan-50 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.15em] text-cyan-800 hover:bg-cyan-100"
+                          className="!min-h-0 rounded-full border border-cyan-300 bg-cyan-50 px-2.5 py-1 text-center text-[10px] font-extrabold leading-none uppercase tracking-[0.08em] text-cyan-800 hover:bg-cyan-100"
                         >
                           Ver picks
                         </button>
@@ -2044,10 +2120,10 @@ export default function PronosticoClient({
                   </div>
 
                   <div className="mt-2">
-                    <p className="wc-title text-4xl text-zinc-950 sm:text-5xl">{STAGE_LABELS_ES[match.stage]}</p>
+                    <p className="wc-title text-3xl text-zinc-950 sm:text-4xl">{STAGE_LABELS_ES[match.stage]}</p>
                     {match.groupName ? (
                       <span
-                        className={`mt-2 inline-flex rounded-full border px-3 py-1 text-sm font-bold uppercase tracking-[0.12em] ${
+                        className={`mt-2 inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] ${
                           (() => {
                             const key = resolveGroupKey(match.groupName);
                             return key ? GROUP_COLOR_STYLES[key].tag : "border-zinc-300 bg-zinc-100 text-zinc-700";
@@ -2059,18 +2135,18 @@ export default function PronosticoClient({
                     ) : null}
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
                     {match.stage === "GROUP" ? (
-                      <span className="rounded-full border border-indigo-300 bg-indigo-100 px-3 py-1 font-semibold uppercase tracking-[0.1em] text-indigo-800">
+                      <span className="inline-flex items-center rounded-full border border-indigo-300 bg-indigo-100 px-2.5 py-1 font-semibold uppercase tracking-[0.08em] text-indigo-800">
                         Fecha {matchday}
                       </span>
                     ) : (
-                      <span className="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 font-semibold uppercase tracking-[0.1em] text-zinc-700">
+                      <span className="inline-flex items-center rounded-full border border-zinc-300 bg-zinc-100 px-2.5 py-1 font-semibold uppercase tracking-[0.08em] text-zinc-700">
                         Eliminatoria
                       </span>
                     )}
-                    <span className="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 font-semibold uppercase tracking-[0.1em] text-zinc-700">
-                      {kickoffDateCol} · {kickoffTimeCol} GMT-5
+                    <span className="inline-flex items-center rounded-full border border-zinc-300 bg-zinc-100 px-2.5 py-1 font-semibold uppercase tracking-[0.08em] text-zinc-700">
+                      {kickoffDateCol} - {kickoffTimeCol} GMT-5
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-zinc-600">
@@ -2162,8 +2238,8 @@ export default function PronosticoClient({
                       </label>
                       {x2LimitReached ? (
                         <p className="mt-1 text-xs text-indigo-800">
-                          Limite alcanzado: revisa total de grupos ({bonusConfig.x2UsesGroup}), fecha (4)
-                          {dailyX2LimitApplies ? " y dia (1)." : "."}
+                          Límite alcanzado: revisa total de grupos ({bonusConfig.x2UsesGroup}), fecha (4)
+                          {dailyX2LimitApplies ? " y día (1)." : "."}
                         </p>
                       ) : null}
                     </div>
@@ -2250,7 +2326,7 @@ export default function PronosticoClient({
                   ) : null}
 
                   <div className="mt-3 flex items-center justify-between gap-2 text-sm text-zinc-700">
-                    <span className="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 font-bold text-zinc-900">
+                    <span className="inline-flex items-center rounded-full border border-zinc-300 bg-zinc-100 px-2.5 py-1 text-xs font-bold text-zinc-900">
                       {match.ownPredictionPoints > 0
                         ? `${live ? "Prov. " : ""}${match.ownPredictionPoints} pts`
                         : live
@@ -2261,7 +2337,7 @@ export default function PronosticoClient({
                     match.homeScore !== null &&
                     match.awayScore !== null ? (
                       <span
-                        className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.1em] ${
+                        className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] ${
                           match.status === "LIVE"
                             ? "border-rose-300 bg-rose-100 text-rose-700"
                             : "border-emerald-300 bg-emerald-100 text-emerald-700"
@@ -2270,7 +2346,7 @@ export default function PronosticoClient({
                         {match.status === "LIVE" ? "Provisional" : "Oficial"} {match.homeScore}-{match.awayScore}
                       </span>
                     ) : (
-                      <span className="text-xs text-zinc-500">Tu pronostico</span>
+                      <span className="text-xs text-zinc-500">Tu pronóstico</span>
                     )}
                   </div>
 
@@ -2303,7 +2379,7 @@ export default function PronosticoClient({
                 <h3 className="wc-title mt-1 text-3xl text-zinc-950">
                   {revealedPredictions.match
                     ? `${revealedPredictions.match.homeTeam} vs ${revealedPredictions.match.awayTeam}`
-                    : "Pronosticos"}
+                    : "Pronósticos"}
                 </h3>
                 {revealedPredictions.match?.homeScore !== null &&
                 revealedPredictions.match?.awayScore !== null &&
@@ -2325,7 +2401,7 @@ export default function PronosticoClient({
 
             {revealedPredictions.loading ? (
               <p className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
-                Cargando pronosticos...
+                Cargando pronósticos...
               </p>
             ) : null}
             {revealedPredictions.error ? (
@@ -2339,7 +2415,7 @@ export default function PronosticoClient({
                   <thead className="bg-zinc-900 text-white">
                     <tr>
                       <th className="px-3 py-2">Usuario</th>
-                      <th className="px-3 py-2">Pronostico</th>
+                      <th className="px-3 py-2">Pronóstico</th>
                       <th className="px-3 py-2">Puntos</th>
                       <th className="px-3 py-2">X2</th>
                       <th className="px-3 py-2">Goleadores</th>
@@ -2349,7 +2425,7 @@ export default function PronosticoClient({
                     {revealedPredictions.predictions.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-3 py-4 text-center text-zinc-500">
-                          No hay pronosticos guardados para este partido.
+                          No hay pronósticos guardados para este partido.
                         </td>
                       </tr>
                     ) : (
@@ -2406,7 +2482,7 @@ export default function PronosticoClient({
                   {(selectedBettor.username || `${selectedBettor.nombres} ${selectedBettor.apellidos}`).toUpperCase()}
                 </h3>
                 <p className="mt-2 text-sm text-zinc-700">
-                  Posicion actual #{selectedBettor.position} · {selectedBettor.totalPoints} pts · Maximo restante{" "}
+                  Posición actual #{selectedBettor.position} - {selectedBettor.totalPoints} pts - Máximo restante{" "}
                   <strong>{selectedBettor.remainingPotentialPoints} pts</strong>
                 </p>
               </div>
@@ -2469,11 +2545,11 @@ export default function PronosticoClient({
                       </p>
                     ) : null}
                     <p className="mt-1 text-sm font-semibold text-cyan-900">
-                      Corte #{selectedBettor.nextMatchPath.currentCutPosition} · mejor posible #
+                      Corte #{selectedBettor.nextMatchPath.currentCutPosition} - mejor posible #
                       {selectedBettor.nextMatchPath.bestPosition}
                       {selectedBettor.nextMatchPath.positionGain > 0
-                        ? ` · sube ${selectedBettor.nextMatchPath.positionGain}`
-                        : " · sin salto de posicion"}
+                        ? ` - sube ${selectedBettor.nextMatchPath.positionGain}`
+                        : " - sin salto de posición"}
                     </p>
                   </div>
                   <span
@@ -2497,7 +2573,7 @@ export default function PronosticoClient({
                     </div>
                     <div className="rounded-xl border border-cyan-200 bg-white px-3 py-2">
                       <p className="text-[11px] font-black uppercase tracking-[0.08em] text-cyan-800">
-                        Escenario optimo
+                        Escenario óptimo
                       </p>
                       <p className="mt-1 text-2xl font-black text-cyan-950">
                         {selectedBettor.nextMatchPath.scoreLine}
@@ -2522,7 +2598,7 @@ export default function PronosticoClient({
 
                 <div className="mt-4 grid gap-3 lg:grid-cols-[0.9fr_1.1fr]">
                   <div className="rounded-xl border border-cyan-200 bg-white p-3">
-                    <p className="text-xs font-black uppercase tracking-[0.1em] text-cyan-800">Que necesita</p>
+                    <p className="text-xs font-black uppercase tracking-[0.1em] text-cyan-800">Qué necesita</p>
                     {selectedBettor.nextMatchPath.scoreLine ? (
                       <p className="mt-2 text-3xl font-black text-cyan-950">
                         {selectedBettor.nextMatchPath.scoreLine}
@@ -2572,7 +2648,7 @@ export default function PronosticoClient({
                 </span>
               </div>
               <p className="mt-2 text-sm text-zinc-700">
-                No incluye pronosticos abiertos. Un X2 devuelto aparece aqui para auditoria, pero no resta cupo.
+                No incluye pronósticos abiertos. Un X2 devuelto aparece aquí para auditoría, pero no resta cupo.
               </p>
               {selectedBettor.x2Usages.length === 0 ? (
                 <p className="mt-3 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-600">
@@ -2594,11 +2670,11 @@ export default function PronosticoClient({
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <p className="text-sm font-black text-zinc-950">
-                            P{usage.matchNumber} · {usage.homeTeam} {usage.homeScore ?? "-"} - {usage.awayScore ?? "-"} {usage.awayTeam}
+                            P{usage.matchNumber} - {usage.homeTeam} {usage.homeScore ?? "-"} - {usage.awayScore ?? "-"} {usage.awayTeam}
                           </p>
                           <p className="mt-1 text-xs font-semibold text-zinc-600">
                             {STAGE_LABELS_ES[usage.stage as MatchStage] ?? usage.stage}
-                            {usage.groupName ? ` · Grupo ${usage.groupName}` : ""} · Base {usage.basePoints} pts · Total{" "}
+                            {usage.groupName ? ` - Grupo ${usage.groupName}` : ""} - Base {usage.basePoints} pts - Total{" "}
                             {usage.points} pts
                           </p>
                         </div>
@@ -2650,7 +2726,7 @@ export default function PronosticoClient({
                       </p>
                       <p>Diferencia actual: {path.pointsBehind} pts</p>
                       <p>Puntos necesarios: {path.neededPoints} pts</p>
-                      <p>Maximo alcanzable: {path.maxReachablePoints} pts</p>
+                      <p>Máximo alcanzable: {path.maxReachablePoints} pts</p>
                     </div>
                   </div>
                 );
@@ -2658,7 +2734,7 @@ export default function PronosticoClient({
             </div>
 
             <p className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-600">
-              Este calculo compara contra la tabla actual y asume el mejor rendimiento posible del apostador; no simula
+              Este cálculo compara contra la tabla actual y asume el mejor rendimiento posible del apostador; no simula
               puntos futuros de otros usuarios.
             </p>
           </div>
@@ -2690,7 +2766,7 @@ export default function PronosticoClient({
                 </div>
                 <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
-                    Dia del partido
+                    Día del partido
                   </p>
                   {x2InfoModal.dailyLimitApplies ? (
                     <p className="text-base font-bold text-zinc-900">
@@ -2704,22 +2780,22 @@ export default function PronosticoClient({
               </div>
               <div className="space-y-1 text-sm">
                 <p>Si confirmas este X2, se descuentan esos cupos.</p>
-                <p>Si el partido te da 0 puntos base, el X2 se te devuelve automaticamente.</p>
+                <p>Si el partido te da 0 puntos base, el X2 se te devuelve automáticamente.</p>
               </div>
               {x2InfoModal.dailyLimitApplies && x2InfoModal.remainingDayAfter === 0 ? (
                 <p className="font-semibold text-amber-700">
-                  Ojo: despues de este, no podras activar otro X2 en partidos de ese mismo dia.
+                  Ojo: después de este, no podrás activar otro X2 en partidos de ese mismo día.
                 </p>
               ) : !x2InfoModal.dailyLimitApplies ? (
                 <p className="font-semibold text-emerald-700">
-                  Fecha 3 permite varios X2 el mismo dia por partidos simultaneos, sin pasar de 4 en la fecha.
+                  Fecha 3 permite varios X2 el mismo día por partidos simultáneos, sin pasar de 4 en la fecha.
                 </p>
               ) : null}
               <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-900">
-                <p className="font-semibold">Reglas rapidas</p>
-                <p>Maximo {bonusConfig.x2UsesGroup} en fase de grupos y 4 por fecha.</p>
-                <p>Fechas 1 y 2: maximo 1 por dia.</p>
-                <p>Fecha 3: se permiten varios X2 el mismo dia por simultaneidad, hasta 4 en la fecha.</p>
+                <p className="font-semibold">Reglas rápidas</p>
+                <p>Máximo {bonusConfig.x2UsesGroup} en fase de grupos y 4 por fecha.</p>
+                <p>Fechas 1 y 2: máximo 1 por día.</p>
+                <p>Fecha 3: se permiten varios X2 el mismo día por simultaneidad, hasta 4 en la fecha.</p>
                 <p>Ejemplo: si usas 4 en Fecha {x2InfoModal.groupMatchday}, debes esperar la siguiente fecha.</p>
               </div>
             </div>

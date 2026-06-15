@@ -349,6 +349,7 @@ export default function AdminPanelClient({
   const [teamPlayers, setTeamPlayers] = useState<TeamPlayerRow[]>([]);
   const [teamPlayersBusy, setTeamPlayersBusy] = useState(false);
   const [bulkPlayersInput, setBulkPlayersInput] = useState("");
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const [teamPlayerOptionsByCode, setTeamPlayerOptionsByCode] = useState<
     Record<string, TeamPlayerOption[]>
   >({});
@@ -393,7 +394,7 @@ export default function AdminPanelClient({
   );
 
   const selectedTeamLabel = selectedTeamCode
-    ? `${selectedTeamCode} - ${teamCodeLabelMap.get(selectedTeamCode) ?? "Seleccion"}`
+    ? `${selectedTeamCode} - ${teamCodeLabelMap.get(selectedTeamCode) ?? "Selección"}`
     : "";
 
   const cleanedTeamPlayers = useMemo(
@@ -426,28 +427,28 @@ export default function AdminPanelClient({
       groupPoints: rule.outcomePoints,
       knockoutPoints: multipliedPoints(rule.outcomePoints, rule.knockoutMultiplier),
       description:
-        "Se otorga cuando el pronostico acierta si gana el local, gana el visitante o el partido termina empatado.",
+        "Se otorga cuando el pronóstico acierta si gana el local, gana el visitante o el partido termina empatado.",
     },
     {
       label: "Por acertar los goles del equipo local",
       groupPoints: rule.singleTeamGoalsPoints,
       knockoutPoints: multipliedPoints(rule.singleTeamGoalsPoints, rule.knockoutMultiplier),
       description:
-        "Se otorga cuando el numero de goles pronosticado para el local coincide con el resultado oficial.",
+        "Se otorga cuando el número de goles pronosticado para el local coincide con el resultado oficial.",
     },
     {
       label: "Por acertar los goles del equipo visitante",
       groupPoints: rule.singleTeamGoalsPoints,
       knockoutPoints: multipliedPoints(rule.singleTeamGoalsPoints, rule.knockoutMultiplier),
       description:
-        "Se otorga cuando el numero de goles pronosticado para el visitante coincide con el resultado oficial.",
+        "Se otorga cuando el número de goles pronosticado para el visitante coincide con el resultado oficial.",
     },
     {
       label: "Por acertar la diferencia de goles",
       groupPoints: rule.goalDifferencePoints,
       knockoutPoints: multipliedPoints(rule.goalDifferencePoints, rule.knockoutMultiplier),
       description:
-        "Se otorga cuando la resta local menos visitante es igual en el pronostico y en el resultado oficial.",
+        "Se otorga cuando la resta local menos visitante es igual en el pronóstico y en el resultado oficial.",
     },
   ];
   const groupMaxPoints = scoreRows.reduce((sum, row) => sum + row.groupPoints, 0);
@@ -617,7 +618,7 @@ export default function AdminPanelClient({
       drawOutcomeBonus: 0,
       lockMinutesBeforeKickoff: 10,
     }));
-    setNotice("Preset oficial aplicado. Revisa y guarda configuracion.");
+    setNotice("Preset oficial aplicado. Revisa y guarda configuración.");
     setError(null);
   }
 
@@ -635,7 +636,7 @@ export default function AdminPanelClient({
         setError(await readErrorMessage(res));
         return;
       }
-      setNotice("Configuracion de bonificaciones actualizada. Aplica para partidos futuros.");
+      setNotice("Configuración de bonificaciones actualizada. Aplica para partidos futuros.");
       await refreshAdminData();
       setPlayoffModalOpen(false);
     } finally {
@@ -659,7 +660,7 @@ export default function AdminPanelClient({
       }
       const payload = (await res.json()) as { config: SafeUiConfig };
       setUiConfig(payload.config);
-      setNotice("Configuracion de vista actualizada.");
+      setNotice("Configuración de vista actualizada.");
     } finally {
       setBusy(false);
     }
@@ -699,11 +700,11 @@ export default function AdminPanelClient({
       return;
     }
     if (cleaned.length > 26) {
-      setError("Solo se permiten 26 jugadores por seleccion.");
+      setError("Solo se permiten 26 jugadores por selección.");
       return;
     }
     if (duplicateNameCount > 0) {
-      setError("Hay nombres de jugadores repetidos. Corrigelos antes de guardar.");
+      setError("Hay nombres de jugadores repetidos. Corrígelos antes de guardar.");
       return;
     }
 
@@ -765,7 +766,7 @@ export default function AdminPanelClient({
   function applyBulkPlayers(append: boolean) {
     const parsed = parseBulkPlayers(bulkPlayersInput);
     if (parsed.length === 0) {
-      setError("No se detectaron jugadores validos para importar.");
+      setError("No se detectaron jugadores válidos para importar.");
       return;
     }
     setError(null);
@@ -773,7 +774,7 @@ export default function AdminPanelClient({
     setNotice(
       append
         ? `Se agregaron ${parsed.length} jugador(es) desde pegado masivo.`
-      : `Se reemplazo la plantilla con ${parsed.length} jugador(es).`,
+      : `Se reemplazó la plantilla con ${parsed.length} jugador(es).`,
     );
   }
 
@@ -1090,7 +1091,7 @@ export default function AdminPanelClient({
     <main className="wc-page min-h-screen px-4 py-6 text-zinc-900 sm:py-8 md:px-8">
       <div className="mx-auto flex max-w-[1320px] flex-col gap-6">
         <section className="wc-card rounded-[2rem] p-5 sm:p-7">
-          <p className="wc-eyebrow">Administracion</p>
+          <p className="wc-eyebrow">Administración</p>
           <h1 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-6xl">Panel de Control</h1>
           <p className="mt-3 max-w-4xl text-sm text-zinc-700 sm:text-base">
             Ajusta reglas de puntaje, habilita o bloquea registros, publica resultados oficiales y
@@ -1101,7 +1102,7 @@ export default function AdminPanelClient({
               href="/pronostico"
               className="wc-button-primary px-5 py-2.5 text-sm"
             >
-              Volver a Pronostico
+              Volver a Pronóstico
             </Link>
             <span className="rounded-2xl border border-violet-300 bg-violet-50 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-violet-900">
               Admin: {adminUser.nombres} {adminUser.apellidos} @{adminUser.username ?? adminUser.email}
@@ -1110,27 +1111,70 @@ export default function AdminPanelClient({
         </section>
 
         <nav className="wc-mobile-sticky wc-card-soft rounded-2xl p-2" aria-label="Accesos admin">
-          <div className="wc-scrollbar-none flex gap-2 overflow-x-auto">
-            {[
-              ["admin-usuarios", "Usuarios"],
-              ["admin-resultados", "Resultados"],
-              ["admin-bonos", "Bonos"],
-              ["admin-vista", "Vista"],
-              ["admin-plantillas", "Plantillas"],
-              ["admin-pagos", "Pagos"],
-              ["admin-comprobantes", "Comprobantes"],
-              ["admin-config", "Config"],
-            ].map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => scrollToSection(id)}
-                className="shrink-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-zinc-800 hover:bg-zinc-50"
-              >
-                {label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setAdminMenuOpen((open) => !open)}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-zinc-300 bg-white text-zinc-900 shadow-sm"
+              aria-expanded={adminMenuOpen}
+              aria-controls="admin-menu-panel"
+              aria-label="Abrir menú admin"
+            >
+              <span className="flex w-4 flex-col gap-1" aria-hidden="true">
+                <span className="h-0.5 rounded-full bg-current" />
+                <span className="h-0.5 rounded-full bg-current" />
+                <span className="h-0.5 rounded-full bg-current" />
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                scrollToSection("admin-resultados");
+                setAdminMenuOpen(false);
+              }}
+              className="min-w-0 flex-1 rounded-2xl border border-cyan-300 bg-cyan-50 px-3 py-2 text-left text-sm font-bold text-cyan-950"
+            >
+              Resultados
+              <span className="block text-xs font-semibold text-zinc-500">{liveMatches.length} live</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                scrollToSection("admin-comprobantes");
+                setAdminMenuOpen(false);
+              }}
+              className="rounded-2xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-bold text-amber-950"
+            >
+              {reviewProofCount}
+            </button>
           </div>
+
+          {adminMenuOpen ? (
+            <div id="admin-menu-panel" className="mt-2 grid gap-2 rounded-[1.25rem] border border-zinc-200 bg-white/90 p-2 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                ["admin-usuarios", "Usuarios"],
+                ["admin-resultados", "Resultados"],
+                ["admin-bonos", "Bonos"],
+                ["admin-vista", "Vista"],
+                ["admin-plantillas", "Plantillas"],
+                ["admin-pagos", "Pagos"],
+                ["admin-comprobantes", "Comprobantes"],
+                ["admin-config", "Config"],
+              ].map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => {
+                    scrollToSection(id);
+                    setAdminMenuOpen(false);
+                  }}
+                  className="rounded-2xl border border-zinc-200 bg-white px-3 py-3 text-left text-sm font-bold text-zinc-950"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </nav>
 
         {notice ? (
@@ -1149,7 +1193,7 @@ export default function AdminPanelClient({
           >
             <p className="text-xs font-black uppercase tracking-[0.12em]">Comprobantes</p>
             <p className="mt-1 text-3xl font-black">{reviewProofCount}</p>
-            <p className="text-sm font-semibold">en revision</p>
+            <p className="text-sm font-semibold">en revisión</p>
           </button>
           <button
             type="button"
@@ -1165,7 +1209,7 @@ export default function AdminPanelClient({
             onClick={() => showAdminMatches(nextUnresolvedMatch?.status ?? "ALL")}
             className="rounded-2xl border border-cyan-300 bg-cyan-50 p-4 text-left text-cyan-900 shadow-[0_8px_20px_rgba(0,0,0,0.08)] hover:bg-cyan-100"
           >
-            <p className="text-xs font-black uppercase tracking-[0.12em]">Proximo pendiente</p>
+            <p className="text-xs font-black uppercase tracking-[0.12em]">Próximo pendiente</p>
             <p className="mt-1 text-3xl font-black">
               {nextUnresolvedMatch ? `P${nextUnresolvedMatch.matchNumber}` : "OK"}
             </p>
@@ -1178,17 +1222,17 @@ export default function AdminPanelClient({
             onClick={() => scrollToSection("admin-vista")}
             className="rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-left text-emerald-900 shadow-[0_8px_20px_rgba(0,0,0,0.08)] hover:bg-emerald-100"
           >
-            <p className="text-xs font-black uppercase tracking-[0.12em]">Tabla paises</p>
+            <p className="text-xs font-black uppercase tracking-[0.12em]">Tabla países</p>
             <p className="mt-1 text-3xl font-black">{uiConfig.groupStandingsVisible ? "ON" : "OFF"}</p>
             <p className="text-sm font-semibold">
-              {uiConfig.groupStandingsVisible ? "visible para usuarios" : "oculta en pronostico"}
+              {uiConfig.groupStandingsVisible ? "visible para usuarios" : "oculta en pronóstico"}
             </p>
           </button>
         </section>
 
         <section id="admin-config" className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
           <p className="wc-eyebrow">Puntaje</p>
-          <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Configuracion</h2>
+          <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Configuración</h2>
           <p className="mt-2 text-sm text-zinc-700 sm:text-base">
             Cambios aquí afectan la tabla global y se recalculan automáticamente.
           </p>
@@ -1229,7 +1273,7 @@ export default function AdminPanelClient({
               />
             </label>
             <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-xs text-zinc-700">
-              Solo cuenta 90 min + reposicion, sin prorroga ni penales.
+              Solo cuenta 90 min + reposición, sin prórroga ni penales.
             </div>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -1301,10 +1345,10 @@ export default function AdminPanelClient({
             Permitir registro público de nuevos usuarios
           </label>
           <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-            <p className="wc-eyebrow text-emerald-800">Distribucion visible para usuarios</p>
-            <h3 className="mt-1 text-2xl font-extrabold text-emerald-950">Como se calculan los puntos</h3>
+            <p className="wc-eyebrow text-emerald-800">Distribución visible para usuarios</p>
+            <h3 className="mt-1 text-2xl font-extrabold text-emerald-950">Cómo se calculan los puntos</h3>
             <p className="mt-2 text-sm text-emerald-900">
-              En modo oficial el marcador se puntua por partes. No hay un premio separado por marcador exacto:
+              En modo oficial el marcador se puntúa por partes. No hay un premio separado por marcador exacto:
               el pleno sale de sumar resultado correcto, goles del local, goles del visitante y diferencia de goles.
             </p>
             <div className="mt-4 overflow-x-auto rounded-xl border border-emerald-300 bg-white">
@@ -1328,7 +1372,7 @@ export default function AdminPanelClient({
                     </tr>
                   ))}
                   <tr className="bg-emerald-50 font-black">
-                    <td className="px-3 py-2">Total maximo sin X2 ni goleadores</td>
+                    <td className="px-3 py-2">Total máximo sin X2 ni goleadores</td>
                     <td className="px-3 py-2 text-center">{formatPoints(groupMaxPoints)}</td>
                     <td className="px-3 py-2 text-center">{formatPoints(knockoutMaxPoints)}</td>
                   </tr>
@@ -1350,7 +1394,7 @@ export default function AdminPanelClient({
                 <p className="font-bold text-emerald-900">Ejemplo parcial</p>
                 <p className="mt-1">
                   Si pronosticas 2-0 y termina 3-1, aciertas ganador y diferencia de goles, pero no los goles exactos
-                  de ningun equipo.
+                  de ningún equipo.
                 </p>
                 <p className="mt-2 font-bold">
                   Grupos: {formatPoints(rule.outcomePoints + rule.goalDifferencePoints)}. Eliminatorias:{" "}
@@ -1365,7 +1409,7 @@ export default function AdminPanelClient({
             disabled={busy}
             className="wc-button-primary mt-5 px-5 py-3 text-sm disabled:opacity-60"
           >
-            Guardar configuracion
+            Guardar configuración
           </button>
         </section>
 
@@ -1373,9 +1417,9 @@ export default function AdminPanelClient({
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="wc-eyebrow">Vista del usuario</p>
-              <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Navegacion y modulos</h2>
+              <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Navegación y módulos</h2>
               <p className="mt-2 max-w-3xl text-sm text-zinc-700">
-                Estos cambios ajustan lo que ven los usuarios en la pantalla de pronosticos sin modificar puntajes,
+                Estos cambios ajustan lo que ven los usuarios en la pantalla de pronósticos sin modificar puntajes,
                 resultados ni predicciones guardadas.
               </p>
             </div>
@@ -1383,16 +1427,16 @@ export default function AdminPanelClient({
               href="/pronostico"
               className="rounded-xl border border-cyan-300 bg-cyan-50 px-4 py-2 text-center text-xs font-semibold uppercase tracking-[0.08em] text-cyan-800 hover:bg-cyan-100"
             >
-              Ver pronostico
+              Ver pronóstico
             </Link>
           </div>
 
           <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
             <label className="flex min-h-28 items-start justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-4 text-zinc-900">
               <span>
-                <span className="block text-sm font-black uppercase tracking-[0.1em]">Tabla de posiciones de paises</span>
+                <span className="block text-sm font-black uppercase tracking-[0.1em]">Tabla de posiciones de países</span>
                 <span className="mt-2 block text-sm text-zinc-700">
-                  Muestra u oculta la seccion de fase de grupos y su acceso directo. El ranking de apostadores sigue
+                  Muestra u oculta la sección de fase de grupos y su acceso directo. El ranking de apostadores sigue
                   visible y se calcula igual.
                 </span>
               </span>
@@ -1401,7 +1445,7 @@ export default function AdminPanelClient({
                 checked={uiConfig.groupStandingsVisible}
                 onChange={(e) => setUiConfig((v) => ({ ...v, groupStandingsVisible: e.target.checked }))}
                 className="mt-1 h-5 w-5 shrink-0"
-                aria-label="Mostrar tabla de posiciones de paises"
+                aria-label="Mostrar tabla de posiciones de países"
               />
             </label>
 
@@ -1417,7 +1461,7 @@ export default function AdminPanelClient({
               <p className="mt-2 text-sm font-semibold">
                 {uiConfig.groupStandingsVisible
                   ? "Los usuarios pueden consultar posiciones por grupo."
-                  : "Los usuarios no veran la tabla de paises ni su acceso rapido."}
+                  : "Los usuarios no verán la tabla de países ni su acceso rápido."}
               </p>
             </div>
           </div>
@@ -1434,7 +1478,7 @@ export default function AdminPanelClient({
 
         <section id="admin-bonos" className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
           <p className="wc-eyebrow">Bonificaciones</p>
-          <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Modulos</h2>
+          <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Módulos</h2>
           <p className="mt-2 text-sm text-zinc-700">
             Cambios aplican solo a partidos con kickoff posterior a la vigencia efectiva.
           </p>
@@ -1447,7 +1491,7 @@ export default function AdminPanelClient({
               <p className="text-sm font-bold text-zinc-900">X2</p>
               <p className="mt-1 text-xs text-zinc-600">
                 Duplica el puntaje base del partido cuando el usuario lo activa antes del cierre. Si el usuario hace
-                0 puntos base, el X2 se devuelve automaticamente.
+                0 puntos base, el X2 se devuelve automáticamente.
               </p>
               <label className="mt-2 flex items-center justify-between text-sm text-zinc-700">
                 Activar global
@@ -1469,8 +1513,8 @@ export default function AdminPanelClient({
                 />
               </label>
               <div className="mt-3 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-900">
-                <p className="font-bold">Limites en grupos</p>
-                <p>Total de usos configurado aqui, maximo 4 por fecha y maximo 1 por dia de partidos.</p>
+                <p className="font-bold">Límites en grupos</p>
+                <p>Total de usos configurado aquí, máximo 4 por fecha y máximo 1 por día de partidos.</p>
                 <p>Ejemplo: si un pleno vale {formatPoints(groupMaxPoints)}, con X2 vale {formatPoints(groupMaxPoints * 2)}.</p>
               </div>
             </div>
@@ -1479,7 +1523,7 @@ export default function AdminPanelClient({
               <p className="text-sm font-bold text-zinc-900">Goleadores</p>
               <p className="mt-1 text-xs text-zinc-600">
                 Suma puntos extra por cada slot de goleador acertado. Los goleadores no se duplican con X2; se suman al
-                total despues del puntaje base.
+                total después del puntaje base.
               </p>
               <label className="mt-2 flex items-center justify-between text-sm text-zinc-700">
                 Activar global
@@ -1503,8 +1547,8 @@ export default function AdminPanelClient({
                 />
               </label>
               <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-                <p className="font-bold">Como se usa</p>
-                <p>Si el usuario pronostica 2 goles para una seleccion, aparecen 2 espacios para elegir goleadores.</p>
+                <p className="font-bold">Cómo se usa</p>
+                <p>Si el usuario pronostica 2 goles para una selección, aparecen 2 espacios para elegir goleadores.</p>
                 <p>Cada espacio acertado suma {formatPoints(bonusConfig.scorerPoint)}.</p>
               </div>
             </div>
@@ -1580,22 +1624,22 @@ export default function AdminPanelClient({
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="wc-eyebrow">Plantillas</p>
-              <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Jugadores por seleccion</h2>
+              <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Jugadores por selección</h2>
             </div>
             <div className="flex flex-wrap items-end gap-2">
               <label className="text-sm text-zinc-700">
-                Seleccion
+                Selección
                 <select
                   className="wc-input mt-1 min-w-[180px] px-3 py-2 text-sm"
                   value={selectedTeamCode}
                   onChange={(e) => setSelectedTeamCode(e.target.value)}
                 >
                   {teamCodeOptions.length === 0 ? (
-                    <option value="">Sin codigos</option>
+                    <option value="">Sin códigos</option>
                   ) : (
                     teamCodeOptions.map((code) => (
                       <option key={code} value={code}>
-                        {code} - {teamCodeLabelMap.get(code) ?? "Seleccion"}
+                        {code} - {teamCodeLabelMap.get(code) ?? "Selección"}
                       </option>
                     ))
                   )}
@@ -1627,10 +1671,10 @@ export default function AdminPanelClient({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.1em] text-zinc-600">
-                    {selectedTeamLabel || "Seleccion no elegida"}
+                    {selectedTeamLabel || "Selección no elegida"}
                   </p>
                   <p className="text-sm font-bold text-zinc-900">
-                    {cleanedTeamPlayers.length} / 26 validos
+                    {cleanedTeamPlayers.length} / 26 válidos
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -1735,7 +1779,7 @@ export default function AdminPanelClient({
                 value={bulkPlayersInput}
                 onChange={(e) => setBulkPlayersInput(e.target.value)}
                 rows={8}
-                placeholder={"10 Juan Perez\n9 Maria Gomez\nRodrigo Martinez"}
+                placeholder={"10 Juan Pérez\n9 María Gómez\nRodrigo Martínez"}
                 className="wc-input mt-3 w-full px-3 py-2 text-sm"
               />
               <div className="mt-2 grid gap-2">
@@ -1775,7 +1819,7 @@ export default function AdminPanelClient({
             {(
               [
                 ["APROBADO", "Aprobados"],
-                ["EN_REVISION", "En revision"],
+                ["EN_REVISION", "En revisión"],
                 ["SIN_COMPROBANTE", "Sin comprobante"],
                 ["RECHAZADO", "Rechazados"],
               ] as const
@@ -1874,7 +1918,7 @@ export default function AdminPanelClient({
                         </div>
                       ) : (
                         <p className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-600">
-                          Este usuario aun no tiene comprobantes cargados.
+                          Este usuario aún no tiene comprobantes cargados.
                         </p>
                       )}
                     </div>
@@ -1887,7 +1931,7 @@ export default function AdminPanelClient({
                         <FileUploadField
                           id={`admin-user-proof-${u.id}`}
                           label="Subir comprobante"
-                          hint="JPG, PNG o PDF. Al subirlo queda en revision."
+                          hint="JPG, PNG o PDF. Al subirlo queda en revisión."
                           accept=".jpg,.jpeg,.png,.pdf"
                           file={proofFileByUser[u.id] ?? null}
                           onChange={(file) =>
@@ -1913,7 +1957,7 @@ export default function AdminPanelClient({
                             disabled={busy || u.paymentStatus === "EN_REVISION"}
                             className="rounded-xl border border-amber-300 bg-amber-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-amber-800 hover:bg-amber-200 disabled:opacity-50"
                           >
-                            A revision
+                            A revisión
                           </button>
                           <button
                             type="button"
@@ -2037,7 +2081,7 @@ export default function AdminPanelClient({
                           <option value="">Mantener / manual</option>
                           {teamCodeOptions.map((code) => (
                             <option key={`home-${match.id}-${code}`} value={code}>
-                              {code} - {teamCodeLabelMap.get(code) ?? "Seleccion"}
+                              {code} - {teamCodeLabelMap.get(code) ?? "Selección"}
                             </option>
                           ))}
                         </select>
@@ -2063,7 +2107,7 @@ export default function AdminPanelClient({
                           <option value="">Mantener / manual</option>
                           {teamCodeOptions.map((code) => (
                             <option key={`away-${match.id}-${code}`} value={code}>
-                              {code} - {teamCodeLabelMap.get(code) ?? "Seleccion"}
+                              {code} - {teamCodeLabelMap.get(code) ?? "Selección"}
                             </option>
                           ))}
                         </select>
@@ -2080,8 +2124,8 @@ export default function AdminPanelClient({
                         />
                       </label>
                       <p className="md:col-span-2 text-xs text-cyan-900">
-                        Para cruces con terceros de grupo, asigna aqui los equipos reales cuando FIFA confirme la
-                        combinacion. Si el partido se define por penales, guarda el empate de 90 minutos y asigna
+                        Para cruces con terceros de grupo, asigna aquí los equipos reales cuando FIFA confirme la
+                        combinación. Si el partido se define por penales, guarda el empate de 90 minutos y asigna
                         manualmente el clasificado en el siguiente cruce.
                       </p>
                     </div>
@@ -2340,7 +2384,7 @@ export default function AdminPanelClient({
           <div className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h2 className="wc-title text-3xl text-zinc-950 sm:text-4xl">Pagos - Configuracion</h2>
+                <h2 className="wc-title text-3xl text-zinc-950 sm:text-4xl">Pagos - Configuración</h2>
                 <p className="mt-1 text-sm text-zinc-700">
                   Publica el QR activo, monto e instrucciones para el registro.
                 </p>
@@ -2417,7 +2461,7 @@ export default function AdminPanelClient({
                         className="max-h-44 w-auto rounded-lg object-contain"
                       />
                     ) : (
-                      <p className="text-center text-sm text-zinc-500">Todavia no hay QR publicado.</p>
+                      <p className="text-center text-sm text-zinc-500">Todavía no hay QR publicado.</p>
                     )}
                   </div>
                 </div>
@@ -2429,7 +2473,7 @@ export default function AdminPanelClient({
                 </p>
                 <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
                   <label className="text-xs text-zinc-600">
-                    Posicion X
+                    Posición X
                     <input
                       type="number"
                       className="wc-input mt-1 px-3 py-2 text-sm"
@@ -2438,7 +2482,7 @@ export default function AdminPanelClient({
                     />
                   </label>
                   <label className="text-xs text-zinc-600">
-                    Posicion Y
+                    Posición Y
                     <input
                       type="number"
                       className="wc-input mt-1 px-3 py-2 text-sm"
@@ -2484,14 +2528,14 @@ export default function AdminPanelClient({
                 disabled={busy}
                 className="wc-button-primary px-5 py-3 text-sm disabled:opacity-60"
               >
-                Guardar configuracion de pago
+                Guardar configuración de pago
               </button>
             </div>
           </div>
 
           <div id="admin-comprobantes" className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
             <h2 className="wc-title text-3xl text-zinc-950 sm:text-4xl">
-              Pagos - Comprobantes ({proofs.filter((p) => p.status === "EN_REVISION").length} en revision)
+              Pagos - Comprobantes ({proofs.filter((p) => p.status === "EN_REVISION").length} en revisión)
             </h2>
             <div className="mt-4 max-h-[460px] space-y-3 overflow-auto pr-1">
               {proofs.length === 0 ? (

@@ -41,7 +41,7 @@ type ApiError = { error?: { message?: string } };
 
 function paymentLabel(status: PaymentStatus) {
   if (status === "APROBADO") return "Aprobado";
-  if (status === "EN_REVISION") return "En revision";
+  if (status === "EN_REVISION") return "En revisión";
   if (status === "RECHAZADO") return "Rechazado";
   return "Sin comprobante";
 }
@@ -115,7 +115,7 @@ export default function CompleteProfileClient({ user, paymentConfig, latestProof
         setError(await extractApiMessage(res));
         return;
       }
-      setMessage("Comprobante enviado. Tu pago queda en revision.");
+      setMessage("Comprobante enviado. Tu pago queda en revisión.");
       setProofFile(null);
       router.refresh();
     } finally {
@@ -139,11 +139,11 @@ export default function CompleteProfileClient({ user, paymentConfig, latestProof
               <h1 className="wc-title mt-2 text-6xl text-zinc-950">Completa tu registro</h1>
               <p className="mt-3 max-w-2xl text-sm text-zinc-700 sm:text-base">
                 Configura tu perfil final y valida el pago para habilitar el acceso completo a los
-                pronosticos.
+                pronósticos.
               </p>
             </div>
             <button type="button" onClick={onLogout} className="wc-button-secondary px-4 py-2 text-sm">
-              Cerrar sesion
+              Cerrar sesión
             </button>
           </div>
           <div className={`mt-4 inline-flex rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.15em] ${paymentBadge(user.paymentStatus)}`}>
@@ -210,7 +210,7 @@ export default function CompleteProfileClient({ user, paymentConfig, latestProof
               </p>
               <p className="mt-2 text-sm text-zinc-700">
                 {paymentConfig?.instructions ??
-                  "Realiza el pago y sube tu comprobante para validacion del administrador."}
+                  "Realiza el pago y sube tu comprobante para validación del administrador."}
               </p>
               {paymentConfig?.qrBlobUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -220,17 +220,17 @@ export default function CompleteProfileClient({ user, paymentConfig, latestProof
                   className="mt-4 h-48 w-48 rounded-xl border border-zinc-300 bg-white object-contain"
                 />
               ) : (
-                <p className="mt-3 text-sm text-amber-700">El admin aun no ha publicado un QR.</p>
+                <p className="mt-3 text-sm text-amber-700">El admin aún no ha publicado un QR.</p>
               )}
             </section>
 
             <form onSubmit={onUploadProof} className="wc-card-soft rounded-[1.7rem] p-5 sm:p-6">
-              <p className="wc-eyebrow">Validacion</p>
+              <p className="wc-eyebrow">Validación</p>
               <h3 className="wc-title mt-2 text-4xl text-zinc-950">Subir comprobante</h3>
-              <p className="mt-1 text-sm text-zinc-700">Permitidos: JPG, PNG, PDF (max 8 MB).</p>
+              <p className="mt-1 text-sm text-zinc-700">Permitidos: JPG, PNG, PDF (máx. 8 MB).</p>
               {latestProof ? (
                 <p className="mt-2 text-xs text-zinc-600">
-                  Ultimo estado: {paymentLabel(latestProof.status)} - {" "}
+                  Último estado: {paymentLabel(latestProof.status)} - {" "}
                   <a href={latestProof.blobUrl} target="_blank" rel="noreferrer" className="text-blue-700 underline">
                     Ver archivo
                   </a>
@@ -242,7 +242,7 @@ export default function CompleteProfileClient({ user, paymentConfig, latestProof
               <FileUploadField
                 id="complete-profile-proof-file"
                 label="Adjuntar comprobante"
-                hint="Permitidos: JPG, PNG, PDF (max. 8 MB)."
+                hint="Permitidos: JPG, PNG, PDF (máx. 8 MB)."
                 accept=".jpg,.jpeg,.png,.pdf"
                 file={proofFile}
                 onChange={setProofFile}

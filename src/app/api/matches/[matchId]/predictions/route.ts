@@ -19,10 +19,10 @@ export async function GET(
   try {
     const user = await requireAuth();
     if (user.role !== UserRole.ADMIN && !isUserProfileComplete(user)) {
-      throw new ApiError(403, "FORBIDDEN", "Debes completar tu registro antes de ver pronosticos.");
+      throw new ApiError(403, "FORBIDDEN", "Debes completar tu registro antes de ver pronósticos.");
     }
     if (user.role !== UserRole.ADMIN && user.paymentStatus !== PaymentStatus.APROBADO) {
-      throw new ApiError(403, "FORBIDDEN", "Tu pago aun no esta aprobado.");
+      throw new ApiError(403, "FORBIDDEN", "Tu pago aún no está aprobado.");
     }
 
     const { matchId } = await context.params;
@@ -48,7 +48,7 @@ export async function GET(
       throw new ApiError(404, "NOT_FOUND", "Partido no encontrado.");
     }
     if (!rule) {
-      throw new ApiError(500, "INTERNAL_ERROR", "No existe configuracion de puntaje.");
+      throw new ApiError(500, "INTERNAL_ERROR", "No existe configuración de puntaje.");
     }
 
     const now = Date.now();
@@ -60,7 +60,7 @@ export async function GET(
       throw new ApiError(
         403,
         "FORBIDDEN",
-        "Los pronosticos de todos se muestran solo cuando el partido ya inicio y esta cerrado.",
+        "Los pronósticos de todos se muestran solo cuando el partido ya inició y está cerrado.",
       );
     }
 
