@@ -398,6 +398,9 @@ export default async function PronosticoPage() {
     bestPosition: number;
     positionGain: number;
     scoreLine: string | null;
+    ownScoreLine: string | null;
+    liveScoreLine: string | null;
+    recommendedDiffersFromPick: boolean;
     ownPoints: number;
     ownBasePoints: number;
     ownUsesX2: boolean;
@@ -611,7 +614,26 @@ export default async function PronosticoPage() {
     includeLiveMatches: false,
     started: finalizedMatchesForRanking.length > 0,
   });
-  const cutoffPositionByUser = new Map(cutoffBettorStandings.map((row) => [row.userId, row.position]));
+  const latestFinalizedMatch = finalizedMatchesForRanking.at(-1) ?? null;
+  const previousFinalizedMatch = finalizedMatchesForRanking.at(-2) ?? null;
+  const movementReferencePredictionRows =
+    hasLiveMatches || !latestFinalizedMatch
+      ? finalizedPredictionRowsForMovement
+      : finalizedPredictionRowsForMovement.filter((row) => row.matchId !== latestFinalizedMatch.id);
+  const movementReferenceStandings = buildBettorStandings(movementReferencePredictionRows, {
+    includeLiveMatches: false,
+    started: hasLiveMatches ? finalizedMatchesForRanking.length > 0 : finalizedMatchesForRanking.length > 1,
+  });
+  const movementPositionByUser = new Map(movementReferenceStandings.map((row) => [row.userId, row.position]));
+  const movementReferenceLabel = hasLiveMatches
+    ? latestFinalizedMatch
+      ? `Ultimo final P${latestFinalizedMatch.matchNumber}`
+      : "Antes del live"
+    : latestFinalizedMatch
+      ? previousFinalizedMatch
+        ? `Antes de P${latestFinalizedMatch.matchNumber}`
+        : "Antes del primer final"
+      : "Inicio";
   const lastFiveFinalMatches = finalizedMatchesForRanking.slice(-5);
   const predictionByUserMatch = new Map(
     allPredictionsForStandings.map((row) => [`${row.userId}:${row.matchId}`, row]),
@@ -803,7 +825,19 @@ export default async function PronosticoPage() {
     };
   }
 
+  function isSameScore(
+    left: { homeScore: number; awayScore: number },
+    right: { homeScore: number; awayScore: number },
+  ) {
+    return left.homeScore === right.homeScore && left.awayScore === right.awayScore;
+  }
+
   function buildScenarioScoreCandidates(matchId: string, ownPrediction: StandingPredictionRow) {
+    const match = matches.find((item) => item.id === matchId);
+    const minHomeScore =
+      match?.status === "LIVE" && match.homeScore !== null ? match.homeScore : 0;
+    const minAwayScore =
+      match?.status === "LIVE" && match.awayScore !== null ? match.awayScore : 0;
     const matchPredictions = allPredictionsForStandings.filter((prediction) => prediction.matchId === matchId);
     const maxPredictedGoals = Math.max(
       ownPrediction.homeScore,
@@ -811,17 +845,25 @@ export default async function PronosticoPage() {
       ...matchPredictions.flatMap((prediction) => [prediction.homeScore, prediction.awayScore]),
       6,
     );
-    const maxGoals = Math.min(12, Math.max(6, maxPredictedGoals + 2));
+    const maxGoals = Math.max(
+      minHomeScore,
+      minAwayScore,
+      Math.min(12, Math.max(6, maxPredictedGoals + 2)),
+    );
     const scoreKeys = new Set<string>();
-    for (let home = 0; home <= maxGoals; home += 1) {
-      for (let away = 0; away <= maxGoals; away += 1) {
+    for (let home = minHomeScore; home <= maxGoals; home += 1) {
+      for (let away = minAwayScore; away <= maxGoals; away += 1) {
         scoreKeys.add(`${home}:${away}`);
       }
     }
     for (const prediction of matchPredictions) {
-      scoreKeys.add(`${prediction.homeScore}:${prediction.awayScore}`);
+      if (prediction.homeScore >= minHomeScore && prediction.awayScore >= minAwayScore) {
+        scoreKeys.add(`${prediction.homeScore}:${prediction.awayScore}`);
+      }
     }
-    scoreKeys.add(`${ownPrediction.homeScore}:${ownPrediction.awayScore}`);
+    if (ownPrediction.homeScore >= minHomeScore && ownPrediction.awayScore >= minAwayScore) {
+      scoreKeys.add(`${ownPrediction.homeScore}:${ownPrediction.awayScore}`);
+    }
     return Array.from(scoreKeys).map((key) => {
       const [homeScore, awayScore] = key.split(":").map(Number);
       return { homeScore, awayScore };
@@ -874,6 +916,14 @@ export default async function PronosticoPage() {
         bestPosition: currentCutPosition,
         positionGain: 0,
         scoreLine: null,
+        ownScoreLine: null,
+        liveScoreLine:
+          nextRankingMatch.status === "LIVE" &&
+          nextRankingMatch.homeScore !== null &&
+          nextRankingMatch.awayScore !== null
+            ? `${nextRankingMatch.homeScore}-${nextRankingMatch.awayScore}`
+            : null,
+        recommendedDiffersFromPick: false,
         ownPoints: 0,
         ownBasePoints: 0,
         ownUsesX2: false,
@@ -903,6 +953,14 @@ export default async function PronosticoPage() {
         bestPosition: currentCutPosition,
         positionGain: 0,
         scoreLine: null,
+        ownScoreLine: null,
+        liveScoreLine:
+          nextRankingMatch.status === "LIVE" &&
+          nextRankingMatch.homeScore !== null &&
+          nextRankingMatch.awayScore !== null
+            ? `${nextRankingMatch.homeScore}-${nextRankingMatch.awayScore}`
+            : null,
+        recommendedDiffersFromPick: false,
         ownPoints: 0,
         ownBasePoints: 0,
         ownUsesX2: false,
@@ -929,7 +987,11 @@ export default async function PronosticoPage() {
       if (
         !best ||
         selectedRow.position < best.selectedRow.position ||
-        (selectedRow.position === best.selectedRow.position && ownImpact.points > best.ownImpact.points)
+        (selectedRow.position === best.selectedRow.position && ownImpact.points > best.ownImpact.points) ||
+        (selectedRow.position === best.selectedRow.position &&
+          ownImpact.points === best.ownImpact.points &&
+          isSameScore(official, { homeScore: ownPrediction.homeScore, awayScore: ownPrediction.awayScore }) &&
+          !isSameScore(best.official, { homeScore: ownPrediction.homeScore, awayScore: ownPrediction.awayScore }))
       ) {
         best = { official, projectedRows, selectedRow, ownImpact };
       }
@@ -938,10 +1000,27 @@ export default async function PronosticoPage() {
     if (!best) return null;
 
     const scoreLine = `${best.official.homeScore}-${best.official.awayScore}`;
+    const ownScoreLine = `${ownPrediction.homeScore}-${ownPrediction.awayScore}`;
+    const liveScoreLine =
+      nextRankingMatch.status === "LIVE" &&
+      nextRankingMatch.homeScore !== null &&
+      nextRankingMatch.awayScore !== null
+        ? `${nextRankingMatch.homeScore}-${nextRankingMatch.awayScore}`
+        : null;
+    const recommendedDiffersFromPick = scoreLine !== ownScoreLine;
     const actions = [
+      `Su pick fue ${ownScoreLine}.`,
+      ...(liveScoreLine
+        ? [`Marcador en vivo actual: ${liveScoreLine}. Solo se simulan finales posibles desde ese marcador.`]
+        : []),
       `Necesita que ${nextRankingMatch.homeTeam} vs ${nextRankingMatch.awayTeam} termine ${scoreLine}.`,
       `Con ese marcador suma ${best.ownImpact.points} pts (${best.ownImpact.basePoints} base${ownPrediction.usedX2 ? " con X2" : ""}).`,
     ];
+    if (recommendedDiffersFromPick) {
+      actions.push(
+        `El escenario optimo no coincide con su pick (${ownScoreLine}) porque tambien se proyectan los puntos y posiciones de los rivales.`,
+      );
+    }
     if (ownPrediction.usedX2) {
       actions.push("Su X2 debe sumar puntos base; si queda en 0 base, se devuelve y no empuja el salto.");
     }
@@ -1007,6 +1086,9 @@ export default async function PronosticoPage() {
       bestPosition: best.selectedRow.position,
       positionGain: Math.max(0, currentCutPosition - best.selectedRow.position),
       scoreLine,
+      ownScoreLine,
+      liveScoreLine,
+      recommendedDiffersFromPick,
       ownPoints: best.ownImpact.points,
       ownBasePoints: best.ownImpact.basePoints,
       ownUsesX2: ownPrediction.usedX2,
@@ -1018,13 +1100,14 @@ export default async function PronosticoPage() {
 
   const baseBettorStandings = buildBettorStandings(allPredictionsForStandings);
   const bettorStandings = baseBettorStandings.map((row) => {
-    const previousPosition = cutoffPositionByUser.get(row.userId) ?? row.position;
+    const previousPosition = movementPositionByUser.get(row.userId) ?? row.position;
     const movement: "UP" | "DOWN" | "SAME" =
       previousPosition > row.position ? "UP" : previousPosition < row.position ? "DOWN" : "SAME";
     const remainingPotentialPoints = calculateRemainingPotential(row.userId, row);
     return {
       ...row,
       previousPosition,
+      movementReferenceLabel,
       movement,
       movementDelta: Math.abs(previousPosition - row.position),
       remainingPotentialPoints,

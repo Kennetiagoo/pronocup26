@@ -116,6 +116,7 @@ type BettorStanding = {
   }>;
   registeredAt: string;
   previousPosition: number;
+  movementReferenceLabel: string;
   movement: "UP" | "DOWN" | "SAME";
   movementDelta: number;
   remainingPotentialPoints: number;
@@ -142,6 +143,9 @@ type BettorStanding = {
     bestPosition: number;
     positionGain: number;
     scoreLine: string | null;
+    ownScoreLine: string | null;
+    liveScoreLine: string | null;
+    recommendedDiffersFromPick: boolean;
     ownPoints: number;
     ownBasePoints: number;
     ownUsesX2: boolean;
@@ -751,6 +755,27 @@ export default function PronosticoClient({
     const timer = window.setInterval(() => setNowMs(Date.now()), 30000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    setMatches(initialMatches);
+  }, [initialMatches]);
+
+  useEffect(() => {
+    if (!hasLiveMatches) return;
+    const refreshLiveData = () => {
+      if (document.visibilityState === "visible") {
+        router.refresh();
+      }
+    };
+    const timer = window.setInterval(refreshLiveData, 15000);
+    return () => window.clearInterval(timer);
+  }, [hasLiveMatches, router]);
+
+  useEffect(() => {
+    setSelectedBettor((current) =>
+      current ? (bettorStandings.find((row) => row.userId === current.userId) ?? null) : null,
+    );
+  }, [bettorStandings]);
 
   const standings = useMemo(
     () => (uiConfig.groupStandingsVisible ? buildStandings(matches) : []),
@@ -1605,7 +1630,9 @@ export default function PronosticoClient({
                           >
                             {movement.label}
                           </span>
-                          <p className="mt-1 text-[10px] text-zinc-500">Corte #{row.previousPosition}</p>
+                          <p className="mt-1 max-w-24 text-[10px] leading-tight text-zinc-500">
+                            {row.movementReferenceLabel}: #{row.previousPosition}
+                          </p>
                         </td>
                         <td className="px-3 py-2">
                           <div className="flex gap-1">
@@ -2436,6 +2463,11 @@ export default function PronosticoClient({
                       P{selectedBettor.nextMatchPath.matchNumber}: {selectedBettor.nextMatchPath.homeTeam} vs{" "}
                       {selectedBettor.nextMatchPath.awayTeam}
                     </h4>
+                    {selectedBettor.nextMatchPath.liveScoreLine ? (
+                      <p className="mt-1 text-sm font-black text-cyan-950">
+                        En vivo: {selectedBettor.nextMatchPath.liveScoreLine}
+                      </p>
+                    ) : null}
                     <p className="mt-1 text-sm font-semibold text-cyan-900">
                       Corte #{selectedBettor.nextMatchPath.currentCutPosition} · mejor posible #
                       {selectedBettor.nextMatchPath.bestPosition}
@@ -2454,6 +2486,39 @@ export default function PronosticoClient({
                     {selectedBettor.nextMatchPath.locked ? "Picks bloqueados" : "Picks abiertos"}
                   </span>
                 </div>
+
+                {selectedBettor.nextMatchPath.hasOwnPrediction ? (
+                  <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                    <div className="rounded-xl border border-cyan-200 bg-white px-3 py-2">
+                      <p className="text-[11px] font-black uppercase tracking-[0.08em] text-cyan-800">Pick usuario</p>
+                      <p className="mt-1 text-2xl font-black text-cyan-950">
+                        {selectedBettor.nextMatchPath.ownScoreLine}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-cyan-200 bg-white px-3 py-2">
+                      <p className="text-[11px] font-black uppercase tracking-[0.08em] text-cyan-800">
+                        Escenario optimo
+                      </p>
+                      <p className="mt-1 text-2xl font-black text-cyan-950">
+                        {selectedBettor.nextMatchPath.scoreLine}
+                      </p>
+                    </div>
+                    <div
+                      className={`rounded-xl border px-3 py-2 ${
+                        selectedBettor.nextMatchPath.recommendedDiffersFromPick
+                          ? "border-amber-200 bg-amber-50"
+                          : "border-emerald-200 bg-emerald-50"
+                      }`}
+                    >
+                      <p className="text-[11px] font-black uppercase tracking-[0.08em] text-cyan-800">Lectura</p>
+                      <p className="mt-1 text-sm font-black text-cyan-950">
+                        {selectedBettor.nextMatchPath.recommendedDiffersFromPick
+                          ? "Recomienda otro marcador por tabla y rivales"
+                          : "El pick del usuario es el mejor escenario"}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="mt-4 grid gap-3 lg:grid-cols-[0.9fr_1.1fr]">
                   <div className="rounded-xl border border-cyan-200 bg-white p-3">
