@@ -19,7 +19,6 @@ export default async function PronosticoPage() {
     redirect("/completar-registro");
   }
   const currentUserId = user.id;
-  const isCurrentUserAdmin = user.role === "ADMIN";
 
   await autoStartLiveMatches();
 
@@ -485,21 +484,29 @@ export default async function PronosticoPage() {
     const standingsStarted = options?.started ?? rankingStarted;
     const totalsByUser = new Map<string, StandingTotals>();
     for (const row of predictionRows) {
-      const liveCalculated =
-        scoringRule &&
+      const isFinalWithScore =
+        row.Match.status === "FINAL" &&
+        row.Match.homeScore !== null &&
+        row.Match.awayScore !== null;
+      const isLiveWithScore =
         includeLiveMatches &&
         row.Match.status === "LIVE" &&
         row.Match.kickoff.getTime() <= serverNowMs &&
         row.Match.homeScore !== null &&
-        row.Match.awayScore !== null
+        row.Match.awayScore !== null;
+      if (!isFinalWithScore && !isLiveWithScore) continue;
+
+      const liveCalculated =
+        scoringRule &&
+        isLiveWithScore
           ? calculatePointsFromSnapshot({
               prediction: {
                 homeScore: row.homeScore,
                 awayScore: row.awayScore,
               },
               official: {
-                homeScore: row.Match.homeScore,
-                awayScore: row.Match.awayScore,
+                homeScore: row.Match.homeScore as number,
+                awayScore: row.Match.awayScore as number,
               },
               rule: scoringRule,
               stage: row.Match.stage,
@@ -539,10 +546,6 @@ export default async function PronosticoPage() {
       else if (basePoints === buckets.p2) current.partialLevel2 += 1;
       else if (basePoints === buckets.p3) current.partialLevel3 += 1;
       else if (basePoints === buckets.p4) current.partialLevel4 += 1;
-      const isFinalWithScore =
-        row.Match.status === "FINAL" &&
-        row.Match.homeScore !== null &&
-        row.Match.awayScore !== null;
       if (isFinalWithScore && row.usedX2) {
         const applied = !row.x2Returned && effectiveBasePoints > 0;
         const consumesGroupQuota = row.Match.stage === "GROUP" && applied;
@@ -619,6 +622,16 @@ export default async function PronosticoPage() {
     return serverNowMs >= match.kickoff.getTime() - scoringRule.lockMinutesBeforeKickoff * 60 * 1000;
   }
 
+  function isPredictionClosedForPrivacy(prediction: StandingPredictionRow) {
+    if (prediction.Match.status !== "SCHEDULED") return true;
+    if (!scoringRule) return false;
+    return serverNowMs >= prediction.Match.kickoff.getTime() - scoringRule.lockMinutesBeforeKickoff * 60 * 1000;
+  }
+
+  function canUsePredictionDetailsForPotential(userId: string, prediction: StandingPredictionRow) {
+    return userId === currentUserId || isPredictionClosedForPrivacy(prediction);
+  }
+
   function x2EnabledForPotential(match: (typeof matches)[number]) {
     if (!bonusConfig.x2EnabledGlobal) return false;
     if (match.kickoff.getTime() <= bonusConfig.activatedAt.getTime()) return false;
@@ -639,7 +652,13 @@ export default async function PronosticoPage() {
     const groupX2Candidates: Array<{ gain: number; matchday: number; kickoffDay: string }> = [];
 
     for (const prediction of allPredictionsForStandings) {
-      if (prediction.userId !== userId || prediction.Match.stage !== "GROUP" || !prediction.usedX2 || prediction.x2Returned) {
+      if (
+        prediction.userId !== userId ||
+        prediction.Match.stage !== "GROUP" ||
+        !prediction.usedX2 ||
+        prediction.x2Returned ||
+        !canUsePredictionDetailsForPotential(userId, prediction)
+      ) {
         continue;
       }
       const matchday = groupMatchdayMap.get(prediction.matchId) ?? 1;
@@ -652,16 +671,21 @@ export default async function PronosticoPage() {
       if (match.status === "FINAL" || match.status === "LIVE") continue;
       const prediction = predictionByUserMatch.get(`${userId}:${match.id}`);
       const locked = isMatchLockedForPotential(match);
-      if (locked && !prediction) continue;
+      const predictionForPotential =
+        prediction && canUsePredictionDetailsForPotential(userId, prediction) ? prediction : null;
+      if (locked && !predictionForPotential) continue;
 
       const baseMax = scoreBucketsForStage(match.stage).max;
-      const scorerPotential = prediction
-        ? prediction.scorerPicks.length * Math.max(0, prediction.scorerPointApplied || bonusConfig.scorerPoint)
+      const scorerPotential = predictionForPotential
+        ? predictionForPotential.scorerPicks.length *
+          Math.max(0, predictionForPotential.scorerPointApplied || bonusConfig.scorerPoint)
         : 0;
-      const savedMultiplier = prediction ? Math.max(1, prediction.appliedMultiplier || (prediction.usedX2 ? 2 : 1)) : 1;
+      const savedMultiplier = predictionForPotential
+        ? Math.max(1, predictionForPotential.appliedMultiplier || (predictionForPotential.usedX2 ? 2 : 1))
+        : 1;
       potential += Math.round(baseMax * savedMultiplier) + scorerPotential;
 
-      if (prediction?.usedX2 || locked || !x2EnabledForPotential(match)) continue;
+      if (predictionForPotential?.usedX2 || locked || !x2EnabledForPotential(match)) continue;
       if (match.stage === "GROUP") {
         groupX2Candidates.push({
           gain: baseMax,
@@ -836,9 +860,36 @@ export default async function PronosticoPage() {
     if (!nextRankingMatch) return null;
     const cutRow = cutoffBettorStandings.find((standingRow) => standingRow.userId === row.userId) ?? row;
     const locked = isScenarioLocked(nextRankingMatch);
-    const canRevealScenarioDetails = locked || row.userId === currentUserId || isCurrentUserAdmin;
-    const ownPrediction = predictionByUserMatch.get(`${row.userId}:${nextRankingMatch.id}`);
     const currentCutPosition = cutRow.position;
+
+    if (!locked) {
+      return {
+        matchNumber: nextRankingMatch.matchNumber,
+        homeTeam: nextRankingMatch.homeTeam,
+        awayTeam: nextRankingMatch.awayTeam,
+        kickoff: nextRankingMatch.kickoff.toISOString(),
+        locked,
+        hasOwnPrediction: false,
+        currentCutPosition,
+        bestPosition: currentCutPosition,
+        positionGain: 0,
+        scoreLine: null,
+        ownPoints: 0,
+        ownBasePoints: 0,
+        ownUsesX2: false,
+        actions: [
+          "El partido sigue abierto: no se calculan escenarios con picks guardados.",
+          "Cuando se bloqueen los picks, se mostrara el mejor escenario sin exponer datos antes de tiempo.",
+        ],
+        rivalConditions: [
+          "Mientras el partido este abierto, los rivales cercanos todavia pueden editar marcador o activar X2.",
+          "El calculo preciso se habilita al bloqueo del partido.",
+        ],
+        note: "Detalle limitado para no revelar picks abiertos de ningun usuario.",
+      };
+    }
+
+    const ownPrediction = predictionByUserMatch.get(`${row.userId}:${nextRankingMatch.id}`);
 
     if (!ownPrediction) {
       return {
@@ -855,20 +906,9 @@ export default async function PronosticoPage() {
         ownPoints: 0,
         ownBasePoints: 0,
         ownUsesX2: false,
-        actions:
-          locked || row.userId === currentUserId || isCurrentUserAdmin
-            ? ["Guardar un pronostico para este partido antes del cierre."]
-            : ["No se muestra si este apostador tiene o no pick mientras el partido siga abierto."],
-        rivalConditions: locked
-          ? ["Sin pick propio no hay salto calculable para el siguiente partido."]
-          : [
-              "Mientras el partido este abierto, los rivales cercanos todavia pueden editar marcador o activar X2.",
-              "Al bloqueo se calculara el escenario con picks finales sin exponerlos antes de tiempo.",
-            ],
-        note:
-          locked || row.userId === currentUserId || isCurrentUserAdmin
-            ? "No tiene pick guardado para el siguiente partido."
-            : "Detalle limitado para no revelar picks abiertos de otros usuarios.",
+        actions: ["No tiene pick guardado para este partido."],
+        rivalConditions: ["Sin pick propio no hay salto calculable para el siguiente partido."],
+        note: "No tiene pick guardado para el siguiente partido.",
       };
     }
 
@@ -898,19 +938,12 @@ export default async function PronosticoPage() {
     if (!best) return null;
 
     const scoreLine = `${best.official.homeScore}-${best.official.awayScore}`;
-    const actions = canRevealScenarioDetails
-      ? [
-          `Necesita que ${nextRankingMatch.homeTeam} vs ${nextRankingMatch.awayTeam} termine ${scoreLine}.`,
-          `Con ese marcador suma ${best.ownImpact.points} pts (${best.ownImpact.basePoints} base${ownPrediction.usedX2 ? " con X2" : ""}).`,
-        ]
-      : [
-          "El partido sigue abierto: no se muestran marcadores guardados de otros apostadores.",
-          "Para mejorar necesita un acierto alto en el siguiente partido y cuidar el uso de X2 si tiene cupo.",
-        ];
-    if (canRevealScenarioDetails && ownPrediction.usedX2) {
+    const actions = [
+      `Necesita que ${nextRankingMatch.homeTeam} vs ${nextRankingMatch.awayTeam} termine ${scoreLine}.`,
+      `Con ese marcador suma ${best.ownImpact.points} pts (${best.ownImpact.basePoints} base${ownPrediction.usedX2 ? " con X2" : ""}).`,
+    ];
+    if (ownPrediction.usedX2) {
       actions.push("Su X2 debe sumar puntos base; si queda en 0 base, se devuelve y no empuja el salto.");
-    } else if (canRevealScenarioDetails && !locked && nextRankingMatch.stage === "GROUP" && x2EnabledForPotential(nextRankingMatch)) {
-      actions.push("Si aun esta abierto y tiene cupo, activar X2 puede subir el techo del escenario.");
     }
 
     const projectedByUser = new Map(best.projectedRows.map((projectedRow) => [projectedRow.userId, projectedRow]));
@@ -936,38 +969,32 @@ export default async function PronosticoPage() {
       })
       .slice(0, 8);
 
-    const rivalConditions = canRevealScenarioDetails
-      ? relevantRivals.map(({ cut, projected, prediction }) => {
-          const name = displayName(cut);
-          const relation =
-            projected.position < selectedProjected.position
-              ? `queda por encima (#${projected.position})`
-              : projected.position === selectedProjected.position
-                ? `comparte la posicion #${projected.position}`
-                : `queda detras (#${projected.position})`;
-          if (!prediction) {
-            return `${name} no tiene pick en este partido; se queda en ${projected.totalPoints} pts y ${relation}.`;
-          }
-          const impact = scenarioImpact(prediction, nextRankingMatch, best.official);
-          const pickText = `puso ${prediction.homeScore}-${prediction.awayScore}`;
-          const x2Text = prediction.usedX2
-            ? impact.basePoints > 0
-              ? " con X2 aplicado"
-              : " con X2 devuelto"
-            : "";
-          const hitText =
-            impact.basePoints >= maxBase
-              ? "tambien hace pleno"
-              : impact.points > 0
-                ? "suma parcial"
-                : "no suma";
-          return `${name} ${pickText}: ${hitText}${x2Text}, agrega ${impact.points} pts, llega a ${projected.totalPoints} pts y ${relation}.`;
-        })
-      : [
-          "No se revelan picks de otros usuarios mientras el partido siga abierto.",
-          "Para subir, los rivales cercanos no deberian combinar acierto alto con X2.",
-          "Al bloqueo se recalculan nombres, marcadores y X2 con datos finales de esa fecha.",
-        ];
+    const rivalConditions = relevantRivals.map(({ cut, projected, prediction }) => {
+      const name = displayName(cut);
+      const relation =
+        projected.position < selectedProjected.position
+          ? `queda por encima (#${projected.position})`
+          : projected.position === selectedProjected.position
+            ? `comparte la posicion #${projected.position}`
+            : `queda detras (#${projected.position})`;
+      if (!prediction) {
+        return `${name} no tiene pick en este partido; se queda en ${projected.totalPoints} pts y ${relation}.`;
+      }
+      const impact = scenarioImpact(prediction, nextRankingMatch, best.official);
+      const pickText = `puso ${prediction.homeScore}-${prediction.awayScore}`;
+      const x2Text = prediction.usedX2
+        ? impact.basePoints > 0
+          ? " con X2 aplicado"
+          : " con X2 devuelto"
+        : "";
+      const hitText =
+        impact.basePoints >= maxBase
+          ? "tambien hace pleno"
+          : impact.points > 0
+            ? "suma parcial"
+            : "no suma";
+      return `${name} ${pickText}: ${hitText}${x2Text}, agrega ${impact.points} pts, llega a ${projected.totalPoints} pts y ${relation}.`;
+    });
 
     return {
       matchNumber: nextRankingMatch.matchNumber,
@@ -979,15 +1006,13 @@ export default async function PronosticoPage() {
       currentCutPosition,
       bestPosition: best.selectedRow.position,
       positionGain: Math.max(0, currentCutPosition - best.selectedRow.position),
-      scoreLine: canRevealScenarioDetails ? scoreLine : null,
-      ownPoints: canRevealScenarioDetails ? best.ownImpact.points : 0,
-      ownBasePoints: canRevealScenarioDetails ? best.ownImpact.basePoints : 0,
+      scoreLine,
+      ownPoints: best.ownImpact.points,
+      ownBasePoints: best.ownImpact.basePoints,
       ownUsesX2: ownPrediction.usedX2,
       actions,
       rivalConditions,
-      note: canRevealScenarioDetails
-        ? "Calculado evaluando todos los marcadores candidatos contra todos los picks disponibles. No incluye puntos de goleadores, porque dependen de anotadores oficiales."
-        : "Detalle limitado para no revelar picks abiertos de otros usuarios; el calculo preciso se muestra al bloqueo.",
+      note: "Calculado evaluando todos los marcadores candidatos contra todos los picks disponibles. No incluye puntos de goleadores, porque dependen de anotadores oficiales.",
     };
   }
 

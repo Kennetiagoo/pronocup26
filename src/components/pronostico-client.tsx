@@ -263,7 +263,7 @@ type RevealedPredictionsModalState = {
   predictions: RevealedPredictionRow[];
 };
 
-type PickFilter = "ALL" | "PENDING" | "SAVED" | "OPEN";
+type PickFilter = "LIVE" | "ALL" | "PENDING" | "SAVED" | "OPEN";
 
 const DEFAULT_ENTRY_FEE_COP = 50000;
 const PRIZE_TIERS = [
@@ -853,6 +853,11 @@ export default function PronosticoClient({
   );
   const pickFilterOptions = useMemo(
     () => [
+      {
+        key: "LIVE" as const,
+        label: "En vivo",
+        count: visibleMatches.filter((match) => match.status === "LIVE").length,
+      },
       { key: "ALL" as const, label: "Todos", count: visibleMatches.length },
       {
         key: "PENDING" as const,
@@ -890,6 +895,9 @@ export default function PronosticoClient({
     }
     if (activePickFilter === "OPEN") {
       scoped = scoped.filter((match) => !isLocked(match));
+    }
+    if (activePickFilter === "LIVE") {
+      scoped = scoped.filter((match) => match.status === "LIVE");
     }
     return scoped;
   }, [visibleMatches, activeStage, activeGroup, activePickFilter, isLocked]);
