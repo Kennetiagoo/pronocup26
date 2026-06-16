@@ -1298,7 +1298,7 @@ export default function PronosticoClient({
                 showOpenMatches(nextActionMatch ?? undefined);
                 setQuickMenuOpen(false);
               }}
-              className="min-w-0 flex-1 rounded-2xl border border-cyan-300 bg-cyan-50 px-3 py-2 text-left text-sm font-bold text-cyan-950"
+              className="min-w-0 flex-1 rounded-2xl border border-cyan-300 bg-cyan-50 px-3 py-2 text-center text-sm font-bold text-cyan-950"
             >
               {nextActionMatch ? `P${nextActionMatch.matchNumber}` : "Listo"} - {pendingMatchCount} pendientes
             </button>
@@ -1322,7 +1322,7 @@ export default function PronosticoClient({
                   showOpenMatches(nextActionMatch ?? undefined);
                   setQuickMenuOpen(false);
                 }}
-                className="rounded-2xl border border-cyan-200 bg-cyan-50 px-3 py-3 text-left text-sm font-bold text-cyan-950"
+                className="flex-col gap-1 rounded-2xl border border-cyan-200 bg-cyan-50 px-3 py-3 text-center text-sm font-bold text-cyan-950"
               >
                 Próximo partido
                 <span className="block text-xs font-semibold text-zinc-500">
@@ -1335,7 +1335,7 @@ export default function PronosticoClient({
                   showPickFilter("PENDING");
                   setQuickMenuOpen(false);
                 }}
-                className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3 text-left text-sm font-bold text-amber-950"
+                className="flex-col gap-1 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3 text-center text-sm font-bold text-amber-950"
               >
                 Pendientes
                 <span className="block text-xs font-semibold text-zinc-500">{pendingMatchCount} picks</span>
@@ -1350,7 +1350,7 @@ export default function PronosticoClient({
                   }
                   setQuickMenuOpen(false);
                 }}
-                className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-3 text-left text-sm font-bold text-rose-950"
+                className="flex-col gap-1 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-3 text-center text-sm font-bold text-rose-950"
               >
                 En vivo
                 <span className="block text-xs font-semibold text-zinc-500">{liveMatchCount} partidos</span>
@@ -1361,7 +1361,7 @@ export default function PronosticoClient({
                   scrollToSection("mis-picks");
                   setQuickMenuOpen(false);
                 }}
-                className="rounded-2xl border border-zinc-200 bg-white px-3 py-3 text-left text-sm font-bold text-zinc-950"
+                className="flex-col gap-1 rounded-2xl border border-zinc-200 bg-white px-3 py-3 text-center text-sm font-bold text-zinc-950"
               >
                 Mis picks
                 <span className="block text-xs font-semibold text-zinc-500">
@@ -1374,7 +1374,7 @@ export default function PronosticoClient({
                   scrollToSection("ranking");
                   setQuickMenuOpen(false);
                 }}
-                className="rounded-2xl border border-blue-200 bg-blue-50 px-3 py-3 text-left text-sm font-bold text-blue-950"
+                className="flex-col gap-1 rounded-2xl border border-blue-200 bg-blue-50 px-3 py-3 text-center text-sm font-bold text-blue-950"
               >
                 Ranking
                 <span className="block text-xs font-semibold text-zinc-500">{bettorStandings.length} jugadores</span>
@@ -1386,7 +1386,7 @@ export default function PronosticoClient({
                     scrollToSection("tabla-grupos");
                     setQuickMenuOpen(false);
                   }}
-                  className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-left text-sm font-bold text-emerald-950"
+                  className="flex-col gap-1 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-center text-sm font-bold text-emerald-950"
                 >
                   Países
                   <span className="block text-xs font-semibold text-zinc-500">{standings.length} tablas</span>
@@ -1399,7 +1399,7 @@ export default function PronosticoClient({
                     scrollToSection("pago");
                     setQuickMenuOpen(false);
                   }}
-                  className="rounded-2xl border border-violet-200 bg-violet-50 px-3 py-3 text-left text-sm font-bold text-violet-950"
+                  className="flex-col gap-1 rounded-2xl border border-violet-200 bg-violet-50 px-3 py-3 text-center text-sm font-bold text-violet-950"
                 >
                   Pago
                   <span className="block text-xs font-semibold text-zinc-500">{paymentLabel(user.paymentStatus)}</span>
@@ -1409,7 +1409,7 @@ export default function PronosticoClient({
                 <Link
                   href="/admin"
                   onClick={() => setQuickMenuOpen(false)}
-                  className="rounded-2xl border border-zinc-200 bg-white px-3 py-3 text-left text-sm font-bold text-zinc-950"
+                  className="flex-col gap-1 rounded-2xl border border-zinc-200 bg-white px-3 py-3 text-center text-sm font-bold text-zinc-950"
                 >
                   Admin
                   <span className="block text-xs font-semibold text-zinc-500">Panel</span>
@@ -1870,7 +1870,7 @@ export default function PronosticoClient({
           </section>
         ) : null}
 
-        <section id="mis-picks">
+        <section id="mis-picks" className="pt-3 sm:pt-4">
           <div className="wc-filter-sticky mb-3 flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white/95 p-3 shadow-[0_6px_18px_rgba(0,0,0,0.07)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="wc-eyebrow">Mis picks</p>
@@ -2473,15 +2473,15 @@ export default function PronosticoClient({
         </div>
       ) : null}
       {selectedBettor ? (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-4 py-6">
-          <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
+        <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/45 px-3 py-4 sm:items-center sm:px-4 sm:py-6">
+          <div className="w-full max-w-[390px] rounded-[1.8rem] border border-white/80 bg-white p-3 shadow-[0_20px_50px_rgba(0,0,0,0.35)] sm:max-h-[92vh] sm:max-w-3xl sm:overflow-y-auto sm:p-5">
+            <div className="rounded-2xl border border-blue-100 bg-[linear-gradient(180deg,rgba(239,247,255,0.98),rgba(255,255,255,0.96))] p-4 text-center sm:flex sm:items-start sm:justify-between sm:gap-3 sm:text-left">
+              <div className="min-w-0">
                 <p className="wc-eyebrow text-zinc-700">Camino al podio</p>
-                <h3 className="wc-title mt-1 text-3xl text-zinc-950">
+                <h3 className="wc-title mt-1 break-words text-2xl text-zinc-950 sm:text-3xl">
                   {(selectedBettor.username || `${selectedBettor.nombres} ${selectedBettor.apellidos}`).toUpperCase()}
                 </h3>
-                <p className="mt-2 text-sm text-zinc-700">
+                <p className="mx-auto mt-2 max-w-xs text-sm text-zinc-700 sm:mx-0 sm:max-w-none">
                   Posición actual #{selectedBettor.position} - {selectedBettor.totalPoints} pts - Máximo restante{" "}
                   <strong>{selectedBettor.remainingPotentialPoints} pts</strong>
                 </p>
@@ -2489,27 +2489,27 @@ export default function PronosticoClient({
               <button
                 type="button"
                 onClick={() => setSelectedBettor(null)}
-                className="self-start rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-800"
+                className="mx-auto mt-3 rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-800 shadow-sm sm:mx-0 sm:mt-0"
               >
                 Cerrar
               </button>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+            <div className="mt-3 grid grid-cols-3 gap-2 sm:mt-4 sm:gap-3">
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-2 text-center sm:p-3">
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-zinc-500">X2 grupos</p>
-                <p className="mt-1 text-xl font-black text-zinc-950">
+                <p className="mt-1 text-sm font-black leading-tight text-zinc-950 sm:text-xl">
                   {selectedBettor.x2UsedCount} consumidos / {selectedBettor.x2LeftCount} libres
                 </p>
-                <p className="mt-1 text-[11px] font-semibold text-zinc-500">Solo finalizados no devueltos.</p>
+                <p className="mt-1 hidden text-[11px] font-semibold text-zinc-500 sm:block">Solo finalizados no devueltos.</p>
               </div>
-              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-2 text-center sm:p-3">
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-zinc-500">Picks</p>
                 <p className="mt-1 text-xl font-black text-zinc-950">{selectedBettor.predictionCount}</p>
               </div>
-              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-2 text-center sm:p-3">
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-zinc-500">Racha</p>
-                <div className="mt-2 flex gap-1">
+                <div className="mt-2 flex justify-center gap-1">
                   {selectedBettor.lastFive.length === 0 ? (
                     <span className="text-xs text-zinc-500">Sin resultados</span>
                   ) : (
@@ -2531,11 +2531,11 @@ export default function PronosticoClient({
             </div>
 
             {selectedBettor.nextMatchPath ? (
-              <section className="mt-4 rounded-2xl border border-cyan-200 bg-cyan-50 p-4 text-cyan-950">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
+              <section className="mt-3 rounded-2xl border border-cyan-200 bg-cyan-50 p-3 text-cyan-950 sm:mt-4 sm:p-4">
+                <div className="flex flex-col items-center gap-2 text-center lg:flex-row lg:items-start lg:justify-between lg:text-left">
+                  <div className="min-w-0">
                     <p className="wc-eyebrow text-cyan-900">Siguiente partido</p>
-                    <h4 className="mt-1 text-xl font-black">
+                    <h4 className="mt-1 text-lg font-black sm:text-xl">
                       P{selectedBettor.nextMatchPath.matchNumber}: {selectedBettor.nextMatchPath.homeTeam} vs{" "}
                       {selectedBettor.nextMatchPath.awayTeam}
                     </h4>
@@ -2564,23 +2564,23 @@ export default function PronosticoClient({
                 </div>
 
                 {selectedBettor.nextMatchPath.hasOwnPrediction ? (
-                  <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                    <div className="rounded-xl border border-cyan-200 bg-white px-3 py-2">
+                  <div className="mt-3 grid grid-cols-3 gap-2 sm:mt-4">
+                    <div className="rounded-xl border border-cyan-200 bg-white px-2 py-2 text-center sm:px-3">
                       <p className="text-[11px] font-black uppercase tracking-[0.08em] text-cyan-800">Pick usuario</p>
-                      <p className="mt-1 text-2xl font-black text-cyan-950">
+                      <p className="mt-1 text-xl font-black text-cyan-950 sm:text-2xl">
                         {selectedBettor.nextMatchPath.ownScoreLine}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-cyan-200 bg-white px-3 py-2">
+                    <div className="rounded-xl border border-cyan-200 bg-white px-2 py-2 text-center sm:px-3">
                       <p className="text-[11px] font-black uppercase tracking-[0.08em] text-cyan-800">
                         Escenario óptimo
                       </p>
-                      <p className="mt-1 text-2xl font-black text-cyan-950">
+                      <p className="mt-1 text-xl font-black text-cyan-950 sm:text-2xl">
                         {selectedBettor.nextMatchPath.scoreLine}
                       </p>
                     </div>
                     <div
-                      className={`rounded-xl border px-3 py-2 ${
+                      className={`rounded-xl border px-2 py-2 text-center sm:px-3 ${
                         selectedBettor.nextMatchPath.recommendedDiffersFromPick
                           ? "border-amber-200 bg-amber-50"
                           : "border-emerald-200 bg-emerald-50"
@@ -2596,7 +2596,7 @@ export default function PronosticoClient({
                   </div>
                 ) : null}
 
-                <div className="mt-4 grid gap-3 lg:grid-cols-[0.9fr_1.1fr]">
+                <div className="mt-3 grid gap-2 sm:mt-4 sm:gap-3 lg:grid-cols-[0.9fr_1.1fr]">
                   <div className="rounded-xl border border-cyan-200 bg-white p-3">
                     <p className="text-xs font-black uppercase tracking-[0.1em] text-cyan-800">Qué necesita</p>
                     {selectedBettor.nextMatchPath.scoreLine ? (

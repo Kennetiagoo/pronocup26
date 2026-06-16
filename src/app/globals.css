@@ -223,7 +223,15 @@ body::after,
   font-weight: 740;
 }
 
-.wc-page :where(.rounded-\[2rem\], .rounded-\[1\.8rem\], .rounded-\[1\.7rem\], .rounded-\[1\.6rem\], .rounded-\[1\.5rem\]) {
+.wc-page :where(.rounded-xl) {
+  border-radius: var(--ios-radius-md);
+}
+
+.wc-page :where(.rounded-2xl) {
+  border-radius: var(--ios-radius-lg);
+}
+
+.wc-page :where(.rounded-\[2rem\], .rounded-\[1\.8rem\], .rounded-\[1\.7rem\], .rounded-\[1\.6rem\], .rounded-\[1\.5rem\], .rounded-\[1\.25rem\]) {
   border-radius: var(--ios-radius-xl);
 }
 
@@ -284,12 +292,21 @@ body::after,
 }
 
 .wc-page :where(button, a[href]).text-left {
+  text-align: center !important;
   line-height: 1.2;
 }
 
 .wc-page :where(button.rounded-full, a[href].rounded-full):not(.w-full) {
   padding-block: 0.36rem;
   line-height: 1;
+}
+
+.wc-page :where(button.rounded-xl, a[href].rounded-xl) {
+  border-radius: 18px;
+}
+
+.wc-page :where(button.rounded-2xl, a[href].rounded-2xl) {
+  border-radius: 20px;
 }
 
 .wc-page :where(button.rounded-xl, button.rounded-2xl, a[href].rounded-xl, a[href].rounded-2xl):not(.w-full):not(.wc-button-primary):not(.wc-button-secondary) {
@@ -299,6 +316,11 @@ body::after,
 
 .wc-page :where(.wc-button-primary, .wc-button-secondary) {
   min-height: 38px;
+}
+
+.wc-page :where(#quick-menu-panel, #admin-menu-panel) :where(button, a[href]) {
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .wc-page :where(button, [role="button"]):focus-visible,
