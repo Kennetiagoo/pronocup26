@@ -2412,7 +2412,7 @@ export default function PronosticoClient({
             {!revealedPredictions.loading && !revealedPredictions.error ? (
               <div className="mt-5 overflow-x-auto rounded-xl border border-zinc-200">
                 <table className="min-w-[760px] w-full text-left text-sm text-zinc-900">
-                  <thead className="bg-zinc-900 text-white">
+                  <thead className="bg-zinc-100 text-zinc-700">
                     <tr>
                       <th className="px-3 py-2">Usuario</th>
                       <th className="px-3 py-2">Pronóstico</th>
