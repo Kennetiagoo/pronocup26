@@ -137,6 +137,15 @@ type BettorStanding = {
     homeTeam: string;
     awayTeam: string;
     kickoff: string;
+    simultaneousMatches: Array<{
+      matchNumber: number;
+      homeTeam: string;
+      awayTeam: string;
+      scoreLine: string | null;
+      ownScoreLine: string | null;
+      liveScoreLine: string | null;
+      ownPoints: number;
+    }>;
     locked: boolean;
     hasOwnPrediction: boolean;
     currentCutPosition: number;
@@ -2592,6 +2601,31 @@ export default function PronosticoClient({
                           ? "Recomienda otro marcador por tabla y rivales"
                           : "El pick del usuario es el mejor escenario"}
                       </p>
+                    </div>
+                  </div>
+                ) : null}
+
+                {selectedBettor.nextMatchPath.simultaneousMatches.length > 0 ? (
+                  <div className="mt-3 rounded-xl border border-cyan-200 bg-white p-3 sm:mt-4">
+                    <p className="text-xs font-black uppercase tracking-[0.1em] text-cyan-800">
+                      Bloque simultáneo
+                    </p>
+                    <div className="mt-3 grid gap-2 md:grid-cols-2">
+                      {selectedBettor.nextMatchPath.simultaneousMatches.map((match) => (
+                        <div key={match.matchNumber} className="rounded-lg border border-cyan-100 bg-cyan-50 px-3 py-2">
+                          <p className="text-sm font-black text-cyan-950">
+                            P{match.matchNumber}: {match.homeTeam} vs {match.awayTeam}
+                          </p>
+                          <p className="mt-1 text-xs font-semibold text-cyan-900">
+                            Necesita: {match.scoreLine ?? "por definir"}
+                            {match.ownScoreLine ? ` - Pick: ${match.ownScoreLine}` : " - Sin pick"}
+                            {match.ownPoints > 0 ? ` - +${match.ownPoints} pts` : ""}
+                          </p>
+                          {match.liveScoreLine ? (
+                            <p className="mt-1 text-xs font-black text-cyan-950">En vivo: {match.liveScoreLine}</p>
+                          ) : null}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ) : null}

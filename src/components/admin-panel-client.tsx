@@ -8,6 +8,13 @@ import { FileUploadField } from "@/components/file-upload-field";
 import { TeamBadge } from "@/components/team-badge";
 import { paymentStatusLabelEs, STAGE_FILTERS_ES } from "@/lib/i18n/es";
 import { getTeamPresentation } from "@/lib/teams";
+import { buildWorldCupGroupStandings, rankThirdPlacedTeams } from "@/lib/world-cup-regulations";
+import {
+  getRound32SideSlot,
+  getRound32Slot,
+  parseRound32Slot,
+  WORLD_CUP_ROUND32_SLOTS,
+} from "@/lib/world-cup-round32-slots";
 
 type SafeAdminUser = {
   id: string;
@@ -47,6 +54,13 @@ type SafeMatch = {
   awayTeamCode: string | null;
   isTopMatch: boolean;
   topMultiplier: number;
+};
+
+type SlotCandidate = {
+  team: string;
+  code: string | null;
+  label: string;
+  eligible: boolean;
 };
 
 type SafeUserRow = {
@@ -385,6 +399,68 @@ export default function AdminPanelClient({
         map.set(match.awayTeamCode, match.awayTeam);
       }
     }
+    return map;
+  }, [matches]);
+
+  const groupStageTeamOptions = useMemo(() => {
+    const byCode = new Map<string, { code: string; team: string }>();
+    for (const match of matches) {
+      if (match.stage !== "GROUP") continue;
+      if (match.homeTeamCode) byCode.set(match.homeTeamCode, { code: match.homeTeamCode, team: match.homeTeam });
+      if (match.awayTeamCode) byCode.set(match.awayTeamCode, { code: match.awayTeamCode, team: match.awayTeam });
+    }
+    return Array.from(byCode.values()).sort((a, b) => a.team.localeCompare(b.team, "es"));
+  }, [matches]);
+
+  const round32CandidatesBySlot = useMemo(() => {
+    const standings = buildWorldCupGroupStandings(matches);
+    const groups = new Map(standings.map((group) => [group.groupName, group.rows]));
+    const qualifiedThirdGroups = new Set(rankThirdPlacedTeams(standings).slice(0, 8).map((row) => row.groupName));
+    const map = new Map<string, SlotCandidate[]>();
+
+    for (const slot of new Set(WORLD_CUP_ROUND32_SLOTS.flatMap((item) => [item.homeSlot, item.awaySlot]))) {
+      const parsed = parseRound32Slot(slot);
+      if (!parsed) {
+        map.set(slot, []);
+        continue;
+      }
+
+      if (parsed.kind === "fixed") {
+        const row = groups.get(parsed.groups[0])?.[parsed.position - 1] ?? null;
+        map.set(
+          slot,
+          row
+            ? [
+                {
+                  team: row.team,
+                  code: row.teamCode,
+                  label: `${slot}: ${row.team}`,
+                  eligible: row.pj === 3,
+                },
+              ]
+            : [],
+        );
+        continue;
+      }
+
+      map.set(
+        slot,
+        parsed.groups.flatMap((groupName) => {
+          const row = groups.get(groupName)?.[2] ?? null;
+          if (!row) return [];
+          const isQualified = qualifiedThirdGroups.has(groupName);
+          return [
+            {
+              team: row.team,
+              code: row.teamCode,
+              label: `${isQualified ? "✓" : "?"} 3${groupName}: ${row.team}`,
+              eligible: isQualified,
+            },
+          ];
+        }),
+      );
+    }
+
     return map;
   }, [matches]);
 
@@ -832,20 +908,126 @@ export default function AdminPanelClient({
       items.map((item) => {
         if (item.id !== matchId) return item;
         const teamName = teamCode ? teamCodeLabelMap.get(teamCode) ?? teamCode : "";
+        const slotName = getRound32SideSlot(item.matchNumber, side);
         if (side === "home") {
           return {
             ...item,
             homeTeamCode: teamCode || null,
-            homeTeam: teamName || item.homeTeam,
+            homeTeam: teamName || slotName || item.homeTeam,
           };
         }
         return {
           ...item,
           awayTeamCode: teamCode || null,
-          awayTeam: teamName || item.awayTeam,
+          awayTeam: teamName || slotName || item.awayTeam,
         };
       }),
     );
+  }
+
+  function getBestRound32Candidate(slotName: string | null) {
+    if (!slotName) return null;
+    const candidates = round32CandidatesBySlot.get(slotName) ?? [];
+    return candidates.find((candidate) => candidate.eligible) ?? candidates[0] ?? null;
+  }
+
+  async function applyRound32CurrentPositions() {
+    const editableMatches = matches.filter(
+      (match) => match.status === "SCHEDULED" && Boolean(getRound32Slot(match.matchNumber)),
+    );
+    if (editableMatches.length === 0) {
+      setError("No hay dieciseisavos programados para actualizar.");
+      return;
+    }
+
+    setBusy(true);
+    setNotice(null);
+    setError(null);
+    try {
+      let updatedCount = 0;
+      for (const match of editableMatches) {
+        const slot = getRound32Slot(match.matchNumber);
+        if (!slot) continue;
+        const homeCandidate = getBestRound32Candidate(slot.homeSlot);
+        const awayCandidate = getBestRound32Candidate(slot.awaySlot);
+        if (!homeCandidate || !awayCandidate) continue;
+
+        const res = await fetch(`/api/admin/matches/${match.id}/result`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            homeScore: null,
+            awayScore: null,
+            status: "SCHEDULED",
+            homeTeam: homeCandidate.team,
+            awayTeam: awayCandidate.team,
+            homeTeamCode: homeCandidate.code,
+            awayTeamCode: awayCandidate.code,
+          }),
+        });
+        if (!res.ok) {
+          setError(await readErrorMessage(res));
+          return;
+        }
+        updatedCount += 1;
+      }
+
+      setNotice(
+        updatedCount > 0
+          ? `Se actualizaron ${updatedCount} partido(s) con las posiciones actuales.`
+          : "Todavía no hay suficientes posiciones de grupo para aplicar dieciseisavos.",
+      );
+      await refreshAdminData();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resetRound32Slots() {
+    const round32Matches = matches.filter((match) => getRound32Slot(match.matchNumber));
+    const editableMatches = round32Matches.filter((match) => match.status === "SCHEDULED");
+    if (editableMatches.length === 0) {
+      setError("No hay dieciseisavos programados para restaurar.");
+      return;
+    }
+    const lockedCount = round32Matches.length - editableMatches.length;
+    const confirmed =
+      lockedCount === 0 ||
+      window.confirm(
+        `${lockedCount} partido(s) de dieciseisavos ya no están programados y no se tocarán. ¿Restaurar los demás al esquema de slots?`,
+      );
+    if (!confirmed) return;
+
+    setBusy(true);
+    setNotice(null);
+    setError(null);
+    try {
+      for (const match of editableMatches) {
+        const slot = getRound32Slot(match.matchNumber);
+        if (!slot) continue;
+        const res = await fetch(`/api/admin/matches/${match.id}/result`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            homeScore: null,
+            awayScore: null,
+            status: "SCHEDULED",
+            homeTeam: slot.homeSlot,
+            awayTeam: slot.awaySlot,
+            homeTeamCode: null,
+            awayTeamCode: null,
+          }),
+        });
+        if (!res.ok) {
+          setError(await readErrorMessage(res));
+          return;
+        }
+      }
+      setNotice("Dieciseisavos restaurados al esquema de slots. Selecciona manualmente cada equipo cuando corresponda.");
+      await refreshAdminData();
+    } finally {
+      setBusy(false);
+    }
   }
 
   function updateMatchDraft(matchId: string, patch: Partial<SafeMatch>) {
@@ -2040,6 +2222,53 @@ export default function AdminPanelClient({
               </button>
             ))}
           </div>
+          <div className="mt-4 rounded-2xl border border-cyan-200 bg-cyan-50 p-3">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.12em] text-cyan-900">
+                  Esquema de dieciseisavos
+                </p>
+                <p className="mt-1 text-sm font-semibold text-cyan-950">
+                  Los partidos 73-88 quedan como slots tipo 1A, 2B o 3C/E/F/H/I. El equipo real se elige
+                  manualmente desde el editor de cada partido.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void applyRound32CurrentPositions();
+                  }}
+                  disabled={busy}
+                  className="rounded-xl border border-emerald-300 bg-emerald-100 px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-emerald-900 hover:bg-emerald-200 disabled:opacity-60"
+                >
+                  Aplicar posiciones
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void resetRound32Slots();
+                  }}
+                  disabled={busy}
+                  className="rounded-xl border border-cyan-300 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-cyan-900 hover:bg-cyan-100 disabled:opacity-60"
+                >
+                  Restaurar slots
+                </button>
+              </div>
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {WORLD_CUP_ROUND32_SLOTS.map((slot) => (
+                <div key={slot.matchNumber} className="rounded-xl border border-cyan-200 bg-white px-3 py-2">
+                  <p className="text-[11px] font-black uppercase tracking-[0.08em] text-cyan-800">
+                    P{slot.matchNumber}
+                  </p>
+                  <p className="mt-1 text-sm font-black text-cyan-950">
+                    {slot.homeSlot} vs {slot.awaySlot}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <div className="mt-5 max-h-[780px] space-y-3 overflow-auto pr-1">
             {filteredMatches.length === 0 ? (
@@ -2049,6 +2278,9 @@ export default function AdminPanelClient({
             ) : null}
             {filteredMatches.map((match) => {
               const isEditing = editingMatchId === match.id;
+              const round32Slot = getRound32Slot(match.matchNumber);
+              const homeSlotCandidates = round32Slot ? (round32CandidatesBySlot.get(round32Slot.homeSlot) ?? []) : [];
+              const awaySlotCandidates = round32Slot ? (round32CandidatesBySlot.get(round32Slot.awaySlot) ?? []) : [];
               const scorersEnabled = isScorersEnabledForStage(bonusConfig, match.stage);
               const draft = scorerDraftByMatch[match.id] ?? { homePlayerIds: [], awayPlayerIds: [] };
               const homeGoals = Math.max(0, match.homeScore ?? 0);
@@ -2068,23 +2300,59 @@ export default function AdminPanelClient({
                   <span className={`mt-2 inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${matchStatusBadge(match.status)}`}>
                     {matchStatusLabel(match.status)}
                   </span>
+                  {round32Slot ? (
+                    <div className="mt-3 inline-flex flex-wrap gap-2 rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-950">
+                      <span>Slot local: {round32Slot.homeSlot}</span>
+                      <span>Slot visitante: {round32Slot.awaySlot}</span>
+                    </div>
+                  ) : null}
 
                   {isEditing && match.stage !== "GROUP" ? (
                     <div className="mt-4 grid gap-3 rounded-2xl border border-cyan-100 bg-cyan-50 p-3 md:grid-cols-2">
                       <label className="text-xs font-semibold uppercase tracking-[0.08em] text-cyan-900">
-                        Equipo local
+                        Equipo local {round32Slot ? `(${round32Slot.homeSlot})` : ""}
                         <select
                           value={match.homeTeamCode ?? ""}
                           onChange={(e) => updateMatchTeam(match.id, "home", e.target.value)}
                           className="mt-1 w-full rounded-lg border border-cyan-200 bg-white px-2 py-2 text-sm normal-case tracking-normal text-zinc-900"
                         >
-                          <option value="">Mantener / manual</option>
-                          {teamCodeOptions.map((code) => (
-                            <option key={`home-${match.id}-${code}`} value={code}>
-                              {code} - {teamCodeLabelMap.get(code) ?? "Selección"}
-                            </option>
-                          ))}
+                          <option value="">
+                            {round32Slot ? `Usar slot ${round32Slot.homeSlot}` : "Mantener / manual"}
+                          </option>
+                          {round32Slot && homeSlotCandidates.length > 0 ? (
+                            <optgroup label={`Candidatos ${round32Slot.homeSlot}`}>
+                              {homeSlotCandidates.map((candidate) => (
+                                <option
+                                  key={`home-slot-${match.id}-${round32Slot.homeSlot}-${candidate.code ?? candidate.team}`}
+                                  value={candidate.code ?? ""}
+                                >
+                                  {candidate.label}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ) : null}
+                          <optgroup label={round32Slot ? "Todas las selecciones" : "Selecciones"}>
+                            {groupStageTeamOptions.map((team) => (
+                              <option key={`home-${match.id}-${team.code}`} value={team.code}>
+                                {team.code} - {team.team}
+                              </option>
+                            ))}
+                          </optgroup>
+                          {teamCodeOptions
+                            .filter((code) => !groupStageTeamOptions.some((team) => team.code === code))
+                            .map((code) => (
+                              <option key={`home-extra-${match.id}-${code}`} value={code}>
+                                {code} - {teamCodeLabelMap.get(code) ?? "Selección"}
+                              </option>
+                            ))}
                         </select>
+                        {round32Slot ? (
+                          <p className="mt-1 text-[11px] font-semibold normal-case tracking-normal text-cyan-900">
+                            {homeSlotCandidates.length > 0
+                              ? `Sugerido por tabla: ${homeSlotCandidates[0].label}`
+                              : "Aún no hay equipo calculable para este slot."}
+                          </p>
+                        ) : null}
                         <input
                           value={match.homeTeam}
                           onChange={(e) =>
@@ -2098,19 +2366,49 @@ export default function AdminPanelClient({
                         />
                       </label>
                       <label className="text-xs font-semibold uppercase tracking-[0.08em] text-cyan-900">
-                        Equipo visitante
+                        Equipo visitante {round32Slot ? `(${round32Slot.awaySlot})` : ""}
                         <select
                           value={match.awayTeamCode ?? ""}
                           onChange={(e) => updateMatchTeam(match.id, "away", e.target.value)}
                           className="mt-1 w-full rounded-lg border border-cyan-200 bg-white px-2 py-2 text-sm normal-case tracking-normal text-zinc-900"
                         >
-                          <option value="">Mantener / manual</option>
-                          {teamCodeOptions.map((code) => (
-                            <option key={`away-${match.id}-${code}`} value={code}>
-                              {code} - {teamCodeLabelMap.get(code) ?? "Selección"}
-                            </option>
-                          ))}
+                          <option value="">
+                            {round32Slot ? `Usar slot ${round32Slot.awaySlot}` : "Mantener / manual"}
+                          </option>
+                          {round32Slot && awaySlotCandidates.length > 0 ? (
+                            <optgroup label={`Candidatos ${round32Slot.awaySlot}`}>
+                              {awaySlotCandidates.map((candidate) => (
+                                <option
+                                  key={`away-slot-${match.id}-${round32Slot.awaySlot}-${candidate.code ?? candidate.team}`}
+                                  value={candidate.code ?? ""}
+                                >
+                                  {candidate.label}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ) : null}
+                          <optgroup label={round32Slot ? "Todas las selecciones" : "Selecciones"}>
+                            {groupStageTeamOptions.map((team) => (
+                              <option key={`away-${match.id}-${team.code}`} value={team.code}>
+                                {team.code} - {team.team}
+                              </option>
+                            ))}
+                          </optgroup>
+                          {teamCodeOptions
+                            .filter((code) => !groupStageTeamOptions.some((team) => team.code === code))
+                            .map((code) => (
+                              <option key={`away-extra-${match.id}-${code}`} value={code}>
+                                {code} - {teamCodeLabelMap.get(code) ?? "Selección"}
+                              </option>
+                            ))}
                         </select>
+                        {round32Slot ? (
+                          <p className="mt-1 text-[11px] font-semibold normal-case tracking-normal text-cyan-900">
+                            {awaySlotCandidates.length > 0
+                              ? `Sugerido por tabla: ${awaySlotCandidates[0].label}`
+                              : "Aún no hay equipo calculable para este slot."}
+                          </p>
+                        ) : null}
                         <input
                           value={match.awayTeam}
                           onChange={(e) =>
@@ -2124,9 +2422,9 @@ export default function AdminPanelClient({
                         />
                       </label>
                       <p className="md:col-span-2 text-xs text-cyan-900">
-                        Para cruces con terceros de grupo, asigna aquí los equipos reales cuando FIFA confirme la
-                        combinación. Si el partido se define por penales, guarda el empate de 90 minutos y asigna
-                        manualmente el clasificado en el siguiente cruce.
+                        Selecciona el equipo real que ocupa cada slot cuando esté confirmado. Si el partido se define
+                        por penales, guarda el empate de 90 minutos y asigna manualmente el clasificado en el siguiente
+                        cruce.
                       </p>
                     </div>
                   ) : null}
