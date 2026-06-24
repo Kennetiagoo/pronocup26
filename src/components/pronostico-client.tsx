@@ -90,6 +90,7 @@ type BettorStanding = {
   username: string;
   paymentStatus: PaymentStatus;
   totalPoints: number;
+  pointsWithoutBonus: number;
   predictionCount: number;
   groupPoints: number;
   knockoutPoints: number;
@@ -1629,25 +1630,27 @@ export default function PronosticoClient({
             ))}
           </div>
           <div className="mt-4 overflow-x-auto rounded-2xl border border-zinc-200 bg-white">
-            <table className="w-full min-w-[1080px] table-fixed text-sm text-zinc-900">
+            <table className="w-full min-w-[1160px] table-fixed text-sm text-zinc-900">
               <caption className="sr-only">Ranking de apostadores por puntaje acumulado</caption>
               <colgroup>
                 <col className="w-[5%]" />
-                <col className="w-[18%]" />
-                <col className="w-[7%]" />
-                <col className="w-[10%]" />
-                <col className="w-[13%]" />
-                <col className="w-[7%]" />
-                <col className="w-[6%]" />
-                <col className="w-[10%]" />
                 <col className="w-[17%]" />
                 <col className="w-[7%]" />
+                <col className="w-[8%]" />
+                <col className="w-[9%]" />
+                <col className="w-[12%]" />
+                <col className="w-[7%]" />
+                <col className="w-[6%]" />
+                <col className="w-[9%]" />
+                <col className="w-[16%]" />
+                <col className="w-[4%]" />
               </colgroup>
               <thead className="bg-zinc-50 text-zinc-700">
                 <tr className="border-b border-zinc-200">
                   <th scope="col" className="px-3 py-2 text-center">#</th>
                   <th scope="col" className="px-3 py-2 text-left">Apostador</th>
                   <th scope="col" className="px-3 py-2 text-center">Puntos</th>
+                  <th scope="col" className="px-3 py-2 text-center">Sin bonus</th>
                   <th scope="col" className="px-3 py-2 text-center">Mov.</th>
                   <th scope="col" className="px-3 py-2 text-center">Últimos 5</th>
                   <th scope="col" className="px-3 py-2 text-center">Grupo</th>
@@ -1660,7 +1663,7 @@ export default function PronosticoClient({
               <tbody>
                 {bettorStandings.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-3 py-4 text-zinc-600">
+                    <td colSpan={11} className="px-3 py-4 text-zinc-600">
                       Aún no hay apostadores con perfil completo.
                     </td>
                   </tr>
@@ -1713,6 +1716,14 @@ export default function PronosticoClient({
                           ) : null}
                         </th>
                         <td className="px-3 py-2 text-center font-bold text-zinc-900">{row.totalPoints}</td>
+                        <td className="px-3 py-2 text-center">
+                          <span className="font-bold text-zinc-800">{row.pointsWithoutBonus}</span>
+                          <p className="mt-0.5 text-[10px] text-zinc-500">
+                            {row.totalPoints - row.pointsWithoutBonus > 0
+                              ? `+${row.totalPoints - row.pointsWithoutBonus} bonus`
+                              : "sin extra"}
+                          </p>
+                        </td>
                         <td className="px-3 py-2 text-center">
                           <span
                             className={`inline-flex items-center justify-center rounded-full border px-2 py-1 text-[11px] font-black uppercase tracking-[0.06em] ${movement.className}`}

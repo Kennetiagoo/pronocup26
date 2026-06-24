@@ -330,6 +330,7 @@ export default async function PronosticoPage() {
   type StandingPredictionRow = (typeof allPredictionsForStandings)[number];
   type StandingTotals = {
     totalPoints: number;
+    pointsWithoutBonus: number;
     predictionCount: number;
     groupPoints: number;
     knockoutPoints: number;
@@ -361,6 +362,7 @@ export default async function PronosticoPage() {
     username: string;
     paymentStatus: (typeof users)[number]["paymentStatus"];
     totalPoints: number;
+    pointsWithoutBonus: number;
     predictionCount: number;
     groupPoints: number;
     knockoutPoints: number;
@@ -536,6 +538,7 @@ export default async function PronosticoPage() {
       const effectiveBasePoints = liveCalculated?.basePoints ?? row.basePoints ?? 0;
       const current = totalsByUser.get(row.userId) ?? {
         totalPoints: 0,
+        pointsWithoutBonus: 0,
         predictionCount: 0,
         groupPoints: 0,
         knockoutPoints: 0,
@@ -547,6 +550,7 @@ export default async function PronosticoPage() {
         x2Usages: [],
       };
       current.totalPoints += effectivePoints;
+      current.pointsWithoutBonus += effectiveBasePoints;
       current.predictionCount += 1;
       const stage = row.Match.stage;
       if (stage === "GROUP") current.groupPoints += effectivePoints;
@@ -590,6 +594,7 @@ export default async function PronosticoPage() {
         username: u.username ?? "",
         paymentStatus: u.paymentStatus,
         totalPoints: totalsByUser.get(u.id)?.totalPoints ?? 0,
+        pointsWithoutBonus: totalsByUser.get(u.id)?.pointsWithoutBonus ?? 0,
         predictionCount: totalsByUser.get(u.id)?.predictionCount ?? 0,
         groupPoints: totalsByUser.get(u.id)?.groupPoints ?? 0,
         knockoutPoints: totalsByUser.get(u.id)?.knockoutPoints ?? 0,
