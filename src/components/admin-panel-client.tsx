@@ -589,6 +589,14 @@ export default function AdminPanelClient({
     () => matches.filter((match) => match.status === "LIVE").sort((a, b) => a.matchNumber - b.matchNumber),
     [matches],
   );
+  const finalizedMatchesWithScore = useMemo(
+    () => matches.filter((match) => match.status === "FINAL" && match.homeScore !== null && match.awayScore !== null),
+    [matches],
+  );
+  const reportUserCount = useMemo(
+    () => users.filter((user) => user.role === "ADMIN" || user.paymentStatus === "APROBADO").length,
+    [users],
+  );
   const nextUnresolvedMatch = useMemo(
     () =>
       matches
@@ -1338,6 +1346,7 @@ export default function AdminPanelClient({
                 ["admin-resultados", "Resultados"],
                 ["admin-bonos", "Bonos"],
                 ["admin-vista", "Vista"],
+                ["admin-informes", "Informes"],
                 ["admin-plantillas", "Plantillas"],
                 ["admin-pagos", "Pagos"],
                 ["admin-comprobantes", "Comprobantes"],
@@ -1412,6 +1421,39 @@ export default function AdminPanelClient({
           </button>
         </section>
 
+        <section id="admin-informes" className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="wc-eyebrow">Informes</p>
+              <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Evolucion de posiciones</h2>
+              <p className="mt-2 max-w-3xl text-sm text-zinc-700 sm:text-base">
+                Genera un PDF con el grafico partido a partido para los usuarios incluidos en el ranking actual.
+              </p>
+            </div>
+            <a
+              href="/api/admin/reports/position-evolution"
+              target="_blank"
+              rel="noreferrer"
+              className="wc-button-primary px-5 py-3 text-sm"
+            >
+              Generar PDF
+            </a>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+              <p className="text-xs font-bold text-zinc-500">Usuarios</p>
+              <p className="mt-1 text-2xl font-black text-zinc-950">{reportUserCount}</p>
+            </div>
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+              <p className="text-xs font-bold text-zinc-500">Partidos con resultado</p>
+              <p className="mt-1 text-2xl font-black text-zinc-950">{finalizedMatchesWithScore.length}</p>
+            </div>
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+              <p className="text-xs font-bold text-zinc-500">Formato</p>
+              <p className="mt-1 text-2xl font-black text-zinc-950">PDF</p>
+            </div>
+          </div>
+        </section>
         <section id="admin-config" className="wc-card-soft rounded-[1.8rem] p-5 sm:p-6">
           <p className="wc-eyebrow">Puntaje</p>
           <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Configuración</h2>
