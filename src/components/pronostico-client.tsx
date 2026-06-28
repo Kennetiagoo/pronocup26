@@ -2,7 +2,7 @@
 
 import { MatchStatus, MatchStage, PaymentStatus, UserRole } from "@prisma/client";
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { FileUploadField } from "@/components/file-upload-field";
@@ -627,6 +627,120 @@ function compareMatchesByKickoff(a: Pick<MatchClient, "kickoff" | "matchNumber">
   if (kickoffDiff !== 0) return kickoffDiff;
   return a.matchNumber - b.matchNumber;
 }
+const BRACKET_CARD_WIDTH = 250;
+const BRACKET_CARD_HEIGHT = 146;
+const BRACKET_COLUMN_GAP = 36;
+const BRACKET_ROW_STEP = 164;
+const BRACKET_HEADER_HEIGHT = 52;
+
+const ROUND32_VISUAL_ORDER = [74, 77, 73, 75, 83, 84, 81, 82, 76, 78, 79, 80, 86, 88, 85, 87] as const;
+
+const KNOCKOUT_BRACKET_ROUNDS = [
+  { key: "ROUND_OF_32", label: "Round of 32", caption: "Dieciseisavos", matchNumbers: ROUND32_VISUAL_ORDER },
+  { key: "ROUND_OF_16", label: "Round of 16", caption: "Octavos", matchNumbers: [89, 90, 93, 94, 91, 92, 95, 96] as const },
+  { key: "QUARTER_FINAL", label: "Quarterfinals", caption: "Cuartos", matchNumbers: [97, 98, 99, 100] as const },
+  { key: "SEMI_FINAL", label: "Semifinals", caption: "Semifinales", matchNumbers: [101, 102] as const },
+  { key: "FINAL", label: "Final", caption: "Campeón", matchNumbers: [104, 103] as const },
+] as const;
+
+const KNOCKOUT_BRACKET_LINKS = [
+  { from: [74, 77], to: 89 },
+  { from: [73, 75], to: 90 },
+  { from: [83, 84], to: 93 },
+  { from: [81, 82], to: 94 },
+  { from: [76, 78], to: 91 },
+  { from: [79, 80], to: 92 },
+  { from: [86, 88], to: 95 },
+  { from: [85, 87], to: 96 },
+  { from: [89, 90], to: 97 },
+  { from: [93, 94], to: 98 },
+  { from: [91, 92], to: 99 },
+  { from: [95, 96], to: 100 },
+  { from: [97, 98], to: 101 },
+  { from: [99, 100], to: 102 },
+  { from: [101, 102], to: 104 },
+] as const;
+
+const BRACKET_COLUMN_LEFT_BY_ROUND = Object.fromEntries(
+  KNOCKOUT_BRACKET_ROUNDS.map((round, index) => [round.key, index * (BRACKET_CARD_WIDTH + BRACKET_COLUMN_GAP)]),
+) as Record<(typeof KNOCKOUT_BRACKET_ROUNDS)[number]["key"], number>;
+
+const KNOCKOUT_BRACKET_NODE_TOPS = (() => {
+  const tops = new Map<number, number>();
+  ROUND32_VISUAL_ORDER.forEach((matchNumber, index) => {
+    tops.set(matchNumber, index * BRACKET_ROW_STEP);
+  });
+
+  const centerTop = (first: number, second: number) => {
+    const topA = tops.get(first);
+    const topB = tops.get(second);
+    if (topA === undefined || topB === undefined) return 0;
+    return (topA + topB) / 2;
+  };
+
+  KNOCKOUT_BRACKET_LINKS.forEach((link) => {
+    tops.set(link.to, centerTop(link.from[0], link.from[1]));
+  });
+
+  const finalTop = tops.get(104) ?? 0;
+  tops.set(103, finalTop + BRACKET_ROW_STEP * 1.45);
+  return tops;
+})();
+
+const KNOCKOUT_BRACKET_NODES = KNOCKOUT_BRACKET_ROUNDS.flatMap((round) =>
+  round.matchNumbers.map((matchNumber) => ({
+    matchNumber,
+    roundKey: round.key,
+    left: BRACKET_COLUMN_LEFT_BY_ROUND[round.key],
+    top: KNOCKOUT_BRACKET_NODE_TOPS.get(matchNumber) ?? 0,
+  })),
+);
+
+const KNOCKOUT_BRACKET_NODE_BY_MATCH = new Map(KNOCKOUT_BRACKET_NODES.map((node) => [node.matchNumber, node]));
+const KNOCKOUT_BRACKET_BOARD_WIDTH =
+  KNOCKOUT_BRACKET_ROUNDS.length * BRACKET_CARD_WIDTH + (KNOCKOUT_BRACKET_ROUNDS.length - 1) * BRACKET_COLUMN_GAP;
+const KNOCKOUT_BRACKET_BOARD_HEIGHT =
+  Math.max(...KNOCKOUT_BRACKET_NODES.map((node) => node.top)) + BRACKET_HEADER_HEIGHT + BRACKET_CARD_HEIGHT + 34;
+
+function bracketSlotLabel(value: string) {
+  return value
+    .replace(/^Winner Match (\d+)$/i, "W$1")
+    .replace(/^Loser Match (\d+)$/i, "L$1")
+    .replace(/^Winner P(\d+)$/i, "W$1")
+    .replace(/^Loser P(\d+)$/i, "L$1")
+    .replace(/^Ganador P(\d+)$/i, "W$1")
+    .replace(/^Perdedor P(\d+)$/i, "L$1");
+}
+
+function bracketSlotToken(value: string) {
+  const token = value.match(/^([WL])(\d+)$/i);
+  return token ? token[1].toUpperCase() : null;
+}
+
+function bracketStatusPresentation(match: MatchClient, locked: boolean, saved: boolean) {
+  if (match.status === "LIVE") {
+    return { label: "En vivo", className: "border-rose-300 bg-rose-50 text-rose-700" };
+  }
+  if (match.status === "FINAL") {
+    return { label: "Final", className: "border-emerald-300 bg-emerald-50 text-emerald-700" };
+  }
+  if (saved) {
+    return { label: "Pick", className: "border-cyan-300 bg-cyan-50 text-cyan-800" };
+  }
+  if (locked) {
+    return { label: "Bloqueado", className: "border-zinc-300 bg-zinc-100 text-zinc-700" };
+  }
+  if (match.homeTeamCode && match.awayTeamCode) {
+    return { label: "Abierto", className: "border-indigo-300 bg-indigo-50 text-indigo-700" };
+  }
+  return { label: "Pendiente", className: "border-amber-300 bg-amber-50 text-amber-700" };
+}
+
+function knockoutWinnerSide(match: MatchClient): "HOME" | "AWAY" | null {
+  if (match.status !== "FINAL" || match.homeScore === null || match.awayScore === null) return null;
+  if (match.homeScore === match.awayScore) return null;
+  return match.homeScore > match.awayScore ? "HOME" : "AWAY";
+}
 
 export default function PronosticoClient({
   user,
@@ -660,6 +774,9 @@ export default function PronosticoClient({
   const [revealedPredictions, setRevealedPredictions] = useState<RevealedPredictionsModalState | null>(null);
   const [editingSavedMatchById, setEditingSavedMatchById] = useState<Record<string, boolean>>({});
   const [quickMenuOpen, setQuickMenuOpen] = useState(false);
+  const knockoutScrollRef = useRef<HTMLDivElement | null>(null);
+  const [knockoutScrollValue, setKnockoutScrollValue] = useState(0);
+  const [knockoutScrollMax, setKnockoutScrollMax] = useState(0);
   const [formByMatch, setFormByMatch] = useState<
     Record<
       string,
@@ -754,6 +871,19 @@ export default function PronosticoClient({
       ]
     : [];
 
+  const syncKnockoutScroll = useCallback(() => {
+    const el = knockoutScrollRef.current;
+    if (!el) return;
+    setKnockoutScrollMax(Math.max(0, el.scrollWidth - el.clientWidth));
+    setKnockoutScrollValue(el.scrollLeft);
+  }, []);
+
+  const onKnockoutSliderChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    const next = Number(event.target.value);
+    const el = knockoutScrollRef.current;
+    if (el) el.scrollLeft = next;
+    setKnockoutScrollValue(next);
+  }, []);
   useEffect(() => {
     setNowMs(Date.now());
     const timer = window.setInterval(() => setNowMs(Date.now()), 30000);
@@ -860,6 +990,26 @@ export default function PronosticoClient({
         .sort(compareMatchesByKickoff),
     [bonusConfig, matches],
   );
+  const knockoutBracketMatches = useMemo(
+    () =>
+      matches
+        .filter((match) => match.stage !== "GROUP")
+        .slice()
+        .sort((a, b) => a.matchNumber - b.matchNumber),
+    [matches],
+  );
+  const knockoutMatchByNumber = useMemo(
+    () => new Map(knockoutBracketMatches.map((match) => [match.matchNumber, match])),
+    [knockoutBracketMatches],
+  );
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(syncKnockoutScroll);
+    window.addEventListener("resize", syncKnockoutScroll);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", syncKnockoutScroll);
+    };
+  }, [knockoutBracketMatches.length, syncKnockoutScroll]);
   const chronologicalMatchNumberById = useMemo(
     () => new Map(visibleMatches.map((match, index) => [match.id, index + 1])),
     [visibleMatches],
@@ -1968,67 +2118,206 @@ export default function PronosticoClient({
             </div>
           </div>
 
-          {visibleKnockoutMatches.length > 0 ? (
-            <div className="mb-4 overflow-x-auto rounded-2xl border border-zinc-200 bg-white p-4 shadow-[0_6px_18px_rgba(0,0,0,0.07)]">
-              <div className="flex min-w-[980px] gap-4">
-                {(
-                  [
-                    ["ROUND_OF_32", "1/16"],
-                    ["ROUND_OF_16", "Octavos"],
-                    ["QUARTER_FINAL", "Cuartos"],
-                    ["SEMI_FINAL", "Semifinales"],
-                    ["FINAL", "Final"],
-                  ] as const
-                ).map(([stage, label]) => {
-                  const stageMatches = visibleKnockoutMatches.filter((match) => match.stage === stage);
-                  if (stageMatches.length === 0) return null;
-                  return (
-                    <div key={stage} className="min-w-[180px] flex-1">
-                      <p className="mb-2 text-center text-xs font-black uppercase tracking-[0.16em] text-zinc-700">
-                        {label}
-                      </p>
-                      <div className="space-y-3">
-                        {stageMatches.map((match) => {
-                          const chronologicalMatchNumber = chronologicalMatchNumberById.get(match.id) ?? match.matchNumber;
-                          return (
-                          <button
-                            key={`bracket-${match.id}`}
-                            type="button"
-                            onClick={() => {
-                              setActiveStage(match.stage);
-                              setActiveGroup("ALL");
-                              scrollToSection(`match-${match.id}`);
-                            }}
-                            className="w-full rounded-xl border border-zinc-300 bg-zinc-50 p-2 text-left text-xs transition hover:border-cyan-300 hover:bg-cyan-50"
-                          >
-                            <span className="font-black text-zinc-500">P{chronologicalMatchNumber}</span>
-                            <span className="mt-1 block truncate font-bold text-zinc-900">{match.homeTeam}</span>
-                            <span className="block truncate font-bold text-zinc-900">{match.awayTeam}</span>
-                            {(match.status === "FINAL" || match.status === "LIVE") &&
-                            match.homeScore !== null &&
-                            match.awayScore !== null ? (
-                              <span
-                                className={`mt-1 inline-flex rounded-full border px-2 py-0.5 font-bold ${
-                                  match.status === "LIVE"
-                                    ? "border-rose-300 bg-rose-100 text-rose-700"
-                                    : "border-emerald-300 bg-emerald-100 text-emerald-800"
-                                }`}
-                              >
-                                {match.status === "LIVE" ? "EN VIVO " : ""}
-                                {match.homeScore}-{match.awayScore}
-                              </span>
-                            ) : null}
-                          </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
+          {knockoutBracketMatches.length > 0 ? (
+            <section
+              className="mb-5 overflow-hidden rounded-[1.6rem] border border-zinc-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.10)]"
+              aria-label="Llave de eliminatorias"
+            >
+              <div className="border-b border-zinc-200 bg-white px-4 py-4 text-zinc-950 sm:px-5">
+                <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                  <div>
+                    <p className="wc-eyebrow text-zinc-600">Knockout stage</p>
+                    <h2 className="wc-title mt-1 text-3xl text-zinc-950 sm:text-4xl">Llave eliminatoria</h2>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs sm:flex sm:text-left">
+                    <span className="rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 font-bold text-cyan-900">
+                      {visibleKnockoutMatches.length} apostables
+                    </span>
+                    <span className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-bold text-rose-800">
+                      {knockoutBracketMatches.filter((match) => match.status === "LIVE").length} en vivo
+                    </span>
+                    <span className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 font-bold text-emerald-800">
+                      {knockoutBracketMatches.filter((match) => match.status === "FINAL").length} cerrados
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          ) : null}
 
+              <div className="border-b border-zinc-200 bg-zinc-50 px-4 py-3 sm:px-5">
+                <div className="grid gap-2 sm:grid-cols-[auto_minmax(180px,1fr)_auto] sm:items-center">
+                  <span className="text-xs font-black uppercase text-zinc-500">Mover llave</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={knockoutScrollMax}
+                    value={Math.min(knockoutScrollValue, knockoutScrollMax)}
+                    onChange={onKnockoutSliderChange}
+                    disabled={knockoutScrollMax <= 0}
+                    aria-label="Desplazamiento horizontal de la llave eliminatoria"
+                    className="h-2 w-full cursor-grab appearance-none rounded-full bg-zinc-200 accent-cyan-600 disabled:cursor-not-allowed disabled:opacity-40 active:cursor-grabbing"
+                  />
+                  <span className="text-right text-xs font-bold text-zinc-500">
+                    {knockoutScrollMax > 0 ? `${Math.round((Math.min(knockoutScrollValue, knockoutScrollMax) / knockoutScrollMax) * 100)}%` : "100%"}
+                  </span>
+                </div>
+              </div>
+
+              <div
+                ref={knockoutScrollRef}
+                onScroll={syncKnockoutScroll}
+                className="overflow-x-auto bg-[linear-gradient(180deg,#f8fafc,#eef7f9)] px-3 py-4 sm:px-4"
+              >
+                <div
+                  className="relative mx-auto"
+                  style={{ width: KNOCKOUT_BRACKET_BOARD_WIDTH, height: KNOCKOUT_BRACKET_BOARD_HEIGHT }}
+                >
+                  {KNOCKOUT_BRACKET_ROUNDS.map((round) => (
+                    <div
+                      key={round.key}
+                      className="absolute top-0 text-center"
+                      style={{ left: BRACKET_COLUMN_LEFT_BY_ROUND[round.key], width: BRACKET_CARD_WIDTH }}
+                    >
+                      <p className="text-sm font-black text-zinc-900">{round.label}</p>
+                      <p className="mt-0.5 text-[11px] font-bold uppercase text-zinc-500">{round.caption}</p>
+                    </div>
+                  ))}
+
+                  {KNOCKOUT_BRACKET_LINKS.map((link) => {
+                    const fromA = KNOCKOUT_BRACKET_NODE_BY_MATCH.get(link.from[0]);
+                    const fromB = KNOCKOUT_BRACKET_NODE_BY_MATCH.get(link.from[1]);
+                    const to = KNOCKOUT_BRACKET_NODE_BY_MATCH.get(link.to);
+                    if (!fromA || !fromB || !to) return null;
+                    const sourceRight = fromA.left + BRACKET_CARD_WIDTH;
+                    const elbowLeft = sourceRight + BRACKET_COLUMN_GAP / 2;
+                    const targetLeft = to.left;
+                    const centerA = BRACKET_HEADER_HEIGHT + fromA.top + BRACKET_CARD_HEIGHT / 2;
+                    const centerB = BRACKET_HEADER_HEIGHT + fromB.top + BRACKET_CARD_HEIGHT / 2;
+                    const targetCenter = BRACKET_HEADER_HEIGHT + to.top + BRACKET_CARD_HEIGHT / 2;
+                    const verticalTop = Math.min(centerA, centerB);
+                    const verticalHeight = Math.abs(centerB - centerA);
+                    return (
+                      <div key={`link-${link.to}`} aria-hidden="true">
+                        <span
+                          className="absolute h-px bg-zinc-300"
+                          style={{ left: sourceRight, top: centerA, width: BRACKET_COLUMN_GAP / 2 }}
+                        />
+                        <span
+                          className="absolute h-px bg-zinc-300"
+                          style={{ left: sourceRight, top: centerB, width: BRACKET_COLUMN_GAP / 2 }}
+                        />
+                        <span
+                          className="absolute w-px bg-zinc-300"
+                          style={{ left: elbowLeft, top: verticalTop, height: verticalHeight }}
+                        />
+                        <span
+                          className="absolute h-px bg-zinc-300"
+                          style={{ left: elbowLeft, top: targetCenter, width: targetLeft - elbowLeft }}
+                        />
+                      </div>
+                    );
+                  })}
+
+                  {KNOCKOUT_BRACKET_NODES.map((node) => {
+                    const match = knockoutMatchByNumber.get(node.matchNumber);
+                    if (!match) return null;
+                    const saved = hasSavedPrediction(match);
+                    const locked = isLocked(match);
+                    const status = bracketStatusPresentation(match, locked, saved);
+                    const winnerSide = knockoutWinnerSide(match);
+                    const showOfficialScore =
+                      (match.status === "FINAL" || match.status === "LIVE") &&
+                      match.homeScore !== null &&
+                      match.awayScore !== null;
+                    const showPickScore = !showOfficialScore && saved;
+                    const homeScore = showOfficialScore ? match.homeScore : showPickScore ? match.ownPredictionHome : null;
+                    const awayScore = showOfficialScore ? match.awayScore : showPickScore ? match.ownPredictionAway : null;
+                    const homeTeam = getTeamPresentation(bracketSlotLabel(match.homeTeam), match.homeTeamCode);
+                    const awayTeam = getTeamPresentation(bracketSlotLabel(match.awayTeam), match.awayTeamCode);
+                    const rows = [
+                      { side: "HOME" as const, team: homeTeam, score: homeScore },
+                      { side: "AWAY" as const, team: awayTeam, score: awayScore },
+                    ];
+                    const isFinal = node.matchNumber === 104;
+                    const isThirdPlace = node.matchNumber === 103;
+                    return (
+                      <button
+                        key={`bracket-${match.id}`}
+                        type="button"
+                        onClick={() => {
+                          setActiveStage(match.stage);
+                          setActiveGroup("ALL");
+                          scrollToSection(`match-${match.id}`);
+                        }}
+                        className={`absolute z-10 overflow-hidden rounded-xl border bg-white p-3.5 text-left shadow-[0_8px_20px_rgba(15,23,42,0.10)] transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-[0_14px_28px_rgba(15,23,42,0.14)] ${
+                          isFinal
+                            ? "border-amber-300 bg-amber-50/80"
+                            : isThirdPlace
+                              ? "border-zinc-300 bg-zinc-50"
+                              : "border-zinc-200"
+                        }`}
+                        style={{
+                          left: node.left,
+                          top: BRACKET_HEADER_HEIGHT + node.top,
+                          width: BRACKET_CARD_WIDTH,
+                          height: BRACKET_CARD_HEIGHT,
+                        }}
+                      >
+                        <div className="mb-3 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
+                          <span className="rounded-md border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 text-[10px] font-black text-cyan-900">
+                            P{match.matchNumber}
+                          </span>
+                          <span className={`justify-self-end truncate rounded-md border px-1.5 py-0.5 text-[9px] font-black uppercase ${status.className}`}>
+                            {isFinal ? "Final" : isThirdPlace ? "3er puesto" : status.label}
+                          </span>
+                        </div>
+
+                        <div className="space-y-2">
+                          {rows.map((row) => {
+                            const winner = winnerSide === row.side;
+                            const slotToken = bracketSlotToken(row.team.nameEs);
+                            return (
+                              <div key={row.side} className="grid h-8 grid-cols-[minmax(0,1fr)_34px] items-center gap-2">
+                                <span
+                                  className={`flex min-w-0 items-center overflow-hidden text-sm font-black ${
+                                    winner ? "text-emerald-800" : "text-zinc-950"
+                                  }`}
+                                >
+                                  {slotToken ? (
+                                    <span className="mr-1.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] bg-zinc-200 text-[10px] font-black text-zinc-700">
+                                      {slotToken}
+                                    </span>
+                                  ) : (
+                                    <TeamBadge team={row.team} compact className="min-w-0 overflow-hidden" />
+                                  )}
+                                  {slotToken ? <span className="truncate">{row.team.nameEs}</span> : null}
+                                </span>
+                                <span
+                                  className={`flex h-8 w-[34px] shrink-0 items-center justify-center rounded-md text-xs font-black ${
+                                    row.score === null
+                                      ? "border border-zinc-200 bg-zinc-100 text-zinc-400"
+                                      : showOfficialScore
+                                        ? "bg-zinc-900 text-white"
+                                        : "border border-cyan-200 bg-cyan-50 text-cyan-900"
+                                  }`}
+                                >
+                                  {row.score ?? "-"}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2 border-t border-zinc-100 pt-2 text-[10px] font-black text-zinc-500">
+                          <span className="truncate">{formatKickoffDateColombia(match.kickoff)}</span>
+                          <span className="shrink-0">{formatKickoffTimeColombia(match.kickoff)}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          ) : null}
           {filteredMatches.length === 0 ? (
             <div className="rounded-2xl border border-zinc-200 bg-white p-5 text-center text-sm text-zinc-600 shadow-[0_6px_18px_rgba(0,0,0,0.07)]">
               No hay partidos para los filtros seleccionados.
@@ -2724,7 +3013,7 @@ export default function PronosticoClient({
                           </p>
                         </div>
                         <span
-                          className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] ${
+                          className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase ${
                             usage.applied
                               ? "border-emerald-300 bg-emerald-50 text-emerald-800"
                               : "border-amber-300 bg-amber-50 text-amber-800"

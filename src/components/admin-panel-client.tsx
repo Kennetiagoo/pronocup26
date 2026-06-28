@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { MatchStatus, PaymentStatus, UserRole } from "@prisma/client";
 import Link from "next/link";
@@ -12,6 +12,7 @@ import { buildWorldCupGroupStandings, rankThirdPlacedTeams } from "@/lib/world-c
 import {
   getRound32SideSlot,
   getRound32Slot,
+  getRound32ThirdPlaceSlotAssignments,
   parseRound32Slot,
   WORLD_CUP_ROUND32_SLOTS,
 } from "@/lib/world-cup-round32-slots";
@@ -415,7 +416,22 @@ export default function AdminPanelClient({
   const round32CandidatesBySlot = useMemo(() => {
     const standings = buildWorldCupGroupStandings(matches);
     const groups = new Map(standings.map((group) => [group.groupName, group.rows]));
-    const qualifiedThirdGroups = new Set(rankThirdPlacedTeams(standings).slice(0, 8).map((row) => row.groupName));
+    const allGroupsComplete =
+      standings.length === 12 && standings.every((group) => group.rows.length >= 4 && group.rows.every((row) => row.pj === 3));
+    const qualifiedThirdGroups = allGroupsComplete
+      ? rankThirdPlacedTeams(standings).slice(0, 8).map((row) => row.groupName)
+      : [];
+    const thirdGroupByMatch = getRound32ThirdPlaceSlotAssignments(qualifiedThirdGroups);
+    const thirdGroupBySlot = new Map<string, string>();
+
+    for (const roundSlot of WORLD_CUP_ROUND32_SLOTS) {
+      const awayParsed = parseRound32Slot(roundSlot.awaySlot);
+      const groupName = thirdGroupByMatch.get(roundSlot.matchNumber);
+      if (awayParsed?.kind === "third" && groupName) {
+        thirdGroupBySlot.set(roundSlot.awaySlot, groupName);
+      }
+    }
+
     const map = new Map<string, SlotCandidate[]>();
 
     for (const slot of new Set(WORLD_CUP_ROUND32_SLOTS.flatMap((item) => [item.homeSlot, item.awaySlot]))) {
@@ -426,7 +442,9 @@ export default function AdminPanelClient({
       }
 
       if (parsed.kind === "fixed") {
-        const row = groups.get(parsed.groups[0])?.[parsed.position - 1] ?? null;
+        const rows = groups.get(parsed.groups[0]);
+        const row = rows?.[parsed.position - 1] ?? null;
+        const complete = Boolean(rows && rows.length >= 4 && rows.every((item) => item.pj === 3));
         map.set(
           slot,
           row
@@ -435,7 +453,7 @@ export default function AdminPanelClient({
                   team: row.team,
                   code: row.teamCode,
                   label: `${slot}: ${row.team}`,
-                  eligible: row.pj === 3,
+                  eligible: complete,
                 },
               ]
             : [],
@@ -443,18 +461,19 @@ export default function AdminPanelClient({
         continue;
       }
 
+      const assignedGroup = thirdGroupBySlot.get(slot) ?? null;
       map.set(
         slot,
         parsed.groups.flatMap((groupName) => {
           const row = groups.get(groupName)?.[2] ?? null;
           if (!row) return [];
-          const isQualified = qualifiedThirdGroups.has(groupName);
+          const isAssigned = assignedGroup === groupName;
           return [
             {
               team: row.team,
               code: row.teamCode,
-              label: `${isQualified ? "✓" : "?"} 3${groupName}: ${row.team}`,
-              eligible: isQualified,
+              label: `${isAssigned ? "✓" : "?"} 3${groupName}: ${row.team}`,
+              eligible: isAssigned,
             },
           ];
         }),
@@ -936,7 +955,7 @@ export default function AdminPanelClient({
   function getBestRound32Candidate(slotName: string | null) {
     if (!slotName) return null;
     const candidates = round32CandidatesBySlot.get(slotName) ?? [];
-    return candidates.find((candidate) => candidate.eligible) ?? candidates[0] ?? null;
+    return candidates.find((candidate) => candidate.eligible) ?? null;
   }
 
   async function applyRound32CurrentPositions() {
@@ -1078,7 +1097,7 @@ export default function AdminPanelClient({
         return;
       }
 
-      if (scorersEnabled) {
+      if (scorersEnabled && current.status === "FINAL") {
         const scorersRes = await fetch(`/api/admin/matches/${matchId}/scorers`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -2271,8 +2290,8 @@ export default function AdminPanelClient({
                   Esquema de dieciseisavos
                 </p>
                 <p className="mt-1 text-sm font-semibold text-cyan-950">
-                  Los partidos 73-88 quedan como slots tipo 1A, 2B o 3C/E/F/H/I. El equipo real se elige
-                  manualmente desde el editor de cada partido.
+                  Los partidos 73-88 quedan como slots tipo 1A, 2B o 3C/E/F/H/I. Al cerrarse la fase de grupos,
+                  el sistema asigna los cruces confirmados usando la combinacion oficial de FIFA.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -2355,7 +2374,11 @@ export default function AdminPanelClient({
                         Equipo local {round32Slot ? `(${round32Slot.homeSlot})` : ""}
                         <select
                           value={match.homeTeamCode ?? ""}
-                          onChange={(e) => updateMatchTeam(match.id, "home", e.target.value)}
+                          onChange={(e) => {
+                            const teamCode = e.target.value;
+                            updateMatchTeam(match.id, "home", teamCode);
+                            void ensureTeamOptionsLoaded(teamCode || null);
+                          }}
                           className="mt-1 w-full rounded-lg border border-cyan-200 bg-white px-2 py-2 text-sm normal-case tracking-normal text-zinc-900"
                         >
                           <option value="">
@@ -2411,7 +2434,11 @@ export default function AdminPanelClient({
                         Equipo visitante {round32Slot ? `(${round32Slot.awaySlot})` : ""}
                         <select
                           value={match.awayTeamCode ?? ""}
-                          onChange={(e) => updateMatchTeam(match.id, "away", e.target.value)}
+                          onChange={(e) => {
+                            const teamCode = e.target.value;
+                            updateMatchTeam(match.id, "away", teamCode);
+                            void ensureTeamOptionsLoaded(teamCode || null);
+                          }}
                           className="mt-1 w-full rounded-lg border border-cyan-200 bg-white px-2 py-2 text-sm normal-case tracking-normal text-zinc-900"
                         >
                           <option value="">
@@ -3038,4 +3065,3 @@ export default function AdminPanelClient({
     </main>
   );
 }
-

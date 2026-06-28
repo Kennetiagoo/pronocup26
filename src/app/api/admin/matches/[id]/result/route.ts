@@ -7,6 +7,7 @@ import { ApiError, fail, ok } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 import { updateMatchResultSchema } from "@/lib/validation";
 import { computeKnockoutAssignments } from "@/lib/world-cup-knockout";
+import { buildRound32Assignments } from "@/lib/world-cup-round32-slots";
 
 export const runtime = "nodejs";
 
@@ -163,12 +164,15 @@ export async function PUT(
       },
     });
 
-    const knockoutAssignments = computeKnockoutAssignments(allMatches);
+    const allAssignments = new Map([
+      ...buildRound32Assignments(allMatches),
+      ...computeKnockoutAssignments(allMatches),
+    ]);
     const assignmentUpdates = [] as Array<ReturnType<typeof prisma.match.update>>;
-    for (const [matchNumber, assignment] of knockoutAssignments.entries()) {
-      if (matchNumber <= 88 || updatedMatch.status !== MatchStatus.FINAL) continue;
+    for (const [matchNumber, assignment] of allAssignments.entries()) {
+      if (updatedMatch.status !== MatchStatus.FINAL) continue;
       const current = allMatches.find((m) => m.matchNumber === matchNumber);
-      if (!current) continue;
+      if (!current || current.status !== MatchStatus.SCHEDULED) continue;
 
       const changed =
         current.homeTeam !== assignment.homeTeam ||
