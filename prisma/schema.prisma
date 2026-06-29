@@ -93,6 +93,7 @@ model Match {
   homeScore    Int?
   awayScore    Int?
   status       MatchStatus @default(SCHEDULED)
+  advancedTeamSide TeamSide?
   isTopMatch   Boolean     @default(false)
   topMultiplier Float      @default(1.5)
   createdAt    DateTime    @default(now())
@@ -134,10 +135,10 @@ model ScoringRule {
   id                       Int      @id @default(1)
   officialModeEnabled      Boolean  @default(true)
   knockoutMultiplier       Int      @default(2)
-  exactScorePoints         Int      @default(5)
-  goalDifferencePoints     Int      @default(3)
-  outcomePoints            Int      @default(2)
-  singleTeamGoalsPoints    Int      @default(1)
+  exactScorePoints         Int      @default(0)
+  goalDifferencePoints     Int      @default(1)
+  outcomePoints            Int      @default(5)
+  singleTeamGoalsPoints    Int      @default(2)
   drawOutcomeBonus         Int      @default(0)
   lockMinutesBeforeKickoff Int      @default(15)
   allowSelfRegistration    Boolean  @default(true)

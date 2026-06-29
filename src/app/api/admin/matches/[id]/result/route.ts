@@ -1,4 +1,4 @@
-import { MatchStatus } from "@prisma/client";
+import { MatchStatus, TeamSide } from "@prisma/client";
 
 import { createAuditLog } from "@/lib/audit";
 import { calculatePointsFromSnapshot, calculateScorerHits } from "@/lib/bonus";
@@ -38,6 +38,18 @@ export async function PUT(
     if (!match) {
       throw new ApiError(404, "NOT_FOUND", "Partido no encontrado.");
     }
+
+    const isKnockoutDrawFinal =
+      parsed.data.status === MatchStatus.FINAL &&
+      match.stage !== "GROUP" &&
+      parsed.data.homeScore !== null &&
+      parsed.data.awayScore !== null &&
+      parsed.data.homeScore === parsed.data.awayScore;
+    const advancedTeamSide = isKnockoutDrawFinal ? parsed.data.advancedTeamSide ?? null : null;
+    if (isKnockoutDrawFinal && advancedTeamSide !== TeamSide.HOME && advancedTeamSide !== TeamSide.AWAY) {
+      throw new ApiError(422, "UNPROCESSABLE", "Selecciona quien avanzo de fase cuando una eliminatoria termina empatada en 90 minutos.");
+    }
+
     const updatedMatch = await prisma.match.update({
       where: { id },
       data: {
@@ -48,6 +60,7 @@ export async function PUT(
         ...(typeof parsed.data.homeTeamCode !== "undefined" ? { homeTeamCode: parsed.data.homeTeamCode } : {}),
         ...(typeof parsed.data.awayTeamCode !== "undefined" ? { awayTeamCode: parsed.data.awayTeamCode } : {}),
         status: parsed.data.status,
+        advancedTeamSide,
         updatedAt: new Date(),
       },
     });
@@ -122,7 +135,7 @@ export async function PUT(
             usedX2: prediction.usedX2,
             x2Returned: prediction.x2Returned,
             topApplied: false,
-            appliedMultiplier: prediction.usedX2 ? 2 : 1,
+            appliedMultiplier: updatedMatch.stage === "GROUP" && prediction.usedX2 ? 2 : 1,
             scorerPointApplied: prediction.scorerPointApplied,
           },
           scorerHitCount,
@@ -137,7 +150,7 @@ export async function PUT(
             scorerPoints: calculated.scorerPoints,
             x2Returned: calculated.x2Returned,
             topApplied: false,
-            appliedMultiplier: prediction.usedX2 ? 2 : 1,
+            appliedMultiplier: updatedMatch.stage === "GROUP" && prediction.usedX2 ? 2 : 1,
             updatedAt: new Date(),
           },
         });
@@ -161,6 +174,7 @@ export async function PUT(
         homeScore: true,
         awayScore: true,
         status: true,
+        advancedTeamSide: true,
       },
     });
 
@@ -208,6 +222,7 @@ export async function PUT(
       metadata: {
         homeScore: parsed.data.homeScore,
         awayScore: parsed.data.awayScore,
+        advancedTeamSide,
         homeTeam: parsed.data.homeTeam,
         awayTeam: parsed.data.awayTeam,
         homeTeamCode: parsed.data.homeTeamCode,

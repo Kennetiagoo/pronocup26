@@ -16,7 +16,7 @@ const rules = [
       "El puntaje se calcula sobre los 90 minutos más reposición.",
       "No cuentan prórroga ni penales para el marcador del pronóstico.",
       "Si un partido termina 1-1 en 90 minutos y luego se define 2-1 en prórroga, el resultado válido para la app es 1-1.",
-      "El admin puede aplicar multiplicador de eliminatorias desde el panel. Si el multiplicador es x2, el puntaje base de esa fase se duplica.",
+      "Desde dieciseisavos en adelante el multiplicador de eliminatorias es x2: el pleno base maximo es 20 puntos si la regla base vale 10.",
     ],
   },
   {
@@ -36,7 +36,8 @@ const rules = [
       "Los goleadores solo aparecen cuando el módulo está activo para esa fase y cuando escribes goles en tu marcador.",
       "Debes elegir un jugador por cada gol pronosticado. Si pronosticas 2 goles para una selección, aparecen 2 espacios de goleador para esa selección.",
       "Cada espacio acertado suma los puntos extra configurados por el admin. Por defecto, cada goleador acertado suma 1 punto.",
-      "El orden de los goleadores importa por espacio de gol cargado por el admin. Si el admin carga dos goleadores, se comparan contra tus espacios guardados.",
+      "El orden no importa: cada jugador cuenta hasta el minimo entre las veces que lo escogiste y los goles reales que marco.",
+      "Ejemplo: si pusiste una vez a un jugador y marca 2 goles, solo suma 1 acierto; si lo pusiste dos veces y marca 1, solo suma 1 acierto.",
       "Si pronosticas goles y dejas goleadores vacíos, puedes guardar, pero renuncias a esos puntos extra.",
       "Si el resultado oficial de una selección es 0 goles, no hay espacios de goleador para esa selección.",
       "Los goleadores no cambian el resultado del partido. Solo son puntos extra sobre el marcador guardado.",

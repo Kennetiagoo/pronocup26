@@ -1,6 +1,6 @@
 "use client";
 
-import { MatchStatus, PaymentStatus, UserRole } from "@prisma/client";
+import { MatchStatus, PaymentStatus, TeamSide, UserRole } from "@prisma/client";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -51,6 +51,7 @@ type SafeMatch = {
   homeScore: number | null;
   awayScore: number | null;
   status: MatchStatus;
+  advancedTeamSide: TeamSide | null;
   homeTeamCode: string | null;
   awayTeamCode: string | null;
   isTopMatch: boolean;
@@ -1088,6 +1089,18 @@ export default function AdminPanelClient({
       const expectedAway = Math.max(0, current.awayScore ?? 0);
 
       if (
+        current.status === "FINAL" &&
+        current.stage !== "GROUP" &&
+        current.homeScore !== null &&
+        current.awayScore !== null &&
+        current.homeScore === current.awayScore &&
+        !current.advancedTeamSide
+      ) {
+        setError("Selecciona quien avanzo cuando una eliminatoria queda empatada en 90 minutos.");
+        return;
+      }
+
+      if (
         scorersEnabled &&
         current.status === "FINAL" &&
         ((expectedHome > 0 && draft.homePlayerIds.slice(0, expectedHome).some((id) => !id)) ||
@@ -1125,6 +1138,7 @@ export default function AdminPanelClient({
           awayTeam: current.awayTeam,
           homeTeamCode: current.homeTeamCode,
           awayTeamCode: current.awayTeamCode,
+          advancedTeamSide: current.advancedTeamSide,
         }),
       });
       if (!res.ok) {
@@ -1818,14 +1832,20 @@ export default function AdminPanelClient({
             <div className="mt-4">
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-zinc-700">Bonos por fase</p>
               <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                {BONUS_STAGE_OPTIONS.map(({ stage, label, x2Key, scorerKey }) => (
+                {BONUS_STAGE_OPTIONS.map(({ stage, label, x2Key, scorerKey }) => {
+                  const x2ManualLocked = stage !== "GROUP";
+                  return (
                   <div key={stage} className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.1em] text-zinc-700">{label}</p>
-                    <label className="mt-2 flex items-center justify-between text-xs text-zinc-700">
-                      X2
+                    <label className="mt-2 flex items-center justify-between gap-3 text-xs text-zinc-700">
+                      <span>
+                        X2
+                        {x2ManualLocked ? <span className="ml-1 text-[10px] text-zinc-500">solo grupos</span> : null}
+                      </span>
                       <input
                         type="checkbox"
-                        checked={bonusConfig[x2Key]}
+                        checked={!x2ManualLocked && bonusConfig[x2Key]}
+                        disabled={x2ManualLocked}
                         onChange={(e) =>
                           setBonusConfig((v) => ({
                             ...v,
@@ -1848,7 +1868,8 @@ export default function AdminPanelClient({
                       />
                     </label>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -2348,6 +2369,12 @@ export default function AdminPanelClient({
               const awayGoals = Math.max(0, match.awayScore ?? 0);
               const homeOptions = match.homeTeamCode ? (teamPlayerOptionsByCode[match.homeTeamCode] ?? []) : [];
               const awayOptions = match.awayTeamCode ? (teamPlayerOptionsByCode[match.awayTeamCode] ?? []) : [];
+              const knockoutDrawFinal =
+                match.status === "FINAL" &&
+                match.stage !== "GROUP" &&
+                match.homeScore !== null &&
+                match.awayScore !== null &&
+                match.homeScore === match.awayScore;
               return (
                 <div key={match.id} className="rounded-2xl border border-zinc-200 bg-white p-4">
                   <p className="wc-eyebrow text-zinc-700">
@@ -2556,6 +2583,7 @@ export default function AdminPanelClient({
                                     e.target.value === "LIVE" && item.homeScore === null ? 0 : item.homeScore,
                                   awayScore:
                                     e.target.value === "LIVE" && item.awayScore === null ? 0 : item.awayScore,
+                                  advancedTeamSide: e.target.value === "FINAL" ? item.advancedTeamSide : null,
                                 }
                               : item,
                           ),
@@ -2632,7 +2660,23 @@ export default function AdminPanelClient({
                       </>
                     )}
                   </div>
-
+                  {isEditing && knockoutDrawFinal ? (
+                    <label className="mt-3 block rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold uppercase tracking-[0.08em] text-amber-900">
+                      Clasificado si empato en 90 minutos
+                      <select
+                        value={match.advancedTeamSide ?? ""}
+                        onChange={(e) => updateMatchDraft(match.id, { advancedTeamSide: e.target.value ? (e.target.value as TeamSide) : null })}
+                        className="mt-2 w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm normal-case tracking-normal text-zinc-900"
+                      >
+                        <option value="">Selecciona quien avanzo</option>
+                        <option value="HOME">Avanza {match.homeTeam}</option>
+                        <option value="AWAY">Avanza {match.awayTeam}</option>
+                      </select>
+                      <p className="mt-1 text-[11px] normal-case tracking-normal text-amber-800">
+                        El marcador guardado sigue siendo el de 90 minutos; este dato solo arma el siguiente cruce.
+                      </p>
+                    </label>
+                  ) : null}
                   {isEditing && scorersEnabled ? (
                     <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
                       <p className="text-xs font-semibold uppercase tracking-[0.1em] text-zinc-700">

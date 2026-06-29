@@ -24,6 +24,7 @@ export async function GET() {
         homeScore: true,
         awayScore: true,
         status: true,
+        advancedTeamSide: true,
         homeTeamCode: true,
         awayTeamCode: true,
         isTopMatch: true,

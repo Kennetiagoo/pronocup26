@@ -1,4 +1,4 @@
-﻿import { MatchStage, MatchStatus } from "@prisma/client";
+import { MatchStage, MatchStatus, TeamSide } from "@prisma/client";
 
 export type KnockoutMatchSnapshot = {
   id: string;
@@ -12,6 +12,7 @@ export type KnockoutMatchSnapshot = {
   homeScore: number | null;
   awayScore: number | null;
   status: MatchStatus;
+  advancedTeamSide?: TeamSide | null;
 };
 
 type TeamRef = {
@@ -38,24 +39,27 @@ function winnerOf(match: KnockoutMatchSnapshot | undefined): TeamRef | null {
   if (!match) return null;
   if (match.status !== "FINAL") return null;
   if (match.homeScore === null || match.awayScore === null) return null;
-  if (match.homeScore === match.awayScore) return null;
-  if (match.homeScore > match.awayScore) {
+  if (match.homeScore > match.awayScore || (match.homeScore === match.awayScore && match.advancedTeamSide === TeamSide.HOME)) {
     return { team: match.homeTeam, code: match.homeTeamCode };
   }
-  return { team: match.awayTeam, code: match.awayTeamCode };
+  if (match.homeScore < match.awayScore || (match.homeScore === match.awayScore && match.advancedTeamSide === TeamSide.AWAY)) {
+    return { team: match.awayTeam, code: match.awayTeamCode };
+  }
+  return null;
 }
 
 function loserOf(match: KnockoutMatchSnapshot | undefined): TeamRef | null {
   if (!match) return null;
   if (match.status !== "FINAL") return null;
   if (match.homeScore === null || match.awayScore === null) return null;
-  if (match.homeScore === match.awayScore) return null;
-  if (match.homeScore < match.awayScore) {
+  if (match.homeScore < match.awayScore || (match.homeScore === match.awayScore && match.advancedTeamSide === TeamSide.AWAY)) {
     return { team: match.homeTeam, code: match.homeTeamCode };
   }
-  return { team: match.awayTeam, code: match.awayTeamCode };
+  if (match.homeScore > match.awayScore || (match.homeScore === match.awayScore && match.advancedTeamSide === TeamSide.HOME)) {
+    return { team: match.awayTeam, code: match.awayTeamCode };
+  }
+  return null;
 }
-
 function pairing(home: TeamRef | null, away: TeamRef | null): MatchAssignment | null {
   if (!home || !away) return null;
   return {

@@ -103,6 +103,7 @@ export function isBonusEnabledForStage(
   kind: BonusKind,
   stage: MatchStage,
 ) {
+  if (kind === "x2" && stage !== "GROUP") return false;
   const globalField =
     kind === "x2"
       ? "x2EnabledGlobal"
@@ -175,7 +176,7 @@ export function calculatePointsWithBonuses(input: {
 }) {
   const basePoints = calculatePredictionPoints(input.prediction, input.official, input.rule, input.stage);
   let appliedMultiplier = 1;
-  if (input.usedX2) appliedMultiplier *= 2;
+  if (input.usedX2 && input.stage === "GROUP") appliedMultiplier *= 2;
   if (input.topApplied) appliedMultiplier *= input.topMultiplier;
   const multipliedPoints = Math.round(basePoints * appliedMultiplier);
   const scorerPoints = input.scorerHitCount * input.scorerPoint;
@@ -200,10 +201,10 @@ export function calculatePointsFromSnapshot(input: {
 }) {
   const basePoints = calculatePredictionPoints(input.prediction, input.official, input.rule, input.stage);
   const scorerPoints = input.scorerHitCount * Math.max(0, input.snapshot.scorerPointApplied);
-  const safeMultiplier = Math.max(1, input.snapshot.appliedMultiplier || 1);
+  const safeMultiplier = input.stage === "GROUP" ? Math.max(1, input.snapshot.appliedMultiplier || 1) : 1;
   const multipliedPoints = Math.round(basePoints * safeMultiplier);
   const totalPoints = multipliedPoints + scorerPoints;
-  const x2Returned = input.snapshot.usedX2 && basePoints === 0;
+  const x2Returned = input.stage === "GROUP" && input.snapshot.usedX2 && basePoints === 0;
 
   return {
     basePoints,

@@ -58,6 +58,7 @@ type MatchClient = {
   ownPredictionAppliedMultiplier: number;
   ownPredictionScorerPointApplied: number;
   ownScorerPicks: Array<{ side: "HOME" | "AWAY"; playerId: number }>;
+  officialScorers: Array<{ side: "HOME" | "AWAY"; slotIndex: number; playerId: number }>;
 };
 
 type ScoringRuleClient = {
@@ -429,6 +430,7 @@ function resolveGroupKey(groupName: string | null | undefined): GroupKey | null 
 }
 
 function isEnabledForStage(config: BonusConfigClient, kind: "x2" | "scorers", stage: MatchStage) {
+  if (kind === "x2" && stage !== "GROUP") return false;
   const matrix: Record<MatchStage, boolean> =
     kind === "x2"
       ? {
@@ -2377,6 +2379,16 @@ export default function PronosticoClient({
               const awayPlayers = match.awayTeamCode ? (teamPlayersByCode[match.awayTeamCode] ?? []) : [];
               const homeSlots = Math.max(0, Math.min(15, Number(form.home) || 0));
               const awaySlots = Math.max(0, Math.min(15, Number(form.away) || 0));
+              const officialHomeScorers = match.officialScorers.filter((scorer) => scorer.side === "HOME");
+              const officialAwayScorers = match.officialScorers.filter((scorer) => scorer.side === "AWAY");
+              const officialScorerName = (
+                scorer: { playerId: number },
+                players: Array<{ id: number; name: string; number: number | null }>,
+              ) => {
+                const player = players.find((item) => item.id === scorer.playerId);
+                if (!player) return `Jugador #${scorer.playerId}`;
+                return `${player.number !== null ? `${player.number}. ` : ""}${player.name}`;
+              };
               const chronologicalMatchNumber = chronologicalMatchNumberById.get(match.id) ?? match.matchNumber;
               return (
                 <article
@@ -2509,7 +2521,39 @@ export default function PronosticoClient({
                       />
                     </div>
                   </div>
-
+                  {finalized && match.officialScorers.length > 0 ? (
+                    <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-800">
+                        Goleadores oficiales
+                      </p>
+                      <div className="mt-2 grid gap-2 text-sm text-zinc-800 sm:grid-cols-2">
+                        <div className="rounded-xl border border-emerald-100 bg-white px-3 py-2">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-zinc-500">{match.homeTeam}</p>
+                          {officialHomeScorers.length > 0 ? (
+                            <ul className="mt-1 space-y-1 font-semibold">
+                              {officialHomeScorers.map((scorer) => (
+                                <li key={`official-home-${match.id}-${scorer.slotIndex}`}>{officialScorerName(scorer, homePlayers)}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="mt-1 text-xs text-zinc-500">Sin goles.</p>
+                          )}
+                        </div>
+                        <div className="rounded-xl border border-emerald-100 bg-white px-3 py-2">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-zinc-500">{match.awayTeam}</p>
+                          {officialAwayScorers.length > 0 ? (
+                            <ul className="mt-1 space-y-1 font-semibold">
+                              {officialAwayScorers.map((scorer) => (
+                                <li key={`official-away-${match.id}-${scorer.slotIndex}`}>{officialScorerName(scorer, awayPlayers)}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="mt-1 text-xs text-zinc-500">Sin goles.</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
                   {x2Enabled ? (
                     <div className="mt-3">
                       <label className="flex items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-900">

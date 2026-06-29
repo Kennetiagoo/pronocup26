@@ -1,4 +1,4 @@
-﻿import { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import AdminPanelClient from "@/components/admin-panel-client";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -35,6 +35,7 @@ export default async function AdminPage() {
         homeScore: true,
         awayScore: true,
         status: true,
+        advancedTeamSide: true,
         homeTeamCode: true,
         awayTeamCode: true,
         isTopMatch: true,

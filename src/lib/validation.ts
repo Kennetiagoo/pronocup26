@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 
 const usernamePattern = /^[a-zA-Z0-9_]{3,24}$/;
 
@@ -108,6 +108,7 @@ export const updateMatchResultSchema = z.object({
   awayTeam: z.string().trim().min(1).max(120).optional(),
   homeTeamCode: z.string().trim().min(2).max(8).nullable().optional(),
   awayTeamCode: z.string().trim().min(2).max(8).nullable().optional(),
+  advancedTeamSide: z.enum(["HOME", "AWAY"]).nullable().optional(),
 });
 
 export const updateBonusConfigSchema = z.object({

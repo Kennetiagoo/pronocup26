@@ -64,8 +64,10 @@ export default async function PronosticoPage() {
         isTopMatch: true,
         topMultiplier: true,
         officialScorers: {
+          orderBy: [{ teamSide: "asc" }, { slotIndex: "asc" }],
           select: {
             teamSide: true,
+            slotIndex: true,
             playerId: true,
           },
         },
@@ -217,11 +219,14 @@ export default async function PronosticoPage() {
             ),
           })
         : null;
-    const { officialScorers, ...matchPayload } = match;
-    void officialScorers;
     return {
-      ...matchPayload,
+      ...match,
       kickoff: match.kickoff.toISOString(),
+      officialScorers: match.officialScorers.map((scorer) => ({
+        side: scorer.teamSide,
+        slotIndex: scorer.slotIndex,
+        playerId: scorer.playerId,
+      })),
       groupMatchday: groupMatchdayMap.get(match.id) ?? null,
       ownPredictionHome: ownPrediction?.homeScore ?? null,
       ownPredictionAway: ownPrediction?.awayScore ?? null,
@@ -713,7 +718,7 @@ export default async function PronosticoPage() {
         ? predictionForPotential.scorerPicks.length *
           Math.max(0, predictionForPotential.scorerPointApplied || bonusConfig.scorerPoint)
         : 0;
-      const savedMultiplier = predictionForPotential
+      const savedMultiplier = match.stage === "GROUP" && predictionForPotential
         ? Math.max(1, predictionForPotential.appliedMultiplier || (predictionForPotential.usedX2 ? 2 : 1))
         : 1;
       potential += Math.round(baseMax * savedMultiplier) + scorerPotential;
@@ -838,7 +843,9 @@ export default async function PronosticoPage() {
       scoringRule,
       match.stage,
     );
-    const multiplier = Math.max(1, prediction.appliedMultiplier || (prediction.usedX2 ? 2 : 1));
+    const multiplier = match.stage === "GROUP"
+      ? Math.max(1, prediction.appliedMultiplier || (prediction.usedX2 ? 2 : 1))
+      : 1;
     return {
       basePoints,
       points: Math.round(basePoints * multiplier),
