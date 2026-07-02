@@ -211,6 +211,17 @@ function statusBadge(status: PaymentStatus) {
   return "bg-zinc-100 text-zinc-700 border-zinc-300";
 }
 
+function isReportEligibleUser(user: SafeUserRow) {
+  return user.role === "ADMIN" || user.paymentStatus === "APROBADO";
+}
+
+function reportUserLabel(user: SafeUserRow) {
+  const username = user.username?.trim();
+  const fullName = `${user.nombres} ${user.apellidos}`.trim();
+  if (username) return `${fullName || username} @${username}`;
+  return fullName || user.email;
+}
+
 function formatKickoff(isoDate: string) {
   const datePart = new Intl.DateTimeFormat("es-CO", {
     weekday: "short",
@@ -371,6 +382,9 @@ export default function AdminPanelClient({
   >({});
   const [scorerDraftByMatch, setScorerDraftByMatch] = useState<Record<string, MatchScorerDraft>>({});
   const [proofFileByUser, setProofFileByUser] = useState<Record<string, File | null>>({});
+  const [reportUserIds, setReportUserIds] = useState<string[]>(() =>
+    initialUsers.filter(isReportEligibleUser).map((user) => user.id),
+  );
 
   useEffect(() => {
     if (!paymentQrFile) {
@@ -613,10 +627,30 @@ export default function AdminPanelClient({
     () => matches.filter((match) => match.status === "FINAL" && match.homeScore !== null && match.awayScore !== null),
     [matches],
   );
-  const reportUserCount = useMemo(
-    () => users.filter((user) => user.role === "ADMIN" || user.paymentStatus === "APROBADO").length,
-    [users],
+  const reportEligibleUsers = useMemo(() => users.filter(isReportEligibleUser), [users]);
+  const reportEligibleUserIdSet = useMemo(
+    () => new Set(reportEligibleUsers.map((user) => user.id)),
+    [reportEligibleUsers],
   );
+  const reportSelectedUserIds = useMemo(
+    () => reportUserIds.filter((userId) => reportEligibleUserIdSet.has(userId)),
+    [reportUserIds, reportEligibleUserIdSet],
+  );
+  const reportSelectedUserSet = useMemo(() => new Set(reportSelectedUserIds), [reportSelectedUserIds]);
+  const reportPdfHref = useMemo(() => {
+    if (reportSelectedUserIds.length === 0) return "";
+    if (reportSelectedUserIds.length === reportEligibleUsers.length) return "/api/admin/reports/position-evolution";
+
+    const params = new URLSearchParams();
+    params.set("userIds", reportSelectedUserIds.join(","));
+    return `/api/admin/reports/position-evolution?${params.toString()}`;
+  }, [reportEligibleUsers.length, reportSelectedUserIds]);
+  useEffect(() => {
+    setReportUserIds((current) => {
+      const next = current.filter((userId) => reportEligibleUserIdSet.has(userId));
+      return next.length === current.length ? current : next;
+    });
+  }, [reportEligibleUserIdSet]);
   const nextUnresolvedMatch = useMemo(
     () =>
       matches
@@ -640,6 +674,16 @@ export default function AdminPanelClient({
     setFilterStage("ALL");
     setMatchStatusFilter(status);
     scrollToSection("admin-resultados");
+  }
+
+  function toggleReportUser(userId: string) {
+    setReportUserIds((current) =>
+      current.includes(userId) ? current.filter((id) => id !== userId) : [...current, userId],
+    );
+  }
+
+  function selectAllReportUsers() {
+    setReportUserIds(reportEligibleUsers.map((user) => user.id));
   }
 
   async function refreshAdminData() {
@@ -1460,22 +1504,30 @@ export default function AdminPanelClient({
               <p className="wc-eyebrow">Informes</p>
               <h2 className="wc-title mt-2 text-4xl text-zinc-950 sm:text-5xl">Evolucion de posiciones</h2>
               <p className="mt-2 max-w-3xl text-sm text-zinc-700 sm:text-base">
-                Genera un PDF con el grafico partido a partido para los usuarios incluidos en el ranking actual.
+                Genera un PDF con el grafico partido a partido para los usuarios seleccionados.
               </p>
             </div>
-            <a
-              href="/api/admin/reports/position-evolution"
-              target="_blank"
-              rel="noreferrer"
-              className="wc-button-primary px-5 py-3 text-sm"
-            >
-              Generar PDF
-            </a>
+            {reportSelectedUserIds.length > 0 ? (
+              <a
+                href={reportPdfHref}
+                target="_blank"
+                rel="noreferrer"
+                className="wc-button-primary px-5 py-3 text-sm"
+              >
+                Generar PDF
+              </a>
+            ) : (
+              <button type="button" disabled className="wc-button-primary px-5 py-3 text-sm opacity-50">
+                Generar PDF
+              </button>
+            )}
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-              <p className="text-xs font-bold text-zinc-500">Usuarios</p>
-              <p className="mt-1 text-2xl font-black text-zinc-950">{reportUserCount}</p>
+              <p className="text-xs font-bold text-zinc-500">Usuarios seleccionados</p>
+              <p className="mt-1 text-2xl font-black text-zinc-950">
+                {reportSelectedUserIds.length} / {reportEligibleUsers.length}
+              </p>
             </div>
             <div className="rounded-2xl border border-zinc-200 bg-white p-4">
               <p className="text-xs font-bold text-zinc-500">Partidos con resultado</p>
@@ -1484,6 +1536,64 @@ export default function AdminPanelClient({
             <div className="rounded-2xl border border-zinc-200 bg-white p-4">
               <p className="text-xs font-bold text-zinc-500">Formato</p>
               <p className="mt-1 text-2xl font-black text-zinc-950">PDF</p>
+            </div>
+          </div>
+          <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.08em] text-zinc-900">Usuarios del informe</p>
+                <p className="mt-1 text-xs font-semibold text-zinc-500">Aprobados y administradores</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={selectAllReportUsers}
+                  disabled={reportEligibleUsers.length === 0 || reportSelectedUserIds.length === reportEligibleUsers.length}
+                  className="rounded-xl border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-cyan-800 hover:bg-cyan-100 disabled:opacity-50"
+                >
+                  Todos
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setReportUserIds([])}
+                  disabled={reportSelectedUserIds.length === 0}
+                  className="rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-zinc-700 hover:bg-zinc-100 disabled:opacity-50"
+                >
+                  Ninguno
+                </button>
+              </div>
+            </div>
+            <div className="wc-scrollbar-none mt-3 grid max-h-72 gap-2 overflow-y-auto pr-1 sm:grid-cols-2 xl:grid-cols-3">
+              {reportEligibleUsers.length === 0 ? (
+                <p className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-600">
+                  No hay usuarios aprobados para incluir.
+                </p>
+              ) : (
+                reportEligibleUsers.map((user) => {
+                  const checked = reportSelectedUserSet.has(user.id);
+                  return (
+                    <label
+                      key={user.id}
+                      className={`flex min-w-0 items-start gap-3 rounded-xl border p-3 text-sm transition ${
+                        checked ? "border-cyan-300 bg-cyan-50" : "border-zinc-200 bg-zinc-50"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleReportUser(user.id)}
+                        className="mt-1 h-4 w-4 accent-cyan-700"
+                      />
+                      <span className="min-w-0">
+                        <span className="block truncate font-bold text-zinc-950">{reportUserLabel(user)}</span>
+                        <span className="mt-1 block text-xs font-semibold text-zinc-500">
+                          {user.role === "ADMIN" ? "Admin" : statusLabel(user.paymentStatus)}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })
+              )}
             </div>
           </div>
         </section>

@@ -1,15 +1,35 @@
 import { requireAdmin } from "@/lib/auth/guards";
 import { getOrCreateBonusConfig } from "@/lib/bonus";
-import { fail } from "@/lib/http";
+import { ApiError, fail } from "@/lib/http";
 import { generatePositionEvolutionPdf } from "@/lib/admin/position-evolution-report";
 import { prisma } from "@/lib/prisma";
+import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+function parseSelectedUserIds(request: NextRequest) {
+  const hasUserIdsParam = request.nextUrl.searchParams.has("userIds");
+  if (!hasUserIdsParam) return null;
+
+  return new Set(
+    request.nextUrl.searchParams
+      .getAll("userIds")
+      .flatMap((value) => value.split(","))
+      .map((value) => value.trim())
+      .filter(Boolean),
+  );
+}
+
+export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
+    const selectedUserIds = parseSelectedUserIds(request);
+    if (selectedUserIds && selectedUserIds.size === 0) {
+      throw new ApiError(400, "BAD_REQUEST", "Selecciona al menos un usuario para generar el informe.");
+    }
+
+    const selectedUserIdList = selectedUserIds ? Array.from(selectedUserIds) : null;
 
     const [rule, bonusConfig, users, matches, predictions] = await Promise.all([
       prisma.scoringRule.findUnique({
@@ -22,7 +42,10 @@ export async function GET() {
       getOrCreateBonusConfig(),
       prisma.user.findMany({
         where: {
-          OR: [{ paymentStatus: "APROBADO" }, { role: "ADMIN" }],
+          AND: [
+            { OR: [{ paymentStatus: "APROBADO" }, { role: "ADMIN" }] },
+            selectedUserIdList ? { id: { in: selectedUserIdList } } : {},
+          ],
         },
         orderBy: [{ createdAt: "asc" }],
         select: {
@@ -56,6 +79,7 @@ export async function GET() {
       }),
       prisma.prediction.findMany({
         where: {
+          ...(selectedUserIdList ? { userId: { in: selectedUserIdList } } : {}),
           Match: {
             status: "FINAL",
             homeScore: { not: null },
@@ -88,6 +112,9 @@ export async function GET() {
 
     if (!rule) {
       throw new Error("No existe configuracion de puntaje inicial.");
+    }
+    if (selectedUserIdList && users.length === 0) {
+      throw new ApiError(422, "UNPROCESSABLE", "No hay usuarios aprobados o administradores en la seleccion.");
     }
 
     const pdf = generatePositionEvolutionPdf({
